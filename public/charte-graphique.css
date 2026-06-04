@@ -1,0 +1,279 @@
+/* ============================================================================
+   KayTechnologie Gabon — Système de Gestion des Tâches
+   CHARTE GRAPHIQUE EXÉCUTABLE  ·  charte-graphique.css
+   ----------------------------------------------------------------------------
+   Ce fichier contient LES DEUX directions visuelles (A & B) dans un seul
+   système, sélectionnables à l'exécution = "choix multiple" intégrable.
+
+   COMMENT L'UTILISER (choix de la direction) :
+   --------------------------------------------
+   1. Lier ce fichier :   <link rel="stylesheet" href="charte-graphique.css">
+   2. Choisir la direction sur la balise racine :
+         <html data-direction="A">   →  Corporate Sobre  (nav latérale, dense)
+         <html data-direction="B">   →  Opérations Modernes (nav haute, aérée)
+   3. Bascule dynamique (admin / préférence utilisateur) :
+         document.documentElement.dataset.direction = 'B';
+      (voir theme-switcher.js — persistance localStorage incluse)
+
+   STRUCTURE DU FICHIER :
+     1. Tokens de marque (communs aux 2 directions)
+     2. Tokens de statut (code couleur — communs)
+     3. Tokens "thème" qui CHANGENT selon la direction (A vs B)
+     4. Base & typographie
+     5. Composants pilotés par les tokens de thème
+   ============================================================================ */
+
+/* Polices */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+/* ============================================================================
+   1. TOKENS DE MARQUE  (identiques en A et B — issus du logo KayTechnologie)
+   ============================================================================ */
+:root {
+  /* Couleurs de marque */
+  --kt-navy:        #173A7A;   /* Bleu LAN — primaire */
+  --kt-navy-deep:   #0E2350;   /* Marine profond */
+  --kt-navy-700:    #1E458C;
+  --kt-orange:      #F47A1F;   /* Software — accent / action */
+  --kt-orange-soft: #FCEBDB;
+  --kt-maroon:      #8C1622;   /* Hardware — alerte / danger */
+  --kt-purple:      #7C3FBF;   /* Accent secondaire */
+
+  /* Échelle ardoise (neutres) */
+  --slate-50:  #F6F8FB;  --slate-100: #EEF2F7;  --slate-150: #E7EDF4;
+  --slate-200: #DEE5EE;  --slate-300: #CBD5E1;  --slate-400: #94A3B8;
+  --slate-500: #64748B;  --slate-600: #4B5A6E;  --slate-700: #334155;
+  --slate-800: #1E293B;  --slate-900: #0F172A;  --white: #FFFFFF;
+
+  /* Typographie */
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-ui:      'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Espacements (base 4 px) */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+
+  /* ==========================================================================
+     2. TOKENS DE STATUT  (code couleur normalisé — communs aux 2 directions)
+     ========================================================================== */
+  --st-todo:     #64748B;  --st-todo-bg:     #EEF1F5;  /* À faire / Nouveau */
+  --st-progress: #2563EB;  --st-progress-bg: #E5EDFD;  /* En cours          */
+  --st-wait:     #C97A0A;  --st-wait-bg:     #FBF0DC;  /* En attente        */
+  --st-stop:     #B0202E;  --st-stop-bg:     #FBE6E7;  /* En arrêt          */
+  --st-done:     #15885A;  --st-done-bg:     #E2F3EA;  /* Terminé           */
+}
+
+/* ============================================================================
+   3. TOKENS DE THÈME — CE QUI DIFFÈRE ENTRE LES DEUX DIRECTIONS
+   ----------------------------------------------------------------------------
+   Les composants (§5) consomment uniquement ces variables `--th-*`.
+   Changer la direction sur <html data-direction> recâble tout le rendu.
+   ============================================================================ */
+
+/* Valeurs par défaut = Direction A (si aucun data-direction n'est posé) */
+:root,
+[data-direction="A"] {
+  --th-name:            "Corporate Sobre";
+  --th-nav-layout:      "sidebar";        /* indicatif (lecture JS) */
+
+  --th-app-bg:          var(--slate-50);  /* fond général          */
+  --th-surface:         var(--white);     /* fond des cartes       */
+  --th-surface-2:       var(--slate-50);
+  --th-border:          var(--slate-200);
+  --th-text:            var(--slate-800);
+  --th-text-muted:      var(--slate-500);
+  --th-heading:         var(--slate-900);
+
+  /* Navigation */
+  --th-nav-bg:          var(--kt-navy-deep);
+  --th-nav-text:        rgba(255,255,255,.74);
+  --th-nav-active-bg:   rgba(255,255,255,.12);
+  --th-nav-active-text: #ffffff;
+  --th-nav-accent:      var(--kt-orange);
+
+  /* Cartes & rayons : A = compact, anguleux, ombres discrètes */
+  --th-radius:          10px;
+  --th-radius-lg:       12px;
+  --th-card-shadow:     0 1px 2px rgba(15,23,42,.06), 0 1px 3px rgba(15,23,42,.05);
+  --th-card-border:     1px solid var(--th-border);
+  --th-density:         13px;             /* padding vertical des lignes  */
+  --th-gap:             16px;
+
+  /* Accent principal des composants */
+  --th-accent:          var(--kt-navy);
+  --th-accent-text:     #ffffff;
+
+  /* Rail de couleur de statut sur les lignes (A = non) */
+  --th-row-rail:        0px;
+}
+
+/* Direction B = Opérations Modernes */
+[data-direction="B"] {
+  --th-name:            "Opérations Modernes";
+  --th-nav-layout:      "topbar";
+
+  --th-app-bg:          var(--slate-100);
+  --th-surface:         var(--white);
+  --th-surface-2:       var(--slate-50);
+  --th-border:          var(--slate-200);
+  --th-text:            var(--slate-800);
+  --th-text-muted:      var(--slate-500);
+  --th-heading:         var(--slate-900);
+
+  /* Navigation horizontale claire */
+  --th-nav-bg:          var(--white);
+  --th-nav-text:        var(--slate-500);
+  --th-nav-active-bg:   var(--slate-100);
+  --th-nav-active-text: var(--kt-navy);
+  --th-nav-accent:      var(--kt-orange);
+
+  /* Cartes & rayons : B = aéré, arrondi, ombres plus présentes */
+  --th-radius:          14px;
+  --th-radius-lg:       20px;
+  --th-card-shadow:     0 4px 12px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.05);
+  --th-card-border:     1px solid transparent;
+  --th-density:         16px;
+  --th-gap:             20px;
+
+  --th-accent:          var(--kt-navy);
+  --th-accent-text:     #ffffff;
+
+  /* B = rail de couleur de statut visible à gauche des lignes */
+  --th-row-rail:        5px;
+}
+
+/* ============================================================================
+   4. BASE & TYPOGRAPHIE
+   ============================================================================ */
+* { box-sizing: border-box; }
+
+body.kt-app {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--th-text);
+  background: var(--th-app-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.kt-app h1, .kt-app h2, .kt-app h3,
+.kt-display { font-family: var(--font-display); color: var(--th-heading); letter-spacing: -.01em; }
+.kt-num  { font-family: var(--font-display); font-weight: 700; letter-spacing: -.01em; }
+.kt-mono { font-family: var(--font-mono); }
+.kt-muted { color: var(--th-text-muted); }
+
+/* ============================================================================
+   5. COMPOSANTS  (pilotés par les tokens de thème — s'adaptent à A/B)
+   ============================================================================ */
+
+/* ---- Boutons ------------------------------------------------------------- */
+.kt-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-ui); font-weight: 600; font-size: 13px;
+  border-radius: calc(var(--th-radius) - 2px);
+  padding: 9px 15px; border: 0; cursor: pointer;
+  transition: transform .12s ease, filter .12s ease;
+}
+.kt-btn:active { transform: translateY(1px); }
+.kt-btn--primary { background: var(--th-accent); color: var(--th-accent-text); }
+.kt-btn--action  { background: var(--kt-orange); color: #fff; }       /* CTA marque */
+.kt-btn--action:hover { filter: brightness(.96); }
+.kt-btn--ghost   { background: var(--th-surface); color: var(--th-text-muted);
+                   border: 1px solid var(--th-border); }
+
+/* ---- Cartes -------------------------------------------------------------- */
+.kt-card {
+  background: var(--th-surface);
+  border: var(--th-card-border);
+  border-radius: var(--th-radius);
+  box-shadow: var(--th-card-shadow);
+  padding: var(--th-gap);
+}
+.kt-card--lg { border-radius: var(--th-radius-lg); }
+
+/* ---- Pastilles de statut (code couleur) ---------------------------------- */
+.kt-status {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 11px 4px 9px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; line-height: 1; white-space: nowrap;
+}
+.kt-status .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.kt-status[data-st="todo"]     { color: var(--st-todo);     background: var(--st-todo-bg); }
+.kt-status[data-st="progress"] { color: var(--st-progress); background: var(--st-progress-bg); }
+.kt-status[data-st="wait"]     { color: var(--st-wait);     background: var(--st-wait-bg); }
+.kt-status[data-st="stop"]     { color: var(--st-stop);     background: var(--st-stop-bg); }
+.kt-status[data-st="done"]     { color: var(--st-done);     background: var(--st-done-bg); }
+.kt-status[data-st="todo"]     .dot { background: var(--st-todo); }
+.kt-status[data-st="progress"] .dot { background: var(--st-progress); }
+.kt-status[data-st="wait"]     .dot { background: var(--st-wait); }
+.kt-status[data-st="stop"]     .dot { background: var(--st-stop); }
+.kt-status[data-st="done"]     .dot { background: var(--st-done); }
+
+/* Couleur de rappel utilisable pour rails, barres, points */
+.kt-st-bg[data-st="todo"]     { background: var(--st-todo); }
+.kt-st-bg[data-st="progress"] { background: var(--st-progress); }
+.kt-st-bg[data-st="wait"]     { background: var(--st-wait); }
+.kt-st-bg[data-st="stop"]     { background: var(--st-stop); }
+.kt-st-bg[data-st="done"]     { background: var(--st-done); }
+
+/* ---- Avatars initiales --------------------------------------------------- */
+.kt-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 700; color: #fff;
+  border: 2px solid var(--th-surface); flex: none;
+}
+
+/* ---- Tag de site / lieu d'intervention ----------------------------------- */
+.kt-site { display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--th-text-muted); }
+
+/* ---- Barre de progression ------------------------------------------------ */
+.kt-prog { display: inline-flex; align-items: center; gap: 8px; }
+.kt-prog .track { width: 64px; height: 7px; border-radius: 999px;
+  background: var(--slate-100); overflow: hidden; }
+.kt-prog .fill { height: 100%; border-radius: 999px; background: var(--st-progress); }
+.kt-prog .val  { font-family: var(--font-mono); font-size: 11px; color: var(--th-text-muted); }
+
+/* ---- Échéance en retard -------------------------------------------------- */
+.kt-late { color: var(--kt-maroon); font-weight: 600; }
+
+/* ---- Ligne de tâche -------------------------------------------------------
+   En A : rail = 0 (pas de bande couleur). En B : rail = 5px (couleur statut).
+   Poser la couleur du rail via style="--rail-color: var(--st-progress)" ou
+   via la classe utilitaire .kt-st-bg sur l'élément .rail.                     */
+.kt-task-row {
+  display: grid; grid-template-columns: var(--th-row-rail) 1fr;
+  background: var(--th-surface);
+  border: var(--th-card-border);
+  border-radius: var(--th-radius);
+  box-shadow: var(--th-card-shadow);
+  overflow: hidden;
+}
+.kt-task-row > .rail { width: var(--th-row-rail); background: var(--rail-color, transparent); }
+.kt-task-row > .content { padding: var(--th-density) var(--th-gap); }
+
+/* ---- Tableau (Direction A surtout) --------------------------------------- */
+.kt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.kt-table thead th {
+  text-align: left; font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--th-text-muted); font-weight: 600;
+  padding: 11px 14px; border-bottom: 1px solid var(--th-border); background: var(--th-surface-2);
+}
+.kt-table tbody td {
+  padding: var(--th-density) 14px; border-bottom: 1px solid var(--slate-100);
+  color: var(--th-text); vertical-align: middle;
+}
+
+/* ---- Case à cocher ------------------------------------------------------- */
+.kt-check { width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--slate-300); display: inline-block; cursor: pointer; }
+.kt-check[data-checked="true"] { background: var(--st-done); border-color: var(--st-done);
+  position: relative; }
+.kt-check[data-checked="true"]::after { content: "✓"; color: #fff; font-size: 11px;
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+/* ============================================================================
+   FIN — Pour visualiser la bascule A/B : ouvrir "Charte A-B (demo).html"
+   ============================================================================ */

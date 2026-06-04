@@ -1,0 +1,59 @@
+name: Tests CI — SGT KayTechnologie
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ''
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: erp_sgt_test
+        ports: [ '3306:3306' ]
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, pdo_sqlite, pdo_mysql, zip, intl
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Prepare .env
+        run: |
+          cp .env.example .env
+          sed -i 's/APP_NAME=.*/APP_NAME="SGT KayTechnologie"/' .env
+          sed -i 's/APP_URL=.*/APP_URL=http:\/\/localhost/' .env
+          php artisan key:generate
+
+      - name: Run tests (SQLite in-memory)
+        run: php artisan test --stop-on-failure
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-log
+          path: storage/logs/laravel.log
+          retention-days: 3

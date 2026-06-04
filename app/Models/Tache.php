@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Tache extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'titre', 'description', 'createur_id', 'site_id',
+        'date_debut', 'date_echeance', 'statut', 'progression',
+        'priorite', 'archived_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'date_debut'    => 'date',
+            'date_echeance' => 'date',
+            'archived_at'   => 'datetime',
+            'progression'   => 'integer',
+        ];
+    }
+
+    // ── Scopes ────────────────────────────────────────────────────────────────
+
+    public function scopeActives($query)
+    {
+        return $query->whereNull('archived_at')->where('statut', '!=', 'termine');
+    }
+
+    public function scopeEnRetard($query)
+    {
+        return $query->where('date_echeance', '<', now()->toDateString())
+                     ->where('statut', '!=', 'termine')
+                     ->whereNull('archived_at');
+    }
+
+    public function scopeVisiblePar($query, User $user)
+    {
+        if ($user->isManager()) {
+            return $query;
+        }
+        return $query->whereHas('responsables', fn($q) => $q->where('users.id', $user->id))
+                     ->orWhere('createur_id', $user->id);
+    }
+
+    // ── Relations ─────────────────────────────────────────────────────────────
+
+    public function createur()
+    {
+        return $this->belongsTo(User::class, 'createur_id');
+    }
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class);
+    }
+
+    public function responsables()
+    {
+        return $this->belongsToMany(User::class, 'tache_user');
+    }
+
+    public function sousTaches()
+    {
+        return $this->hasMany(SousTache::class)->orderBy('ordre');
+    }
+
+    public function commentaires()
+    {
+        return $this->hasMany(Commentaire::class)->orderBy('created_at');
+    }
+
+    public function rapports()
+    {
+        return $this->hasMany(Rapport::class)->orderByDesc('created_at');
+    }
+
+    public function actionsSuivi()
+    {
+        return $this->hasMany(ActionSuivi::class)->orderByDesc('created_at');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    public function recalculerProgression(): void
+    {
+        $total = $this->sousTaches()->count();
+        if ($total === 0) return;
+        $terminees = $this->sousTaches()->where('termine', true)->count();
+        $this->update(['progression' => (int) round(($terminees / $total) * 100)]);
+    }
+
+    public function estEnRetard(): bool
+    {
+        return $this->date_echeance
+            && $this->date_echeance->isPast()
+            && $this->statut !== 'termine';
+    }
+
+    public static function couleurStatut(string $statut): string
+    {
+        return match($statut) {
+            'nouveau'     => '#64748B',
+            'en_cours'    => '#2563EB',
+            'en_attente'  => '#C97A0A',
+            'en_arret'    => '#B0202E',
+            'termine'     => '#15885A',
+            default       => '#64748B',
+        };
+    }
+
+    public static function libelleStatut(string $statut): string
+    {
+        return match($statut) {
+            'nouveau'    => 'Nouveau',
+            'en_cours'   => 'En cours',
+            'en_attente' => 'En attente',
+            'en_arret'   => 'En arrêt',
+            'termine'    => 'Terminé',
+            default      => $statut,
+        };
+    }
+}
