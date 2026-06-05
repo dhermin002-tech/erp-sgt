@@ -152,16 +152,16 @@
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 📊 Tableau de bord
             </a>
-            <a href="#" class="{{ request()->routeIs('taches.*') ? 'active' : '' }}">
+            <a href="{{ route('taches.index') }}" class="{{ request()->routeIs('taches.index') || request()->routeIs('taches.show') || request()->routeIs('taches.create') || request()->routeIs('taches.edit') ? 'active' : '' }}">
                 ✅ Tâches
             </a>
-            <a href="#" class="{{ request()->routeIs('taches.archives') ? 'active' : '' }}">
+            <a href="{{ route('taches.archives') }}" class="{{ request()->routeIs('taches.archives') ? 'active' : '' }}">
                 🗄 Archives
             </a>
             @if(auth()->user()->isManager())
             <div class="nav-label">Administration</div>
             <a href="#">👥 Membres</a>
-            <a href="#">📍 Sites</a>
+            <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">📍 Sites</a>
             @endif
         </nav>
         <div class="sidebar-footer" style="color:rgba(255,255,255,.5)">
@@ -186,11 +186,11 @@
                 {{-- Direction B nav --}}
                 <nav class="top-nav">
                     <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-                    <a href="#" class="{{ request()->routeIs('taches.*') ? 'active' : '' }}">Tâches</a>
-                    <a href="#">Archives</a>
+                    <a href="{{ route('taches.index') }}" class="{{ request()->routeIs('taches.index','taches.show','taches.create','taches.edit') ? 'active' : '' }}">Tâches</a>
+                    <a href="{{ route('taches.archives') }}" class="{{ request()->routeIs('taches.archives') ? 'active' : '' }}">Archives</a>
                     @if(auth()->user()->isManager())
                     <a href="#">Membres</a>
-                    <a href="#">Sites</a>
+                    <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">Sites</a>
                     @endif
                 </nav>
             </div>
