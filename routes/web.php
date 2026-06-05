@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/', fn() => redirect()->route('dashboard'));
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
 
     // ── Tâches ────────────────────────────────────────────────────────────────
     Route::get('/taches/archives', [TacheController::class, 'archives'])->name('taches.archives');
