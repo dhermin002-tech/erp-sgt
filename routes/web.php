@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActionSuiviController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
@@ -50,6 +51,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/notifications/{id}/lue', [NotificationController::class, 'marquerLue'])->name('notifications.lue');
     Route::patch('/notifications/tout-lire', [NotificationController::class, 'toutLire'])->name('notifications.tout-lire');
     Route::get('/notifications/count', [NotificationController::class, 'count'])->name('notifications.count');
+
+    // ── Préférences utilisateur ───────────────────────────────────────────────
+    Route::post('/preferences/locale', [PreferenceController::class, 'setLocale'])->name('preferences.locale');
+    Route::patch('/preferences/direction', [PreferenceController::class, 'setDirection'])->name('preferences.direction');
 
     // ── Sites (Manager uniquement) ────────────────────────────────────────────
     Route::resource('sites', SiteController::class)->middleware('role:manager');

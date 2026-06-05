@@ -197,11 +197,26 @@
 
             {{-- Droite : notifs + user --}}
             <div style="display:flex;align-items:center;gap:.75rem">
-                {{-- Bascule lang --}}
-                <span style="font-size:.8rem;color:var(--slate-500);cursor:pointer">FR | EN</span>
+                {{-- Bascule lang FR/EN --}}
+                @php $locale = app()->getLocale(); @endphp
+                <div style="display:flex;align-items:center;gap:.2rem;font-size:.78rem;font-weight:700">
+                    <form method="POST" action="{{ route('preferences.locale') }}" style="display:inline">
+                        @csrf
+                        <input type="hidden" name="locale" value="fr">
+                        <button type="submit" style="background:none;border:none;cursor:pointer;padding:.2rem .35rem;border-radius:4px;font-weight:700;font-size:.78rem;{{ $locale==='fr' ? 'color:var(--kt-navy);text-decoration:underline' : 'color:var(--slate-400)' }}">FR</button>
+                    </form>
+                    <span style="color:var(--slate-300)">|</span>
+                    <form method="POST" action="{{ route('preferences.locale') }}" style="display:inline">
+                        @csrf
+                        <input type="hidden" name="locale" value="en">
+                        <button type="submit" style="background:none;border:none;cursor:pointer;padding:.2rem .35rem;border-radius:4px;font-weight:700;font-size:.78rem;{{ $locale==='en' ? 'color:var(--kt-navy);text-decoration:underline' : 'color:var(--slate-400)' }}">EN</button>
+                    </form>
+                </div>
 
-                {{-- Bascule thème --}}
-                <button onclick="toggleDirection()" style="background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--slate-500)" title="Changer le thème">🎨</button>
+                {{-- Bascule thème A/B --}}
+                <button onclick="toggleDirectionAjax()" style="background:none;border:none;cursor:pointer;font-size:.82rem;color:var(--slate-500);padding:.2rem .4rem;border-radius:5px;border:1px solid var(--slate-200)" title="Direction A/B">
+                    🎨 <span id="dirLabel">Dir. {{ auth()->user()->direction_ui }}</span>
+                </button>
 
                 {{-- Notifications --}}
                 <div class="user-menu" id="notifMenu">
@@ -287,12 +302,22 @@ function logoutSafe() {
     }).finally(() => { window.location.href = '{{ route('login') }}'; });
 }
 
-function toggleDirection() {
+function toggleDirectionAjax() {
     const html = document.documentElement;
-    html.dataset.direction = html.dataset.direction === 'A' ? 'B' : 'A';
-    localStorage.setItem('sgt_direction', html.dataset.direction);
-    // Sync les éléments Direction B uniquement
-    syncDirectionUI();
+    const newDir = html.dataset.direction === 'A' ? 'B' : 'A';
+    fetch('{{ route('preferences.direction') }}', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        body: JSON.stringify({ direction: newDir })
+    }).then(r => r.json()).then(d => {
+        if (d.ok) {
+            html.dataset.direction = d.direction;
+            localStorage.setItem('sgt_direction', d.direction);
+            const lbl = document.getElementById('dirLabel');
+            if (lbl) lbl.textContent = 'Dir. ' + d.direction;
+            syncDirectionUI();
+        }
+    });
 }
 
 function syncDirectionUI() {
