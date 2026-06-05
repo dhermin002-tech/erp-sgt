@@ -180,7 +180,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <div class="logo-img-wrap">
-                <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie"
+                <img src="{{ asset('images/logo-kt.jpg') }}" alt="KayTechnologie"
                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                 {{-- Fallback texte si image absente --}}
                 <span style="display:none;align-items:center;gap:.4rem;font-family:'IBM Plex Sans',sans-serif;font-weight:800;font-size:1.1rem;color:#fff">
@@ -224,7 +224,7 @@
                 </button>
                 {{-- Direction B logo --}}
                 <span class="top-bar-logo" style="display:none">
-                    <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie">
+                    <img src="{{ asset('images/logo-kt.jpg') }}" alt="KayTechnologie">
                     <span class="logo-sep"></span>
                     <span class="logo-app">SGT</span>
                 </span>

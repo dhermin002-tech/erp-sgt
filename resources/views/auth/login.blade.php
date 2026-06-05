@@ -264,7 +264,7 @@
     <div class="panel-left">
         <div class="left-content">
             <div class="logo-wrapper">
-                <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie Gabon"
+                <img src="{{ asset('images/logo-kt.jpg') }}" alt="KayTechnologie Gabon"
                      onerror="this.style.display='none';document.getElementById('logoFallback').style.display='block'">
                 <div id="logoFallback" style="display:none;text-align:center">
                     <div style="font-size:3.5rem;font-weight:900;font-family:'Syne',sans-serif;color:#fff;letter-spacing:-.03em">
