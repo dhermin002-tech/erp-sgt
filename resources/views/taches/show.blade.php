@@ -8,6 +8,7 @@
 .tache-body { display:grid;grid-template-columns:1fr 320px;gap:1rem; }
 .main-col, .side-col { display:flex;flex-direction:column;gap:1rem; }
 .card { background:var(--white);border-radius:12px;border:1px solid var(--slate-200);overflow:hidden; }
+.card.overflow-visible { overflow:visible; }
 .card-header { padding:.85rem 1.25rem;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;justify-content:space-between; }
 .card-title { font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--kt-navy); }
 .card-body { padding:1.25rem; }
@@ -283,7 +284,7 @@
     <div class="side-col">
 
         {{-- Changement de statut --}}
-        <div class="card">
+        <div class="card overflow-visible">
             <div class="card-header"><span class="card-title">Statut</span></div>
             <div class="card-body">
                 <div class="statut-dropdown" id="statutDD">
