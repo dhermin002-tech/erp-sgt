@@ -22,7 +22,7 @@ commits: 8
 score_securite: 87/100
 date_creation: 2026-06-05
 date_livraison_estimee: 2026-08-22
-github_repo: https://github.com/kaytechnologie/erp-sgt (à créer)
+github_repo: https://github.com/dhermin002-tech/erp-sgt
 ```
 
 ---

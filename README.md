@@ -1,7 +1,7 @@
 # SGT — Système de Gestion des Tâches
 ### KayTechnologie Gabon
 
-[![Tests CI](https://github.com/kaytechnologie/erp-sgt/actions/workflows/tests.yml/badge.svg)](https://github.com/kaytechnologie/erp-sgt/actions/workflows/tests.yml)
+[![Tests CI](https://github.com/dhermin002-tech/erp-sgt/actions/workflows/tests.yml/badge.svg)](https://github.com/dhermin002-tech/erp-sgt/actions/workflows/tests.yml)
 
 Outil interne de planification, suivi et reporting des tâches quotidiennes (terrain + bureau).
 
@@ -16,7 +16,7 @@ Outil interne de planification, suivi et reporting des tâches quotidiennes (ter
 ## Installation locale (Laragon)
 
 ```bash
-git clone https://github.com/kaytechnologie/erp-sgt c:/laragon/www/erp.sgt
+git clone https://github.com/dhermin002-tech/erp-sgt c:/laragon/www/erp.sgt
 cd c:/laragon/www/erp.sgt
 composer install
 cp .env.example .env
