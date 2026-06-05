@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActionSuiviController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\MembresController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
@@ -55,6 +56,9 @@ Route::middleware('auth')->group(function () {
     // ── Préférences utilisateur ───────────────────────────────────────────────
     Route::post('/preferences/locale', [PreferenceController::class, 'setLocale'])->name('preferences.locale');
     Route::patch('/preferences/direction', [PreferenceController::class, 'setDirection'])->name('preferences.direction');
+
+    // ── Membres (Manager uniquement) ──────────────────────────────────────────
+    Route::resource('membres', MembresController::class)->middleware('role:manager')->parameters(['membres' => 'membre']);
 
     // ── Sites (Manager uniquement) ────────────────────────────────────────────
     Route::resource('sites', SiteController::class)->middleware('role:manager');

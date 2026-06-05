@@ -160,7 +160,7 @@
             </a>
             @if(auth()->user()->isManager())
             <div class="nav-label">Administration</div>
-            <a href="#">👥 Membres</a>
+            <a href="{{ route('membres.index') }}" class="{{ request()->routeIs('membres.*') ? 'active' : '' }}">👥 Membres</a>
             <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">📍 Sites</a>
             @endif
         </nav>
