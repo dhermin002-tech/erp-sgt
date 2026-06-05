@@ -28,37 +28,55 @@
             display: flex; min-height: 100vh;
         }
         [data-direction="A"] .sidebar {
-            width: 240px; min-height: 100vh; flex-shrink: 0;
-            background: var(--nav-bg, #173A7A); color: var(--nav-text, #fff);
-            display: flex; flex-direction: column;
+            width: 248px; min-height: 100vh; flex-shrink: 0;
+            background: linear-gradient(180deg, #001f3f 0%, #003366 60%, #002855 100%);
+            color: #fff; display: flex; flex-direction: column;
+            box-shadow: 2px 0 16px rgba(0,0,0,.18);
         }
         [data-direction="A"] .sidebar-logo {
-            padding: 1.5rem 1.25rem 1rem;
-            font-family: var(--font-display); font-weight: 800; font-size: 1.1rem;
-            color: #fff; border-bottom: 1px solid rgba(255,255,255,.1);
-            display: flex; align-items: center; gap: .5rem;
+            padding: 1.25rem 1.25rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+            display: flex; flex-direction: column; align-items: center; gap: .5rem;
         }
-        [data-direction="A"] .sidebar-logo .logo-badge {
-            background: var(--kt-orange); border-radius: 6px;
-            padding: .2rem .5rem; font-size: .85rem;
+        /* Logo KT image dans la sidebar */
+        [data-direction="A"] .sidebar-logo .logo-img-wrap {
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 14px;
+            padding: .65rem 1rem;
+            display: flex; align-items: center; justify-content: center;
         }
-        [data-direction="A"] .sidebar-nav { flex: 1; padding: 1rem 0; }
+        [data-direction="A"] .sidebar-logo .logo-img-wrap img {
+            width: 130px; height: auto;
+            filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.3));
+        }
+        [data-direction="A"] .sidebar-logo .logo-sub {
+            font-size: .7rem; font-weight: 700; letter-spacing: .12em;
+            color: rgba(255,255,255,.35); text-transform: uppercase;
+        }
+        [data-direction="A"] .sidebar-nav { flex: 1; padding: .75rem 0; }
         [data-direction="A"] .sidebar-nav a {
-            display: flex; align-items: center; gap: .6rem;
-            padding: .65rem 1.25rem; color: rgba(255,255,255,.75);
-            text-decoration: none; font-size: .9rem; transition: all .15s;
+            display: flex; align-items: center; gap: .65rem;
+            padding: .65rem 1.1rem; margin: .1rem .6rem;
+            color: rgba(255,255,255,.7);
+            text-decoration: none; font-size: .875rem; font-weight: 500;
+            border-radius: 9px; transition: all .15s;
         }
-        [data-direction="A"] .sidebar-nav a:hover,
+        [data-direction="A"] .sidebar-nav a:hover {
+            color: #fff; background: rgba(255,255,255,.08);
+        }
         [data-direction="A"] .sidebar-nav a.active {
-            color: #fff; background: rgba(255,255,255,.1); border-radius: 0;
+            color: #fff; background: #8B0000;
+            box-shadow: 0 4px 12px rgba(139,0,0,.4);
+            font-weight: 600;
         }
         [data-direction="A"] .sidebar-nav .nav-label {
-            font-size: .7rem; font-weight: 700; letter-spacing: .08em;
-            color: rgba(255,255,255,.4); padding: .75rem 1.25rem .25rem;
+            font-size: .68rem; font-weight: 700; letter-spacing: .09em;
+            color: rgba(255,255,255,.3); padding: .85rem 1.25rem .3rem;
             text-transform: uppercase;
         }
         [data-direction="A"] .sidebar-footer {
-            padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.1); font-size: .8rem;
+            padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.07); font-size: .78rem;
         }
         [data-direction="A"] .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         [data-direction="A"] .top-bar {
@@ -72,14 +90,25 @@
         [data-direction="B"] .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
         [data-direction="B"] .sidebar { display: none; }
         [data-direction="B"] .top-bar {
-            background: var(--kt-navy); color: #fff;
+            background: linear-gradient(90deg, #001f3f 0%, #003366 100%); color: #fff;
             padding: 0 1.5rem; display: flex; align-items: center;
             justify-content: space-between; position: sticky; top: 0; z-index: 10;
-            height: 56px;
+            height: 60px; box-shadow: 0 2px 12px rgba(0,0,0,.2);
+            border-bottom: 2px solid #8B0000;
         }
         [data-direction="B"] .top-bar-logo {
-            font-family: var(--font-display); font-weight: 800; color: #fff; font-size: 1rem;
-            display: flex; align-items: center; gap: .5rem;
+            display: flex; align-items: center; gap: .75rem;
+        }
+        [data-direction="B"] .top-bar-logo img {
+            height: 34px; width: auto;
+            filter: brightness(0) invert(1);
+        }
+        [data-direction="B"] .top-bar-logo .logo-sep {
+            width: 1px; height: 24px; background: rgba(255,255,255,.2);
+        }
+        [data-direction="B"] .top-bar-logo .logo-app {
+            font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.9);
+            letter-spacing: .04em;
         }
         [data-direction="B"] .top-nav { display: flex; align-items: stretch; gap: 0; }
         [data-direction="B"] .top-nav a {
@@ -145,7 +174,10 @@
     {{-- Sidebar (Direction A) --}}
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
-            <span class="logo-badge">KT</span> SGT
+            <div class="logo-img-wrap">
+                <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie">
+            </div>
+            <span class="logo-sub">Gestion des Tâches</span>
         </div>
         <nav class="sidebar-nav">
             <div class="nav-label">Navigation</div>
@@ -164,8 +196,8 @@
             <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">📍 Sites</a>
             @endif
         </nav>
-        <div class="sidebar-footer" style="color:rgba(255,255,255,.5)">
-            v1.0 &mdash; KayTechnologie
+        <div class="sidebar-footer" style="color:rgba(255,255,255,.35);font-size:.72rem;text-align:center">
+            SGT v1.0 &mdash; KayTechnologie Gabon
         </div>
     </aside>
 
@@ -181,7 +213,9 @@
                 </button>
                 {{-- Direction B logo --}}
                 <span class="top-bar-logo" style="display:none">
-                    <span style="background:var(--kt-orange);border-radius:5px;padding:.15rem .4rem;font-size:.85rem;">KT</span> SGT
+                    <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie">
+                    <span class="logo-sep"></span>
+                    <span class="logo-app">SGT</span>
                 </span>
                 {{-- Direction B nav --}}
                 <nav class="top-nav">
