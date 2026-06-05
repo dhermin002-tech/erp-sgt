@@ -189,16 +189,91 @@
             </div>
         </div>
 
-        {{-- Rapports (placeholder Sprint 4) --}}
+        {{-- Rapports d'intervention --}}
         <div class="card">
             <div class="card-header">
-                <span class="card-title">Rapports & Actions</span>
-                <span style="font-size:.8rem;color:var(--slate-400)">Sprint 4</span>
+                <span class="card-title">Rapports d'intervention</span>
+                <span style="font-size:.8rem;color:var(--slate-500)">{{ $tache->rapports->count() }} rapport(s)</span>
+            </div>
+            <div class="card-body" style="padding:0">
+
+                {{-- Liste des rapports --}}
+                @if($tache->rapports->count() > 0)
+                <div style="max-height:300px;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;min-height:0">
+                    @foreach($tache->rapports as $rapport)
+                    <div style="border:1px solid var(--slate-200);border-radius:8px;padding:.85rem 1rem">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;flex-wrap:wrap;gap:.5rem">
+                            <div style="display:flex;align-items:center;gap:.5rem">
+                                <span style="font-size:.8rem;font-weight:700;color:var(--slate-700)">{{ $rapport->user->nom_complet }}</span>
+                                @if($rapport->date_intervention)
+                                <span style="font-size:.75rem;color:var(--slate-400)">— {{ $rapport->date_intervention->format('d/m/Y') }}</span>
+                                @endif
+                                <span style="font-size:.72rem;color:var(--slate-400)">· {{ $rapport->created_at->diffForHumans() }}</span>
+                            </div>
+                            @if(auth()->user()->isManager() || $rapport->user_id === auth()->id())
+                            <form method="POST" action="{{ route('rapports.destroy', $rapport) }}">
+                                @csrf @method('DELETE')
+                                <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--slate-300);font-size:.8rem">✕</button>
+                            </form>
+                            @endif
+                        </div>
+                        <div style="font-size:.875rem;color:var(--slate-700);line-height:1.5;white-space:pre-wrap">{{ $rapport->contenu }}</div>
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+
+                {{-- Formulaire ajout rapport --}}
+                <div style="border-top:1px solid var(--slate-100);padding:1rem 1.25rem">
+                    <form method="POST" action="{{ route('rapports.store', $tache) }}">
+                        @csrf
+                        <div style="margin-bottom:.5rem">
+                            <textarea name="contenu" rows="3" placeholder="Saisir un compte-rendu d'intervention..."
+                                style="width:100%;padding:.55rem .875rem;border:1.5px solid var(--slate-200);border-radius:8px;font-family:var(--font-ui);font-size:.875rem;resize:vertical;box-sizing:border-box;outline:none"
+                                onfocus="this.style.borderColor='var(--kt-navy)'" onblur="this.style.borderColor='var(--slate-200)'">{{ old('contenu') }}</textarea>
+                            @error('contenu') <div style="color:var(--kt-maroon);font-size:.78rem;margin-top:.2rem">{{ $message }}</div> @enderror
+                        </div>
+                        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+                            <div>
+                                <label style="font-size:.78rem;color:var(--slate-500);margin-right:.35rem">Date intervention :</label>
+                                <input type="date" name="date_intervention" value="{{ old('date_intervention', now()->format('Y-m-d')) }}"
+                                       style="padding:.35rem .65rem;border:1.5px solid var(--slate-200);border-radius:6px;font-size:.82rem;outline:none">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Ajouter le rapport</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- Actions de suivi --}}
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Actions à entreprendre</span>
+                @php $totalActions = $tache->actionsSuivi->count(); $faites = $tache->actionsSuivi->where('fait', true)->count(); @endphp
+                <span style="font-size:.8rem;color:var(--slate-500)">{{ $faites }}/{{ $totalActions }} faites</span>
             </div>
             <div class="card-body">
-                <p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:.5rem">
-                    Les rapports d'intervention et actions de suivi seront disponibles au Sprint 4.
-                </p>
+
+                <div id="actionsList">
+                @forelse($tache->actionsSuivi as $action)
+                <div class="sous-tache-item" id="action-{{ $action->id }}">
+                    <input type="checkbox" class="sous-tache-cb" {{ $action->fait ? 'checked' : '' }}
+                           onchange="toggleAction({{ $action->id }}, this.checked)">
+                    <span class="sous-tache-titre {{ $action->fait ? 'termine' : '' }}" id="action-titre-{{ $action->id }}">{{ $action->description }}</span>
+                    <span style="font-size:.72rem;color:var(--slate-400);margin-left:.35rem">{{ $action->user->nom }}</span>
+                    <button class="sous-tache-del" onclick="supprimerAction({{ $action->id }})">✕</button>
+                </div>
+                @empty
+                <p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:.5rem" id="actionsEmpty">Aucune action — ajoutez-en ci-dessous</p>
+                @endforelse
+                </div>
+
+                <div class="add-input">
+                    <input type="text" id="newAction" placeholder="Ajouter une action à entreprendre..." maxlength="500">
+                    <button class="btn btn-primary btn-sm" onclick="ajouterAction()">Ajouter</button>
+                </div>
             </div>
         </div>
 
@@ -368,6 +443,56 @@ document.addEventListener('click', e => {
 // Enter sur sous-tâche
 document.getElementById('newSousTache').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); ajouterSousTache(); }
+});
+
+// ── Actions de suivi (AJAX) ───────────────────────────────────────────────
+function toggleAction(id, fait) {
+    fetch(`/actions/${id}/toggle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        body: JSON.stringify({ fait })
+    }).then(r => r.json()).then(d => {
+        const titre = document.getElementById(`action-titre-${id}`);
+        if (titre) titre.className = `sous-tache-titre ${fait ? 'termine' : ''}`;
+    });
+}
+
+function ajouterAction() {
+    const input = document.getElementById('newAction');
+    const description = input.value.trim();
+    if (! description) return;
+    fetch(`/taches/${tacheId}/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        body: JSON.stringify({ description })
+    }).then(r => r.json()).then(d => {
+        if (d.id) {
+            const empty = document.getElementById('actionsEmpty');
+            if (empty) empty.remove();
+            document.getElementById('actionsList').insertAdjacentHTML('beforeend', `
+                <div class="sous-tache-item" id="action-${d.id}">
+                    <input type="checkbox" class="sous-tache-cb" onchange="toggleAction(${d.id}, this.checked)">
+                    <span class="sous-tache-titre" id="action-titre-${d.id}">${d.description}</span>
+                    <button class="sous-tache-del" onclick="supprimerAction(${d.id})">✕</button>
+                </div>
+            `);
+            input.value = '';
+        }
+    });
+}
+
+function supprimerAction(id) {
+    if (!confirm('Supprimer cette action ?')) return;
+    fetch(`/actions/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': csrfToken }
+    }).then(r => r.json()).then(d => {
+        if (d.ok) document.getElementById(`action-${id}`)?.remove();
+    });
+}
+
+document.getElementById('newAction').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); ajouterAction(); }
 });
 </script>
 @endpush

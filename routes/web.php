@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\ActionSuiviController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RapportController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SousTacheController;
 use App\Http\Controllers\TacheController;
@@ -34,6 +36,13 @@ Route::middleware('auth')->group(function () {
     // ── Commentaires ──────────────────────────────────────────────────────────
     Route::post('/taches/{tache}/commentaires', [CommentaireController::class, 'store'])->name('commentaires.store');
     Route::delete('/commentaires/{commentaire}', [CommentaireController::class, 'destroy'])->name('commentaires.destroy');
+
+    // ── Rapports & Actions ────────────────────────────────────────────────────
+    Route::post('/taches/{tache}/rapports', [RapportController::class, 'store'])->name('rapports.store');
+    Route::delete('/rapports/{rapport}', [RapportController::class, 'destroy'])->name('rapports.destroy');
+    Route::post('/taches/{tache}/actions', [ActionSuiviController::class, 'store'])->name('actions.store');
+    Route::patch('/actions/{actionSuivi}/toggle', [ActionSuiviController::class, 'toggle'])->name('actions.toggle');
+    Route::delete('/actions/{actionSuivi}', [ActionSuiviController::class, 'destroy'])->name('actions.destroy');
 
     // ── Notifications ─────────────────────────────────────────────────────────
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

@@ -43,6 +43,34 @@
 
 </div>
 
+{{-- KPI supplémentaire : archives du mois --}}
+<div style="background:var(--white);border-radius:12px;padding:1.25rem;border:1px solid var(--slate-200);box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:2rem;display:inline-flex;align-items:center;gap:1rem">
+    <div style="font-size:1.75rem">🗄</div>
+    <div>
+        <div style="font-size:.8rem;font-weight:600;color:var(--slate-500);text-transform:uppercase;letter-spacing:.05em">Archivées ce mois</div>
+        <div style="font-size:1.5rem;font-weight:800;color:var(--slate-600);font-family:var(--font-display)">{{ $stats['archivees_mois'] }}</div>
+    </div>
+    <a href="{{ route('taches.archives') }}" style="margin-left:.5rem;font-size:.8rem;color:var(--kt-navy);text-decoration:none;font-weight:600">Voir les archives →</a>
+</div>
+
+{{-- Accès rapide --}}
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem">
+    <a href="{{ route('taches.create') }}" style="background:var(--kt-navy);color:#fff;border-radius:12px;padding:1.25rem;text-decoration:none;display:flex;align-items:center;gap:.75rem">
+        <span style="font-size:1.5rem">➕</span>
+        <div><div style="font-weight:700;font-family:var(--font-display)">Nouvelle tâche</div><div style="font-size:.8rem;opacity:.7">Créer et assigner</div></div>
+    </a>
+    <a href="{{ route('taches.index') }}" style="background:var(--white);border:1px solid var(--slate-200);border-radius:12px;padding:1.25rem;text-decoration:none;display:flex;align-items:center;gap:.75rem;color:var(--slate-700)">
+        <span style="font-size:1.5rem">📋</span>
+        <div><div style="font-weight:700;font-family:var(--font-display)">Mes tâches</div><div style="font-size:.8rem;color:var(--slate-400)">{{ $stats['total_actives'] }} active(s)</div></div>
+    </a>
+    @if($stats['en_retard'] > 0)
+    <a href="{{ route('taches.index', ['statut' => 'en_cours']) }}" style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:12px;padding:1.25rem;text-decoration:none;display:flex;align-items:center;gap:.75rem;color:#991B1B">
+        <span style="font-size:1.5rem">⚠️</span>
+        <div><div style="font-weight:700;font-family:var(--font-display)">{{ $stats['en_retard'] }} en retard</div><div style="font-size:.8rem;opacity:.8">Action requise</div></div>
+    </a>
+    @endif
+</div>
+
 {{-- Placeholder graphiques (Sprint 5) --}}
 <div style="background:var(--white);border-radius:12px;padding:2rem;border:1px solid var(--slate-200);text-align:center;color:var(--slate-400)">
     <div style="font-size:2.5rem;margin-bottom:.5rem">📈</div>

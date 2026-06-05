@@ -15,10 +15,13 @@ class DashboardController extends Controller
         $query = Tache::query()->visiblePar($user);
 
         $stats = [
-            'total_actives'  => (clone $query)->actives()->count(),
-            'en_cours'       => (clone $query)->where('statut', 'en_cours')->count(),
-            'en_retard'      => (clone $query)->enRetard()->count(),
+            'total_actives'   => (clone $query)->actives()->count(),
+            'en_cours'        => (clone $query)->where('statut', 'en_cours')->count(),
+            'en_retard'       => (clone $query)->enRetard()->count(),
             'taux_completion' => $this->calculerTauxCompletion($user),
+            'archivees_mois'  => (clone $query)->whereNotNull('archived_at')
+                                               ->whereMonth('archived_at', now()->month)
+                                               ->count(),
         ];
 
         return view('dashboard', compact('stats'));
