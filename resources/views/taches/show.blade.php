@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', $tache->titre)
+@php use Illuminate\Support\Facades\Storage; @endphp
 
 @push('styles')
 <style>
@@ -121,16 +122,70 @@
             </div>
         </div>
 
-        {{-- Commentaires (placeholder Sprint 3) --}}
-        <div class="card">
+        {{-- Commentaires --}}
+        <div class="card" id="commentaires">
             <div class="card-header">
                 <span class="card-title">Commentaires</span>
-                <span style="font-size:.8rem;color:var(--slate-400)">Sprint 3</span>
+                <span style="font-size:.8rem;color:var(--slate-500)">{{ $tache->commentaires->count() }} commentaire(s)</span>
             </div>
-            <div class="card-body">
-                <p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:.5rem">
-                    Les commentaires et photos terrain seront disponibles au Sprint 3.
-                </p>
+            <div class="card-body" style="padding:0">
+
+                {{-- Fil de commentaires --}}
+                <div style="max-height:400px;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;min-height:0">
+                    @forelse($tache->commentaires as $com)
+                    <div style="display:flex;gap:.75rem;align-items:flex-start" id="com-{{ $com->id }}">
+                        <div style="width:32px;height:32px;border-radius:50%;background:var(--kt-navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0">
+                            {{ strtoupper(substr($com->user->prenom??'',0,1)) }}{{ strtoupper(substr($com->user->nom??'',0,1)) }}
+                        </div>
+                        <div style="flex:1;min-width:0">
+                            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;flex-wrap:wrap">
+                                <span style="font-size:.82rem;font-weight:700;color:var(--slate-700)">{{ $com->user->nom_complet }}</span>
+                                <span style="font-size:.72rem;color:var(--slate-400)">{{ $com->created_at->diffForHumans() }}</span>
+                                @if(auth()->user()->isManager() || $com->user_id === auth()->id())
+                                <form method="POST" action="{{ route('commentaires.destroy', $com) }}" style="margin-left:auto">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--slate-300);font-size:.8rem;padding:.1rem .3rem" title="Supprimer">✕</button>
+                                </form>
+                                @endif
+                            </div>
+                            <div style="background:var(--slate-50);border-radius:8px;padding:.6rem .85rem;font-size:.875rem;color:var(--slate-700);line-height:1.5;word-break:break-word">
+                                {{ $com->contenu }}
+                            </div>
+                            @if($com->photo_path)
+                            <div style="margin-top:.5rem">
+                                <a href="{{ Storage::url($com->photo_path) }}" target="_blank" title="Voir la photo en grand">
+                                    <img src="{{ Storage::url($com->photo_path) }}" alt="Photo terrain"
+                                         style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover;border:1px solid var(--slate-200);cursor:pointer">
+                                </a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @empty
+                    <p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:.5rem">Aucun commentaire — soyez le premier !</p>
+                    @endforelse
+                </div>
+
+                {{-- Formulaire ajout commentaire --}}
+                <div style="border-top:1px solid var(--slate-100);padding:1rem 1.25rem">
+                    <form method="POST" action="{{ route('commentaires.store', $tache) }}" enctype="multipart/form-data">
+                        @csrf
+                        <textarea name="contenu" rows="2" placeholder="Ajouter un commentaire..."
+                            style="width:100%;padding:.55rem .875rem;border:1.5px solid var(--slate-200);border-radius:8px;font-family:var(--font-ui);font-size:.875rem;resize:vertical;box-sizing:border-box;outline:none;transition:border-color .2s"
+                            onfocus="this.style.borderColor='var(--kt-navy)'" onblur="this.style.borderColor='var(--slate-200)'">{{ old('contenu') }}</textarea>
+                        @error('contenu') <div style="color:var(--kt-maroon);font-size:.78rem;margin:.2rem 0">{{ $message }}</div> @enderror
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.5rem;flex-wrap:wrap;gap:.5rem">
+                            <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;font-size:.82rem;color:var(--slate-500)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="this.previousElementSibling.previousElementSibling.textContent = this.files[0]?.name || '📷 Photo terrain'">
+                                Photo terrain (max 5 Mo)
+                            </label>
+                            @error('photo') <div style="color:var(--kt-maroon);font-size:.78rem">{{ $message }}</div> @enderror
+                            <button type="submit" class="btn btn-primary btn-sm">Commenter</button>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </div>
 

@@ -6,6 +6,8 @@ use App\Http\Requests\TacheRequest;
 use App\Models\Site;
 use App\Models\Tache;
 use App\Models\User;
+use App\Notifications\StatutTacheNotification;
+use App\Notifications\TacheAssigneeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -64,6 +66,14 @@ class TacheController extends Controller
 
         $tache->responsables()->sync($request->responsables);
 
+        // Notifier chaque responsable assigné (sauf le créateur)
+        $createur = Auth::user();
+        foreach ($tache->responsables as $responsable) {
+            if ($responsable->id !== $createur->id) {
+                $responsable->notify(new TacheAssigneeNotification($tache, $createur->nom_complet));
+            }
+        }
+
         return redirect()->route('taches.show', $tache)
                          ->with('success', 'Tâche créée avec succès.');
     }
@@ -90,8 +100,30 @@ class TacheController extends Controller
     {
         $this->authorizeAccess($tache);
 
+        $ancienStatut = $tache->statut;
         $tache->update($request->safe()->except('responsables'));
+
+        // Détecter les nouveaux responsables pour notifier
+        $ancienIds = $tache->responsables->pluck('id')->toArray();
         $tache->responsables()->sync($request->responsables);
+        $tache->load('responsables');
+        $nouveauxIds = array_diff($request->responsables, $ancienIds);
+
+        $auteur = Auth::user();
+        foreach ($tache->responsables->whereIn('id', $nouveauxIds) as $r) {
+            if ($r->id !== $auteur->id) {
+                $r->notify(new TacheAssigneeNotification($tache, $auteur->nom_complet));
+            }
+        }
+
+        // Notifier les responsables si statut a changé
+        if ($ancienStatut !== $tache->statut) {
+            foreach ($tache->responsables as $r) {
+                if ($r->id !== $auteur->id) {
+                    $r->notify(new StatutTacheNotification($tache, $tache->statut, $auteur->nom_complet));
+                }
+            }
+        }
 
         // Archivage automatique si statut = termine
         if ($tache->statut === 'termine' && ! $tache->archived_at) {
@@ -141,6 +173,14 @@ class TacheController extends Controller
 
         if ($request->statut === 'termine' && ! $tache->archived_at) {
             $tache->update(['archived_at' => now()]);
+        }
+
+        // Notifier les responsables du changement de statut
+        $auteur = Auth::user();
+        foreach ($tache->responsables as $r) {
+            if ($r->id !== $auteur->id) {
+                $r->notify(new StatutTacheNotification($tache, $request->statut, $auteur->nom_complet));
+            }
         }
 
         return response()->json(['ok' => true, 'statut' => $tache->statut]);

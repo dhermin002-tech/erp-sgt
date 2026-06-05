@@ -204,10 +204,37 @@
                 <button onclick="toggleDirection()" style="background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--slate-500)" title="Changer le thème">🎨</button>
 
                 {{-- Notifications --}}
-                <button class="notif-btn" title="Notifications">
-                    🔔
-                    {{-- <span class="notif-badge">3</span> --}}
-                </button>
+                <div class="user-menu" id="notifMenu">
+                    <button class="notif-btn" onclick="toggleNotifDropdown()" title="Notifications" id="notifBell">
+                        🔔
+                        @php $nbNotifs = auth()->user()->unreadNotifications()->count(); @endphp
+                        @if($nbNotifs > 0)
+                        <span class="notif-badge" id="notifBadge">{{ $nbNotifs > 9 ? '9+' : $nbNotifs }}</span>
+                        @else
+                        <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+                        @endif
+                    </button>
+                    <div class="user-dropdown" id="notifDropdown" style="width:320px;right:0;left:auto">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem 1rem;border-bottom:1px solid var(--slate-100)">
+                            <span style="font-size:.85rem;font-weight:700;color:var(--kt-navy)">Notifications</span>
+                            <form method="POST" action="{{ route('notifications.tout-lire') }}">
+                                @csrf @method('PATCH')
+                                <button type="submit" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--kt-navy)">Tout lire</button>
+                            </form>
+                        </div>
+                        @php $recentes = auth()->user()->notifications()->latest()->limit(8)->get(); @endphp
+                        @forelse($recentes as $notif)
+                        @php $data = $notif->data; @endphp
+                        <a href="{{ $data['url'] ?? '#' }}" style="display:block;padding:.6rem 1rem;border-bottom:1px solid var(--slate-50);text-decoration:none;background:{{ is_null($notif->read_at) ? 'var(--slate-50)' : '#fff' }}">
+                            <div style="font-size:.82rem;color:var(--slate-700);font-weight:{{ is_null($notif->read_at) ? '600' : '400' }};line-height:1.4">{{ $data['message'] ?? '—' }}</div>
+                            <div style="font-size:.72rem;color:var(--slate-400);margin-top:.2rem">{{ $notif->created_at->diffForHumans() }}</div>
+                        </a>
+                        @empty
+                        <div style="padding:1rem;text-align:center;font-size:.85rem;color:var(--slate-400)">Aucune notification</div>
+                        @endforelse
+                        <a href="{{ route('notifications.index') }}" style="display:block;text-align:center;padding:.6rem;font-size:.82rem;color:var(--kt-navy);text-decoration:none;border-top:1px solid var(--slate-100)">Voir toutes →</a>
+                    </div>
+                </div>
 
                 {{-- User menu --}}
                 <div class="user-menu">
@@ -273,6 +300,10 @@ function syncDirectionUI() {
     document.querySelectorAll('.top-bar-logo').forEach(el => {
         el.style.display = dir === 'B' ? 'flex' : 'none';
     });
+}
+
+function toggleNotifDropdown() {
+    document.getElementById('notifDropdown').classList.toggle('open');
 }
 
 // Fermer les dropdowns au clic extérieur

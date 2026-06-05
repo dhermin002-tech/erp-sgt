@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SousTacheController;
 use App\Http\Controllers\TacheController;
@@ -19,7 +21,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ── Tâches ────────────────────────────────────────────────────────────────
-    // Route archives AVANT resource pour éviter conflit avec show/{tache}
     Route::get('/taches/archives', [TacheController::class, 'archives'])->name('taches.archives');
     Route::resource('taches', TacheController::class)->parameters(['taches' => 'tache']);
     Route::patch('/taches/{tache}/restaurer', [TacheController::class, 'restaurer'])->name('taches.restaurer');
@@ -29,6 +30,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/taches/{tache}/sous-taches', [SousTacheController::class, 'store'])->name('sous-taches.store');
     Route::patch('/sous-taches/{sousTache}/toggle', [SousTacheController::class, 'toggle'])->name('sous-taches.toggle');
     Route::delete('/sous-taches/{sousTache}', [SousTacheController::class, 'destroy'])->name('sous-taches.destroy');
+
+    // ── Commentaires ──────────────────────────────────────────────────────────
+    Route::post('/taches/{tache}/commentaires', [CommentaireController::class, 'store'])->name('commentaires.store');
+    Route::delete('/commentaires/{commentaire}', [CommentaireController::class, 'destroy'])->name('commentaires.destroy');
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/lue', [NotificationController::class, 'marquerLue'])->name('notifications.lue');
+    Route::patch('/notifications/tout-lire', [NotificationController::class, 'toutLire'])->name('notifications.tout-lire');
+    Route::get('/notifications/count', [NotificationController::class, 'count'])->name('notifications.count');
 
     // ── Sites (Manager uniquement) ────────────────────────────────────────────
     Route::resource('sites', SiteController::class)->middleware('role:manager');
