@@ -62,19 +62,17 @@
 
         /* Logo KT */
         .logo-wrapper {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 24px;
-            padding: 2rem 2.5rem;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
             margin-bottom: 2.5rem;
             display: inline-block;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
         }
         .logo-wrapper img {
             width: 200px;
             height: auto;
             display: block;
-            filter: drop-shadow(0 4px 16px rgba(0,0,0,0.3));
         }
 
         .left-title {

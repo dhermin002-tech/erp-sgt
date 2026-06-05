@@ -40,20 +40,15 @@
         }
         /* Logo KT image dans la sidebar */
         [data-direction="A"] .sidebar-logo .logo-img-wrap {
-            background: rgba(255,255,255,.07);
-            border: 1px solid rgba(255,255,255,.1);
+            background: #ffffff;
             border-radius: 14px;
-            padding: .65rem 1rem;
+            padding: .6rem 1rem;
             display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,.25);
         }
         [data-direction="A"] .sidebar-logo .logo-img-wrap img {
             width: 130px; height: auto;
-            filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.3));
-        }
-        /* Fallback si image absente */
-        [data-direction="A"] .sidebar-logo .logo-img-wrap img[src=""],
-        [data-direction="A"] .sidebar-logo .logo-img-wrap img:not([src]) {
-            display: none;
+            display: block;
         }
         [data-direction="A"] .sidebar-logo .logo-sub {
             font-size: .7rem; font-weight: 700; letter-spacing: .12em;
@@ -105,8 +100,10 @@
             display: flex; align-items: center; gap: .75rem;
         }
         [data-direction="B"] .top-bar-logo img {
-            height: 34px; width: auto;
-            filter: brightness(0) invert(1);
+            height: 36px; width: auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 3px 6px;
         }
         [data-direction="B"] .top-bar-logo .logo-sep {
             width: 1px; height: 24px; background: rgba(255,255,255,.2);
