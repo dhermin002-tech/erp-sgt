@@ -264,7 +264,14 @@
     <div class="panel-left">
         <div class="left-content">
             <div class="logo-wrapper">
-                <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie Gabon">
+                <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie Gabon"
+                     onerror="this.style.display='none';document.getElementById('logoFallback').style.display='block'">
+                <div id="logoFallback" style="display:none;text-align:center">
+                    <div style="font-size:3.5rem;font-weight:900;font-family:'Syne',sans-serif;color:#fff;letter-spacing:-.03em">
+                        <span style="color:#F47A1F">Kay</span>Tech
+                    </div>
+                    <div style="font-size:.75rem;color:rgba(255,255,255,.5);letter-spacing:.15em;text-transform:uppercase;margin-top:.25rem">Gabon</div>
+                </div>
             </div>
             <h1 class="left-title">Système de Gestion<br>des Tâches</h1>
             <p class="left-subtitle">Planifiez, suivez et reportez vos interventions terrain en temps réel.</p>

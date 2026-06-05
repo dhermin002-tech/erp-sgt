@@ -50,6 +50,11 @@
             width: 130px; height: auto;
             filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.3));
         }
+        /* Fallback si image absente */
+        [data-direction="A"] .sidebar-logo .logo-img-wrap img[src=""],
+        [data-direction="A"] .sidebar-logo .logo-img-wrap img:not([src]) {
+            display: none;
+        }
         [data-direction="A"] .sidebar-logo .logo-sub {
             font-size: .7rem; font-weight: 700; letter-spacing: .12em;
             color: rgba(255,255,255,.35); text-transform: uppercase;
@@ -175,7 +180,13 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <div class="logo-img-wrap">
-                <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie">
+                <img src="{{ asset('images/logo-kt.png') }}" alt="KayTechnologie"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                {{-- Fallback texte si image absente --}}
+                <span style="display:none;align-items:center;gap:.4rem;font-family:'IBM Plex Sans',sans-serif;font-weight:800;font-size:1.1rem;color:#fff">
+                    <span style="background:#8B0000;border-radius:6px;padding:.2rem .5rem">KT</span>
+                    <span style="color:rgba(255,255,255,.85)">Kay<span style="color:#F47A1F">Tech</span></span>
+                </span>
             </div>
             <span class="logo-sub">Gestion des Tâches</span>
         </div>
