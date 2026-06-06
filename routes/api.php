@@ -8,11 +8,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// ── Auth API ──────────────────────────────────────────────────────────────────
-Route::post('/v1/auth/token',  [ApiTokenController::class, 'issue']);
+// ── Auth API (rate-limit : 5 tentatives/minute par IP) ───────────────────────
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/v1/auth/token', [ApiTokenController::class, 'issue']);
+});
 
-// ── Routes protégées Sanctum ──────────────────────────────────────────────────
-Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
+// ── Routes protégées Sanctum (rate-limit : 60 req/minute) ────────────────────
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(function () {
 
     // Utilisateur connecté
     Route::get('/me', fn(Request $r) => response()->json([
