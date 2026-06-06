@@ -115,6 +115,22 @@ class TacheApiController extends Controller
         ]);
     }
 
+    public function sousTaches(Request $request, Tache $tache): JsonResponse
+    {
+        $this->authorizeAccess($request->user(), $tache);
+        $tache->load('sousTaches');
+
+        return response()->json([
+            'data' => $tache->sousTaches->map(fn($st) => [
+                'id'      => $st->id,
+                'titre'   => $st->titre,
+                'termine' => (bool) $st->termine,
+                'ordre'   => $st->ordre,
+            ]),
+            'progression' => $tache->progression,
+        ]);
+    }
+
     public function destroy(Request $request, Tache $tache): JsonResponse
     {
         if (! $request->user()->isManager()) {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ApiTokenController;
 use App\Http\Controllers\Api\TacheApiController;
+use App\Http\Controllers\Api\SousTacheApiController;
 use App\Http\Controllers\Api\DashboardApiController;
 use App\Models\Site;
 use App\Models\User;
@@ -30,6 +31,12 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
     Route::get   ('/taches/{tache}',             [TacheApiController::class, 'show']);
     Route::patch ('/taches/{tache}/statut',      [TacheApiController::class, 'changerStatut']);
     Route::delete('/taches/{tache}',             [TacheApiController::class, 'destroy']);
+
+    // Sous-tâches
+    Route::get   ('/taches/{tache}/sous-taches',          [TacheApiController::class, 'sousTaches']);
+    Route::post  ('/taches/{tache}/sous-taches',          [SousTacheApiController::class, 'store']);
+    Route::patch ('/sous-taches/{sousTache}/toggle',      [SousTacheApiController::class, 'toggle']);
+    Route::delete('/sous-taches/{sousTache}',             [SousTacheApiController::class, 'destroy']);
 
     // Dashboard KPIs
     Route::get('/dashboard/kpis', [DashboardApiController::class, 'kpis']);
