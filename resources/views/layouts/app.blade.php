@@ -6,6 +6,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SGT') — KayTechnologie</title>
 
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.svg') }}">
+    <meta name="theme-color" content="#003366">
+
     <link rel="stylesheet" href="{{ asset('charte-graphique.css') }}">
     @stack('styles')
 
@@ -85,6 +90,9 @@
             justify-content: space-between; position: sticky; top: 0; z-index: 10;
         }
         [data-direction="A"] .page-body { padding: 1.5rem; flex: 1; }
+        /* En Direction A, la nav horizontale (.top-nav) appartient à la Direction B :
+           elle ne doit jamais apparaître ici, sinon ses liens s'empilent en colonne sur mobile. */
+        [data-direction="A"] .top-nav { display: none !important; }
 
         /* ── Direction B : nav haute ──────────────────────── */
         [data-direction="B"] .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
@@ -126,11 +134,37 @@
         [data-direction="B"] .page-body { padding: 1.5rem; flex: 1; }
 
         /* ── Responsive mobile ──────────────────────────── */
-        .hamburger { display: none; background: none; border: none; cursor: pointer; padding: .5rem; }
+        .hamburger {
+            display: none; background: var(--slate-50, #f3f1ec); border: none; cursor: pointer;
+            width: 44px; height: 44px; min-width: 44px; border-radius: 10px;
+            align-items: center; justify-content: center; color: var(--kt-navy, #003366);
+        }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,15,35,.55);
+            backdrop-filter: blur(2px); z-index: 99;
+        }
+        .sidebar-overlay.show { display: block; }
+
         @media (max-width: 768px) {
-            [data-direction="A"] .sidebar { display: none; position: fixed; z-index: 100; left: 0; top: 0; height: 100vh; }
-            [data-direction="A"] .sidebar.open { display: flex; }
-            .hamburger { display: block; }
+            [data-direction="A"] .sidebar {
+                display: flex; position: fixed; z-index: 100; left: 0; top: 0; height: 100vh;
+                width: min(86vw, 280px);
+                transform: translateX(-100%);
+                transition: transform .3s cubic-bezier(0.16,1,0.3,1);
+                box-shadow: 12px 0 40px rgba(0,0,0,.25);
+            }
+            [data-direction="A"] .sidebar.open { transform: translateX(0); }
+            .hamburger { display: flex; }
+
+            /* Header compact : on masque le superflu, on garde burger + notif + avatar */
+            .top-bar { padding: .6rem .85rem; gap: .5rem; }
+            .top-bar .lang-switch,
+            .top-bar .direction-toggle,
+            .user-btn .user-fullname { display: none !important; }
+            .role-chip { font-size: .65rem; padding: .12rem .4rem; }
+            .user-btn { gap: .35rem; padding: .3rem; min-height: 44px; }
+            .notif-btn { min-width: 44px; min-height: 44px; }
+            .user-dropdown { right: -.5rem; min-width: 180px; }
         }
 
         /* ── Dropdown user ───────────────────────────────── */
@@ -172,6 +206,9 @@
 </head>
 <body>
 <div class="app-wrapper" id="appWrapper">
+
+    {{-- Overlay assombri derrière le drawer mobile --}}
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
 
     {{-- Sidebar (Direction A) --}}
     <aside class="sidebar" id="sidebar">
@@ -216,7 +253,7 @@
         <header class="top-bar">
             {{-- Direction A : titre page + hamburger --}}
             <div style="display:flex;align-items:center;gap:.75rem">
-                <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu">
+                <button class="hamburger" onclick="toggleSidebarMobile()" aria-label="Menu">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
                 {{-- Direction B logo --}}
@@ -241,7 +278,7 @@
             <div style="display:flex;align-items:center;gap:.75rem">
                 {{-- Bascule lang FR/EN --}}
                 @php $locale = app()->getLocale(); @endphp
-                <div style="display:flex;align-items:center;gap:.2rem;font-size:.78rem;font-weight:700">
+                <div class="lang-switch" style="display:flex;align-items:center;gap:.2rem;font-size:.78rem;font-weight:700">
                     <form method="POST" action="{{ route('preferences.locale') }}" style="display:inline">
                         @csrf
                         <input type="hidden" name="locale" value="fr">
@@ -256,7 +293,7 @@
                 </div>
 
                 {{-- Bascule thème A/B --}}
-                <button onclick="toggleDirectionAjax()" style="background:none;border:none;cursor:pointer;font-size:.82rem;color:var(--slate-500);padding:.2rem .4rem;border-radius:5px;border:1px solid var(--slate-200)" title="Direction A/B">
+                <button class="direction-toggle" onclick="toggleDirectionAjax()" style="background:none;border:none;cursor:pointer;font-size:.82rem;color:var(--slate-500);padding:.2rem .4rem;border-radius:5px;border:1px solid var(--slate-200)" title="Direction A/B">
                     🎨 <span id="dirLabel">Dir. {{ auth()->user()->direction_ui }}</span>
                 </button>
 
@@ -296,7 +333,7 @@
                 {{-- User menu --}}
                 <div class="user-menu">
                     <button class="user-btn" onclick="this.nextElementSibling.classList.toggle('open')">
-                        <span style="font-size:.875rem;font-weight:600;color:var(--slate-700)">{{ auth()->user()->nom_complet }}</span>
+                        <span class="user-fullname" style="font-size:.875rem;font-weight:600;color:var(--slate-700)">{{ auth()->user()->nom_complet }}</span>
                         <span class="role-chip">{{ auth()->user()->role }}</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
@@ -337,6 +374,17 @@
 
 <script src="{{ asset('theme-switcher.js') }}"></script>
 <script>
+function toggleSidebarMobile() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+    document.body.style.overflow = document.getElementById('sidebar').classList.contains('open') ? 'hidden' : '';
+}
+function closeSidebarMobile() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
 function logoutSafe() {
     fetch('{{ route('logout') }}', {
         method: 'POST',

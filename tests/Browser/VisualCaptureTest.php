@@ -81,4 +81,29 @@ class VisualCaptureTest extends DuskTestCase
                     ->screenshot('cible-' . str_replace(['/', ' '], ['-', '_'], ltrim($page, '/')));
         });
     }
+
+    /**
+     * Capture en viewport mobile (iPhone-like) pour valider le header/drawer responsive.
+     * Usage : DUSK_PAGE=/dashboard php artisan dusk --filter test_capture_mobile
+     */
+    public function test_capture_mobile(): void
+    {
+        $page = env('DUSK_PAGE', '/dashboard');
+
+        $this->browse(function (Browser $browser) use ($page) {
+            $browser->resize(390, 844)
+                    ->visit('/login')
+                    ->waitFor('input[name=username]', 10)
+                    ->type('username', $this->managerUsername)
+                    ->type('password', $this->managerPassword)
+                    ->press('button[type=submit]')
+                    ->waitForLocation('/dashboard')
+                    ->visit($page)
+                    ->pause(800)
+                    ->screenshot('mobile-fermee-' . str_replace(['/', ' '], ['-', '_'], ltrim($page, '/')))
+                    ->click('.hamburger')
+                    ->pause(500)
+                    ->screenshot('mobile-drawer-ouvert-' . str_replace(['/', ' '], ['-', '_'], ltrim($page, '/')));
+        });
+    }
 }
