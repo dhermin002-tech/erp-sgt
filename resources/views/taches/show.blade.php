@@ -27,8 +27,8 @@
 /* Sous-tâches */
 .sous-tache-item { display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--slate-100); }
 .sous-tache-item:last-child { border-bottom:none; }
-.sous-tache-cb { width:16px;height:16px;accent-color:var(--kt-navy);cursor:pointer; }
-.sous-tache-titre { flex:1;font-size:.875rem; }
+.sous-tache-cb { width:18px;height:18px;accent-color:var(--st-done);cursor:pointer; }
+.sous-tache-titre { flex:1;font-size:.875rem;font-weight:500; }
 .sous-tache-titre.termine { text-decoration:line-through;color:var(--slate-400); }
 .sous-tache-del { background:none;border:none;cursor:pointer;color:var(--slate-300);font-size:.9rem;padding:.2rem; }
 .sous-tache-del:hover { color:var(--kt-maroon); }
@@ -54,15 +54,18 @@
 </div>
 
 {{-- En-tête tâche --}}
-<div class="tache-header">
+@php
+$railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'var(--st-progress)','basse'=>'var(--st-todo)'];
+@endphp
+<div class="tache-header" style="border-left:4px solid {{ $railVar[$tache->priorite] ?? 'var(--slate-300)' }}">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <div style="flex:1">
             <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem">
                 @include('partials.badge_statut', ['statut' => $tache->statut])
+                @include('partials.badge_priorite', ['priorite' => $tache->priorite])
                 @if($tache->estEnRetard())
-                <span style="background:#B0202E;color:#fff;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:999px">⚠ En retard</span>
+                <span style="background:var(--st-stop);color:#fff;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:999px">⚠ En retard</span>
                 @endif
-                <span style="font-size:.8rem;color:var(--slate-400)">Priorité : <strong style="color:var(--slate-600)">{{ ucfirst($tache->priorite) }}</strong></span>
             </div>
             <h1 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--kt-navy);margin-bottom:.4rem">{{ $tache->titre }}</h1>
             @if($tache->description)
