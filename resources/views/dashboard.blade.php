@@ -4,10 +4,28 @@
 @push('styles')
 <style>
 .kpi-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem }
-.kpi-card { background:var(--white);border-radius:12px;padding:1.25rem;border:1px solid var(--slate-200);box-shadow:0 1px 4px rgba(0,0,0,.06) }
-.kpi-label { font-size:.75rem;font-weight:700;color:var(--slate-500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem }
-.kpi-value { font-size:2.2rem;font-weight:800;font-family:var(--font-display);line-height:1 }
-.kpi-sub { font-size:.78rem;color:var(--slate-400);margin-top:.3rem }
+.kpi-card {
+    --kc: var(--kt-navy); --kc-bg: var(--slate-50); --kc-border: var(--slate-200);
+    background:linear-gradient(160deg, var(--kc-bg) 0%, var(--white) 60%);
+    border-radius:14px;padding:1.25rem;border:1px solid var(--kc-border);
+    box-shadow:0 1px 4px rgba(15,23,42,.05);position:relative;overflow:hidden;
+    transition:transform .15s ease, box-shadow .15s ease;
+}
+.kpi-card::before {
+    content:""; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--kc);
+}
+.kpi-card:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(15,23,42,.10) }
+.kpi-card--actives   { --kc: var(--kt-navy);  --kc-bg: #EAF0FB; --kc-border: #D7E3F6; }
+.kpi-card--cours     { --kc: #2563EB;         --kc-bg: #EBF1FE; --kc-border: #D7E4FD; }
+.kpi-card--attente   { --kc: #C97A0A;         --kc-bg: #FCF3E3; --kc-border: #F7E6C8; }
+.kpi-card--terminees { --kc: #15885A;         --kc-bg: #E6F5EE; --kc-border: #CFEADC; }
+.kpi-card--completion{ --kc: #15885A;         --kc-bg: #EEF8F2; --kc-border: #D9EFE3; }
+.kpi-card--retard    { --kc: #B0202E;         --kc-bg: #FBE9EA; --kc-border: #F6D2D5; }
+.kpi-card--retard.is-zero { --kc: var(--slate-300); --kc-bg: var(--slate-50); --kc-border: var(--slate-200); }
+.kpi-card--archives  { --kc: var(--slate-500);--kc-bg: var(--slate-100); --kc-border: var(--slate-200); }
+.kpi-label { font-size:.74rem;font-weight:700;color:var(--th-text-muted, var(--slate-500));text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem }
+.kpi-value { font-size:2.15rem;font-weight:800;font-family:var(--font-display);line-height:1;color:var(--kc) }
+.kpi-sub { font-size:.78rem;color:var(--slate-400);margin-top:.35rem }
 .charts-grid { display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem }
 .charts-grid-3 { display:grid;grid-template-columns:1fr;gap:1rem;margin-bottom:1.5rem }
 .chart-card { background:var(--white);border-radius:14px;border:1px solid var(--slate-200);overflow:hidden;box-shadow:0 1px 4px rgba(15,23,42,.05);transition:box-shadow .2s ease }
@@ -85,35 +103,45 @@
 
 {{-- KPI Cards --}}
 <div class="kpi-grid">
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card--actives">
         <div class="kpi-label">Tâches actives</div>
-        <div class="kpi-value" style="color:var(--kt-navy)">{{ $stats['total_actives'] }}</div>
+        <div class="kpi-value">{{ $stats['total_actives'] }}</div>
         <div class="kpi-sub">en cours de traitement</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card--cours">
         <div class="kpi-label">En cours</div>
-        <div class="kpi-value" style="color:#2563EB">{{ $stats['en_cours'] }}</div>
+        <div class="kpi-value">{{ $stats['en_cours'] }}</div>
         <div class="kpi-sub">travail actif</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card--attente">
+        <div class="kpi-label">En attente</div>
+        <div class="kpi-value">{{ $stats['en_attente'] }}</div>
+        <div class="kpi-sub">en pause / blocage</div>
+    </div>
+    <div class="kpi-card kpi-card--terminees">
+        <div class="kpi-label">Terminées</div>
+        <div class="kpi-value">{{ $stats['terminees'] }}</div>
+        <div class="kpi-sub">sur la période</div>
+    </div>
+    <div class="kpi-card kpi-card--completion">
         <div class="kpi-label">Taux de complétion</div>
-        <div class="kpi-value" style="color:#15885A">{{ $stats['taux_completion'] }}%</div>
+        <div class="kpi-value">{{ $stats['taux_completion'] }}%</div>
         <div style="background:var(--slate-100);border-radius:999px;height:5px;margin:.4rem 0">
             <div style="width:{{ $stats['taux_completion'] }}%;height:5px;border-radius:999px;background:#15885A;transition:width .5s"></div>
         </div>
         <div class="kpi-sub">tâches terminées</div>
     </div>
-    <div class="kpi-card" style="{{ $stats['en_retard'] > 0 ? 'background:#FEF2F2;border-color:#FCA5A5' : '' }}">
-        <div class="kpi-label" style="{{ $stats['en_retard'] > 0 ? 'color:#991B1B' : '' }}">En retard</div>
-        <div class="kpi-value" style="color:{{ $stats['en_retard'] > 0 ? '#B0202E' : 'var(--slate-300)' }}">{{ $stats['en_retard'] }}</div>
+    <div class="kpi-card kpi-card--retard {{ $stats['en_retard'] == 0 ? 'is-zero' : '' }}">
+        <div class="kpi-label">En retard</div>
+        <div class="kpi-value">{{ $stats['en_retard'] }}</div>
         <div class="kpi-sub" style="{{ $stats['en_retard'] > 0 ? 'color:#991B1B;font-weight:600' : '' }}">
             {{ $stats['en_retard'] > 0 ? '⚠ Action requise' : 'Aucun retard' }}
         </div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card--archives">
         <div class="kpi-label">Archivées ce mois</div>
-        <div class="kpi-value" style="color:var(--slate-600)">{{ $stats['archivees_mois'] }}</div>
-        <div class="kpi-sub"><a href="{{ route('taches.archives') }}" style="color:var(--kt-navy);text-decoration:none">Voir les archives →</a></div>
+        <div class="kpi-value">{{ $stats['archivees_mois'] }}</div>
+        <div class="kpi-sub"><a href="{{ route('taches.archives') }}" style="color:var(--kt-navy);text-decoration:none;font-weight:600">Voir les archives →</a></div>
     </div>
 </div>
 

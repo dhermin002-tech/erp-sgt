@@ -34,6 +34,8 @@ class DashboardController extends Controller
         $stats = [
             'total_actives'   => (clone $query)->actives()->count(),
             'en_cours'        => (clone $query)->where('statut', 'en_cours')->count(),
+            'en_attente'      => (clone $query)->where('statut', 'en_attente')->count(),
+            'terminees'       => (clone $query)->where('statut', 'termine')->count(),
             'en_retard'       => (clone $query)->enRetard()->count(),
             'taux_completion' => $this->calculerTauxCompletion($query),
             'archivees_mois'  => (clone $query)->whereNotNull('archived_at')
