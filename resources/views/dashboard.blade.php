@@ -10,10 +10,15 @@
 .kpi-sub { font-size:.78rem;color:var(--slate-400);margin-top:.3rem }
 .charts-grid { display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem }
 .charts-grid-3 { display:grid;grid-template-columns:1fr;gap:1rem;margin-bottom:1.5rem }
-.chart-card { background:var(--white);border-radius:12px;border:1px solid var(--slate-200);overflow:hidden }
-.chart-header { padding:.85rem 1.25rem;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;justify-content:space-between }
-.chart-title { font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--kt-navy) }
-.chart-body { padding:1.25rem;position:relative }
+.chart-card { background:var(--white);border-radius:14px;border:1px solid var(--slate-200);overflow:hidden;box-shadow:0 1px 4px rgba(15,23,42,.05);transition:box-shadow .2s ease }
+.chart-card:hover { box-shadow:0 6px 20px rgba(15,23,42,.08) }
+.chart-header { padding:.95rem 1.35rem;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,var(--slate-50),var(--white)) }
+.chart-title { font-family:var(--font-display);font-size:.92rem;font-weight:800;color:var(--kt-navy);letter-spacing:-.01em;display:flex;align-items:center;gap:.5rem }
+.chart-title::before { content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--kt-orange,#F47A1F) }
+.chart-tag { font-size:.72rem;font-weight:600;color:var(--slate-500);background:var(--slate-100);padding:.25rem .6rem;border-radius:999px }
+.chart-body { padding:1.35rem;position:relative }
+.chart-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;height:100%;color:var(--slate-400);font-size:.82rem;font-weight:600 }
+.chart-empty span:first-child { font-size:1.6rem }
 .filters-bar { background:var(--white);border-radius:12px;border:1px solid var(--slate-200);padding:.875rem 1.25rem;margin-bottom:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end }
 .filter-group { display:flex;flex-direction:column;gap:.25rem }
 .filter-label { font-size:.72rem;font-weight:700;color:var(--slate-500);text-transform:uppercase;letter-spacing:.04em }
@@ -119,7 +124,7 @@
     <div class="chart-card">
         <div class="chart-header">
             <span class="chart-title">Répartition par statut</span>
-            <span style="font-size:.75rem;color:var(--slate-400)">toutes périodes</span>
+            <span class="chart-tag">toutes périodes</span>
         </div>
         <div class="chart-body" style="height:260px;display:flex;align-items:center;justify-content:center">
             <canvas id="chartDonut" style="max-height:240px;max-width:240px"></canvas>
@@ -130,7 +135,7 @@
     <div class="chart-card">
         <div class="chart-header">
             <span class="chart-title">Charge par responsable</span>
-            <span style="font-size:.75rem;color:var(--slate-400)">tâches actives</span>
+            <span class="chart-tag">tâches actives</span>
         </div>
         <div class="chart-body" style="height:260px">
             <canvas id="chartBarres" style="height:240px"></canvas>
@@ -143,7 +148,7 @@
 <div class="chart-card" style="margin-bottom:1.5rem">
     <div class="chart-header">
         <span class="chart-title">Avancement dans le temps</span>
-        <span style="font-size:.75rem;color:var(--slate-400)">tâches créées vs terminées</span>
+        <span class="chart-tag">tâches créées vs terminées</span>
     </div>
     <div class="chart-body" style="height:220px">
         <canvas id="chartCourbe" style="height:200px"></canvas>
@@ -181,7 +186,25 @@ const KT = {
     orange:  '#F47A1F',
     maroon:  '#8C1622',
     slate:   '#64748B',
+    done:    '#15885A',
 };
+
+// Apparence globale Chart.js — alignée sur la charte KT
+Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+Chart.defaults.color = '#64748B';
+Chart.defaults.plugins.tooltip.backgroundColor = '#0E2350';
+Chart.defaults.plugins.tooltip.titleFont = { family: "'Archivo', sans-serif", size: 12, weight: '700' };
+Chart.defaults.plugins.tooltip.bodyFont  = { size: 12 };
+Chart.defaults.plugins.tooltip.padding   = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.displayColors = true;
+Chart.defaults.plugins.tooltip.boxPadding = 4;
+
+// Affiche un message « pas de donnée » à la place d'un graphique vide
+function chartVide(canvas, message) {
+    const card = canvas.closest('.chart-body');
+    card.innerHTML = `<div class="chart-empty"><span>📭</span><span>${message}</span></div>`;
+}
 
 // Paramètres des filtres courants pour l'API
 const apiParams = new URLSearchParams({
@@ -201,58 +224,114 @@ fetch(`/dashboard/data?${apiParams}`)
 
 // ── Donut : répartition par statut ───────────────────────────────────────────
 function renderDonut(d) {
-    new Chart(document.getElementById('chartDonut'), {
+    const canvas = document.getElementById('chartDonut');
+    if (! d.data.length || d.data.reduce((a, b) => a + b, 0) === 0) {
+        return chartVide(canvas, 'Aucune tâche sur cette période');
+    }
+    const total = d.data.reduce((a, b) => a + b, 0);
+
+    // Plugin maison : affiche le total au centre du donut
+    const centreTotal = {
+        id: 'centreTotal',
+        beforeDraw(chart) {
+            const { ctx, chartArea: { left, right, top, bottom } } = chart;
+            const x = (left + right) / 2;
+            const y = (top + bottom) / 2;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = "800 22px 'Archivo', sans-serif";
+            ctx.fillStyle = '#173A7A';
+            ctx.fillText(total, x, y - 9);
+            ctx.font = "600 10px 'IBM Plex Sans', sans-serif";
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText('TÂCHE' + (total > 1 ? 'S' : ''), x, y + 11);
+            ctx.restore();
+        }
+    };
+
+    new Chart(canvas, {
         type: 'doughnut',
         data: {
             labels: d.labels,
             datasets: [{
                 data: d.data,
                 backgroundColor: d.backgroundColor,
-                borderWidth: 2,
+                borderWidth: 3,
                 borderColor: '#fff',
-                hoverOffset: 6,
+                hoverOffset: 8,
+                hoverBorderWidth: 0,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            cutout: '62%',
+            cutout: '68%',
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { font: { family: "'IBM Plex Sans', sans-serif", size: 11 }, padding: 12 }
+                    labels: {
+                        font: { size: 11.5, weight: '600' },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 8, boxHeight: 8,
+                        padding: 16,
+                        color: '#334155',
+                    }
                 },
                 tooltip: { callbacks: {
-                    label: ctx => ` ${ctx.label} : ${ctx.raw} tâche(s)`
+                    label: ctx => ` ${ctx.label} : ${ctx.raw} tâche(s) · ${Math.round(ctx.raw / total * 100)}%`
                 }}
             }
-        }
+        },
+        plugins: [centreTotal]
     });
 }
 
 // ── Barres : charge par responsable ──────────────────────────────────────────
 function renderBarres(d) {
-    if (! d.labels.length) return;
-    new Chart(document.getElementById('chartBarres'), {
+    const canvas = document.getElementById('chartBarres');
+    if (! d.labels.length) return chartVide(canvas, 'Aucune charge à afficher');
+
+    const ctx = canvas.getContext('2d');
+    const degrade = ctx.createLinearGradient(0, 0, 0, 240);
+    degrade.addColorStop(0, KT.orange);
+    degrade.addColorStop(1, KT.navy);
+
+    const horizontal = d.labels.length > 4;
+    new Chart(canvas, {
         type: 'bar',
         data: {
             labels: d.labels,
             datasets: [{
                 label: 'Tâches actives',
                 data: d.data,
-                backgroundColor: KT.navy,
-                borderRadius: 5,
+                backgroundColor: degrade,
+                borderRadius: 7,
                 borderSkipped: false,
+                maxBarThickness: 34,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            indexAxis: d.labels.length > 4 ? 'y' : 'x',
-            plugins: { legend: { display: false } },
+            indexAxis: horizontal ? 'y' : 'x',
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.raw} tâche(s) active(s)` } }
+            },
             scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-                y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } } }
+                x: {
+                    grid: { display: !horizontal, color: '#EEF2F7', drawTicks: false },
+                    border: { display: false },
+                    ticks: { font: { size: 11, weight: '600' }, precision: horizontal ? 0 : undefined }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { display: horizontal, color: '#EEF2F7', drawTicks: false },
+                    border: { display: false },
+                    ticks: { precision: horizontal ? undefined : 0, font: { size: 11, weight: '600' } }
+                }
             }
         }
     });
@@ -260,7 +339,18 @@ function renderBarres(d) {
 
 // ── Courbe : créées vs terminées ──────────────────────────────────────────────
 function renderCourbe(d) {
-    new Chart(document.getElementById('chartCourbe'), {
+    const canvas = document.getElementById('chartCourbe');
+    if (! d.labels.length) return chartVide(canvas, 'Pas encore de données sur cette période');
+
+    const ctx = canvas.getContext('2d');
+    const fondCreees = ctx.createLinearGradient(0, 0, 0, 200);
+    fondCreees.addColorStop(0, 'rgba(23,58,122,.20)');
+    fondCreees.addColorStop(1, 'rgba(23,58,122,0)');
+    const fondTerminees = ctx.createLinearGradient(0, 0, 0, 200);
+    fondTerminees.addColorStop(0, 'rgba(21,136,90,.18)');
+    fondTerminees.addColorStop(1, 'rgba(21,136,90,0)');
+
+    new Chart(canvas, {
         type: 'line',
         data: {
             labels: d.labels,
@@ -269,33 +359,58 @@ function renderCourbe(d) {
                     label: 'Créées',
                     data: d.dataC,
                     borderColor: KT.navy,
-                    backgroundColor: 'rgba(23,58,122,.08)',
+                    backgroundColor: fondCreees,
                     fill: true,
-                    tension: .35,
-                    pointRadius: 3,
-                    pointBackgroundColor: KT.navy,
+                    tension: .4,
+                    borderWidth: 2.5,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: KT.navy,
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2,
                 },
                 {
                     label: 'Terminées',
                     data: d.dataT,
-                    borderColor: '#15885A',
-                    backgroundColor: 'rgba(21,136,90,.06)',
+                    borderColor: KT.done,
+                    backgroundColor: fondTerminees,
                     fill: true,
-                    tension: .35,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#15885A',
+                    tension: .4,
+                    borderWidth: 2.5,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: KT.done,
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2,
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { font: { size: 11 }, padding: 12 } }
+                legend: {
+                    position: 'top', align: 'end',
+                    labels: {
+                        font: { size: 11.5, weight: '600' },
+                        usePointStyle: true, pointStyle: 'circle',
+                        boxWidth: 8, boxHeight: 8, padding: 18,
+                        color: '#334155',
+                    }
+                },
+                tooltip: { mode: 'index', intersect: false }
             },
             scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 15 } },
-                y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } } }
+                x: {
+                    grid: { display: false }, border: { display: false },
+                    ticks: { font: { size: 10.5 }, maxTicksLimit: 12, color: '#94A3B8' }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#EEF2F7', drawTicks: false }, border: { display: false },
+                    ticks: { precision: 0, font: { size: 11 }, color: '#94A3B8' }
+                }
             }
         }
     });

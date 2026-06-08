@@ -231,10 +231,14 @@ body.kt-app {
 
 /* ---- Barre de progression ------------------------------------------------ */
 .kt-prog { display: inline-flex; align-items: center; gap: 8px; }
-.kt-prog .track { width: 64px; height: 7px; border-radius: 999px;
+.kt-prog .track { display: block; width: 64px; height: 7px; border-radius: 999px;
   background: var(--slate-100); overflow: hidden; }
-.kt-prog .fill { height: 100%; border-radius: 999px; background: var(--st-progress); }
-.kt-prog .val  { font-family: var(--font-mono); font-size: 11px; color: var(--th-text-muted); }
+/* .fill est un <span> imbriqué : sans display:block ses width/height en % sont ignorés
+   (un span reste "inline" même si son parent est blockifié par le flex) — la barre
+   colorée ne s'affichait donc jamais, quel que soit le pourcentage. */
+.kt-prog .fill { display: block; height: 100%; min-width: 2px; border-radius: 999px;
+  background: var(--st-progress); transition: width .4s ease; }
+.kt-prog .val  { font-family: var(--font-mono); font-size: 11px; color: var(--th-text-muted); font-weight: 600; }
 
 /* ---- Échéance en retard -------------------------------------------------- */
 .kt-late { color: var(--kt-maroon); font-weight: 600; }
