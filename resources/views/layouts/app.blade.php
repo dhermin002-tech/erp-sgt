@@ -12,6 +12,8 @@
     <meta name="theme-color" content="#003366">
 
     <link rel="stylesheet" href="{{ asset('charte-graphique.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
     @stack('styles')
 
     <style>
@@ -43,41 +45,52 @@
             border-bottom: 1px solid rgba(255,255,255,.08);
             display: flex; flex-direction: column; align-items: center; gap: .5rem;
         }
-        /* Logo KT image dans la sidebar */
+        /* Logo KT image dans la sidebar — sans fond blanc */
         [data-direction="A"] .sidebar-logo .logo-img-wrap {
-            background: #ffffff;
-            border-radius: 14px;
-            padding: .6rem 1rem;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 12px rgba(0,0,0,.25);
         }
         [data-direction="A"] .sidebar-logo .logo-img-wrap img {
-            width: 130px; height: auto;
+            width: 120px; height: auto;
             display: block;
+            filter: brightness(0) invert(1);
+            opacity: .92;
         }
         [data-direction="A"] .sidebar-logo .logo-sub {
-            font-size: .7rem; font-weight: 700; letter-spacing: .12em;
-            color: rgba(255,255,255,.35); text-transform: uppercase;
+            font-size: .68rem; font-weight: 700; letter-spacing: .14em;
+            color: rgba(255,255,255,.3); text-transform: uppercase;
+            margin-top: .15rem;
         }
         [data-direction="A"] .sidebar-nav { flex: 1; padding: .75rem 0; }
         [data-direction="A"] .sidebar-nav a {
-            display: flex; align-items: center; gap: .65rem;
-            padding: .65rem 1.1rem; margin: .1rem .6rem;
-            color: rgba(255,255,255,.7);
-            text-decoration: none; font-size: .875rem; font-weight: 500;
-            border-radius: 9px; transition: all .15s;
+            display: flex; align-items: center; gap: .75rem;
+            padding: .78rem 1.1rem; margin: .15rem .6rem;
+            color: rgba(255,255,255,.65);
+            text-decoration: none; font-size: .9rem; font-weight: 500;
+            border-radius: 10px; transition: all .15s;
+        }
+        [data-direction="A"] .sidebar-nav a i,
+        [data-direction="A"] .sidebar-nav a .nav-icon {
+            font-size: 1.1rem; width: 20px; text-align: center; flex-shrink: 0;
+            opacity: .75;
         }
         [data-direction="A"] .sidebar-nav a:hover {
-            color: #fff; background: rgba(255,255,255,.08);
+            color: #fff; background: rgba(255,255,255,.1);
         }
+        [data-direction="A"] .sidebar-nav a:hover i,
+        [data-direction="A"] .sidebar-nav a:hover .nav-icon { opacity: 1; }
         [data-direction="A"] .sidebar-nav a.active {
-            color: #fff; background: #8B0000;
-            box-shadow: 0 4px 12px rgba(139,0,0,.4);
-            font-weight: 600;
+            color: #fff; background: #CC5500;
+            box-shadow: 0 4px 14px rgba(204,85,0,.4);
+            font-weight: 700;
         }
+        [data-direction="A"] .sidebar-nav a.active i,
+        [data-direction="A"] .sidebar-nav a.active .nav-icon { opacity: 1; }
         [data-direction="A"] .sidebar-nav .nav-label {
-            font-size: .68rem; font-weight: 700; letter-spacing: .09em;
-            color: rgba(255,255,255,.3); padding: .85rem 1.25rem .3rem;
+            font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+            color: rgba(255,255,255,.25); padding: .9rem 1.25rem .35rem;
             text-transform: uppercase;
         }
         [data-direction="A"] .sidebar-footer {
@@ -285,21 +298,25 @@
         <nav class="sidebar-nav">
             <div class="nav-label">Navigation</div>
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                📊 Tableau de bord
+                <i class="bi bi-speedometer2"></i> Tableau de bord
             </a>
             <a href="{{ route('taches.index') }}" class="{{ request()->routeIs('taches.index') || request()->routeIs('taches.show') || request()->routeIs('taches.create') || request()->routeIs('taches.edit') ? 'active' : '' }}">
-                ✅ Tâches
+                <i class="bi bi-check2-square"></i> Tâches
             </a>
             <a href="{{ route('taches.archives') }}" class="{{ request()->routeIs('taches.archives') ? 'active' : '' }}">
-                🗄 Archives
+                <i class="bi bi-archive"></i> Archives
             </a>
             <a href="{{ route('rapports.index') }}" class="{{ request()->routeIs('rapports.index') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-bar-graph"></i> Rapport
             </a>
             @if(auth()->user()->isManager())
             <div class="nav-label">Administration</div>
-            <a href="{{ route('membres.index') }}" class="{{ request()->routeIs('membres.*') ? 'active' : '' }}">👥 Membres</a>
-            <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">📍 Sites</a>
+            <a href="{{ route('membres.index') }}" class="{{ request()->routeIs('membres.*') ? 'active' : '' }}">
+                <i class="bi bi-people"></i> Membres
+            </a>
+            <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">
+                <i class="bi bi-geo-alt"></i> Sites
+            </a>
             @endif
         </nav>
         <div class="sidebar-footer" style="color:rgba(255,255,255,.35);font-size:.72rem;text-align:center">

@@ -82,17 +82,25 @@
 .table-wrap { background:var(--white);border-radius:12px;border:1px solid var(--slate-200);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:1.5rem; }
 .table-responsive { overflow-x:auto; }
 table.rapport-table { width:100%;border-collapse:collapse; }
-table.rapport-table thead th {
-    padding:.65rem .9rem;text-align:left;background:var(--slate-50);
-    font-size:.73rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--slate-500);
-    border-bottom:1.5px solid var(--slate-200);white-space:nowrap;
+table.rapport-table thead {
+    position:sticky;top:0;z-index:2;
 }
+table.rapport-table thead th {
+    padding:.75rem .9rem;text-align:left;
+    background:#003366;
+    color:rgba(255,255,255,.9);
+    font-family:'Space Grotesk',sans-serif;
+    font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    white-space:nowrap;border-bottom:none;
+}
+table.rapport-table thead th:first-child { border-radius:0; }
 table.rapport-table tbody td {
-    padding:.7rem .9rem;font-size:.85rem;color:var(--slate-700);
+    padding:.75rem .9rem;font-size:.855rem;color:var(--slate-700);
     border-bottom:1px solid var(--slate-100);vertical-align:middle;
 }
+table.rapport-table tbody tr:nth-child(even) { background:#F8FAFF; }
 table.rapport-table tbody tr:last-child td { border-bottom:none; }
-table.rapport-table tbody tr:hover { background:var(--slate-50); }
+table.rapport-table tbody tr:hover { background:#EFF6FF; }
 .cell-titre { font-weight:600;color:var(--kt-navy);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;text-decoration:none; }
 .cell-titre:hover { text-decoration:underline; }
 .cell-prog { display:flex;align-items:center;gap:.5rem; }
