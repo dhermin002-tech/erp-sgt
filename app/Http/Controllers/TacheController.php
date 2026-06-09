@@ -158,6 +158,7 @@ class TacheController extends Controller
 
     public function restaurer(Tache $tache)
     {
+        $this->authorizeAccess($tache);
         $tache->update(['statut' => 'nouveau', 'archived_at' => null]);
         return redirect()->route('taches.archives')
                          ->with('success', 'Tâche restaurée.');

@@ -26,10 +26,10 @@ class MembresController extends Controller
             'nom'      => 'required|string|max:100',
             'prenom'   => 'nullable|string|max:100',
             'role'     => 'required|in:manager,technicien,agent,developpeur,stagiaire',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ], [
             'username.unique'   => 'Cet identifiant est déjà utilisé.',
-            'password.min'      => 'Le mot de passe doit faire au moins 6 caractères.',
+            'password.min'      => 'Le mot de passe doit faire au moins 8 caractères.',
             'password.confirmed'=> 'Les mots de passe ne correspondent pas.',
         ]);
 
@@ -55,7 +55,7 @@ class MembresController extends Controller
             'nom'    => 'required|string|max:100',
             'prenom' => 'nullable|string|max:100',
             'role'   => 'required|in:manager,technicien,agent,developpeur,stagiaire',
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         $data = $request->only('nom', 'prenom', 'role');
