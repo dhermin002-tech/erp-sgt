@@ -45,18 +45,17 @@
             border-bottom: 1px solid rgba(255,255,255,.08);
             display: flex; flex-direction: column; align-items: center; gap: .5rem;
         }
-        /* Logo KT image dans la sidebar — sans fond blanc */
+        /* Logo KT — fond blanc discret bien proportionné */
         [data-direction="A"] .sidebar-logo .logo-img-wrap {
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-            display: flex; align-items: center; justify-content: center;
+            background: #fff;
+            border-radius: 8px;
+            padding: .35rem .7rem;
+            display: inline-flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 6px rgba(0,0,0,.2);
         }
         [data-direction="A"] .sidebar-logo .logo-img-wrap img {
-            width: 120px; height: auto;
+            width: 96px; height: auto;
             display: block;
-            filter: brightness(0) invert(1);
-            opacity: .92;
         }
         [data-direction="A"] .sidebar-logo .logo-sub {
             font-size: .68rem; font-weight: 700; letter-spacing: .14em;
