@@ -5,327 +5,421 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — SGT KayTechnologie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --kt-rouge:  #8B0000;
-            --kt-orange: #CC5500;
-            --kt-bleu:   #003366;
-            --kt-bleu2:  #1a4f99;
-        }
 
         body {
             font-family: 'DM Sans', sans-serif;
             min-height: 100vh;
+            background: #060D1A;
             display: flex;
-        }
-
-        /* ── Panneau gauche — identité KT ───────────── */
-        .panel-left {
-            flex: 1;
-            background: linear-gradient(145deg, #001f3f 0%, #003366 40%, #8B0000 100%);
-            display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 3rem 2.5rem;
             position: relative;
             overflow: hidden;
         }
 
-        /* Cercles décoratifs */
-        .panel-left::before {
-            content: '';
-            position: absolute;
-            width: 500px; height: 500px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.06);
-            top: -100px; left: -100px;
+        /* ── Fond cosmos : mesh + grille de points ── */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 15% 50%, rgba(0,51,102,.65) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 70% at 85% 20%, rgba(139,0,0,.28) 0%, transparent 55%),
+                radial-gradient(ellipse 45% 45% at 65% 85%, rgba(204,85,0,.14) 0%, transparent 55%);
         }
-        .panel-left::after {
-            content: '';
-            position: absolute;
-            width: 350px; height: 350px;
-            border-radius: 50%;
-            border: 1px solid rgba(204,85,0,0.15);
-            bottom: -80px; right: -80px;
+        .bg-dots {
+            position: fixed; inset: 0; z-index: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,.065) 1px, transparent 1px);
+            background-size: 28px 28px;
         }
-
-        .left-content {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            max-width: 380px;
+        /* Ligne verticale décorative animée */
+        .bg-line {
+            position: fixed; top: 0; left: 50%; z-index: 0;
+            width: 1px; height: 100vh;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(204,85,0,.25) 35%,
+                rgba(0,51,102,.35) 65%,
+                transparent 100%);
+            animation: lineFloat 8s ease-in-out infinite alternate;
         }
-
-        /* Logo KT */
-        .logo-wrapper {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 1.5rem 2rem;
-            margin-bottom: 2.5rem;
-            display: inline-block;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-        }
-        .logo-wrapper img {
-            width: 200px;
-            height: auto;
-            display: block;
+        @keyframes lineFloat {
+            0%   { opacity: .4; transform: scaleY(.95); }
+            100% { opacity: .8; transform: scaleY(1.02); }
         }
 
-        .left-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.9rem;
-            font-weight: 800;
-            color: #fff;
-            letter-spacing: -0.02em;
-            line-height: 1.2;
-            margin-bottom: 1rem;
+        /* ── Carte principale ── */
+        .login-wrap {
+            position: relative; z-index: 1;
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            max-width: 860px;
+            width: calc(100% - 2rem);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow:
+                0 40px 100px rgba(0,0,0,.65),
+                0 0 0 1px rgba(255,255,255,.06);
+            animation: cardReveal .55s cubic-bezier(0.16,1,0.3,1) forwards;
+            opacity: 0;
         }
-        .left-subtitle {
-            font-size: .95rem;
-            color: rgba(255,255,255,0.65);
-            line-height: 1.7;
-            max-width: 300px;
-            margin: 0 auto;
+        @keyframes cardReveal {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Badges LAN / SOFTWARE / HARDWARE */
-        .badges {
-            display: flex;
-            gap: .5rem;
-            justify-content: center;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-        .badge-kt {
-            padding: .3rem .9rem;
-            border-radius: 999px;
-            font-size: .72rem;
-            font-weight: 700;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-        }
-        .badge-lan  { background: rgba(26,79,153,0.4); color: #7eb8ff; border: 1px solid rgba(100,170,255,0.2); }
-        .badge-soft { background: rgba(204,85,0,0.4);  color: #ffb07e; border: 1px solid rgba(255,140,0,0.2); }
-        .badge-hard { background: rgba(139,0,0,0.4);   color: #ff8080; border: 1px solid rgba(200,0,0,0.2); }
-
-        /* ── Panneau droit — formulaire ───────────── */
-        .panel-right {
-            width: 440px;
-            flex-shrink: 0;
-            background: #f8f7f4;
+        /* ── Panneau gauche — Identité SGT ── */
+        .panel-id {
+            background: linear-gradient(155deg, #091524 0%, #001F3F 45%, #0D0508 100%);
+            padding: 2.75rem 2.25rem;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem 2.5rem;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            border-right: 1px solid rgba(255,255,255,.05);
+        }
+        /* Lueur orange en bas à droite */
+        .panel-id::after {
+            content: '';
+            position: absolute;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(204,85,0,.12) 0%, transparent 70%);
+            bottom: -80px; right: -60px;
+            pointer-events: none;
+        }
+        /* Texte déco géant en fond */
+        .deco-bg-text {
+            position: absolute;
+            top: -1.5rem; right: 0.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 9rem; font-weight: 800;
+            color: rgba(255,255,255,.025);
+            letter-spacing: -0.06em;
+            user-select: none; pointer-events: none;
+            line-height: 1;
         }
 
-        .form-container { width: 100%; max-width: 340px; }
+        .id-top { position: relative; z-index: 1; }
 
-        .form-eyebrow {
-            font-size: .75rem;
-            font-weight: 700;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: var(--kt-rouge);
-            margin-bottom: .75rem;
+        /* Logo badge */
+        .logo-badge {
+            background: #fff;
+            border-radius: 14px;
+            padding: .75rem 1.1rem;
+            display: inline-flex; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,.3);
+            margin-bottom: 1.75rem;
         }
-        .form-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: #111;
-            margin-bottom: .5rem;
-            letter-spacing: -.02em;
+        .logo-badge img { width: 148px; height: auto; display: block; }
+
+        .id-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.7rem; font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+            letter-spacing: -0.03em;
+            margin-bottom: .65rem;
         }
-        .form-desc {
+        .id-title em {
+            font-style: normal;
+            background: linear-gradient(90deg, #CC5500, #FF8C42);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .id-desc {
             font-size: .875rem;
-            color: #888;
-            margin-bottom: 2rem;
-            line-height: 1.5;
+            color: rgba(255,255,255,.42);
+            line-height: 1.7;
+            max-width: 270px;
         }
 
-        /* Erreur */
+        .id-bottom { position: relative; z-index: 1; }
+
+        /* Stats KPI mini */
+        .id-stats { display: flex; gap: 1.4rem; margin-bottom: 1.4rem; }
+        .id-stat {
+            border-left: 2px solid rgba(204,85,0,.4);
+            padding-left: .65rem;
+        }
+        .id-stat-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1;
+        }
+        .id-stat-lbl {
+            font-size: .68rem; font-weight: 600;
+            color: rgba(255,255,255,.3);
+            letter-spacing: .06em; text-transform: uppercase;
+            margin-top: .2rem;
+        }
+
+        .badges { display: flex; gap: .35rem; flex-wrap: wrap; }
+        .badge-pill {
+            padding: .22rem .7rem;
+            border-radius: 999px;
+            font-size: .67rem; font-weight: 700;
+            letter-spacing: .07em; text-transform: uppercase;
+        }
+        .bp-lan  { background: rgba(0,51,102,.5);  color: #7EB8FF; border: 1px solid rgba(0,80,180,.3); }
+        .bp-soft { background: rgba(204,85,0,.3);  color: #FFAA6A; border: 1px solid rgba(204,85,0,.3); }
+        .bp-hard { background: rgba(139,0,0,.3);   color: #FF9090; border: 1px solid rgba(139,0,0,.3); }
+
+        /* ── Panneau droit — Formulaire ── */
+        .panel-form {
+            background: #F5F4F0;
+            padding: 2.5rem 2.25rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .form-inner { width: 100%; max-width: 310px; }
+
+        /* Tag "accès sécurisé" */
+        .form-tag {
+            display: inline-flex; align-items: center; gap: .35rem;
+            background: rgba(0,51,102,.09);
+            color: #003366;
+            font-size: .7rem; font-weight: 700;
+            letter-spacing: .08em; text-transform: uppercase;
+            padding: .28rem .7rem;
+            border-radius: 999px;
+            border: 1px solid rgba(0,51,102,.14);
+            margin-bottom: 1.1rem;
+        }
+        .form-tag::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #CC5500;
+            flex-shrink: 0;
+        }
+
+        .form-heading {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.1rem; font-weight: 700;
+            color: #0D1B2A;
+            letter-spacing: -0.045em;
+            line-height: 1;
+            margin-bottom: .35rem;
+        }
+        .form-sub {
+            font-size: .84rem;
+            color: #9AA3AF;
+            margin-bottom: 1.75rem;
+            line-height: 1.55;
+        }
+
+        /* Alert erreur */
         .alert-error {
-            background: #fff0f0;
-            border: 1px solid #fca5a5;
-            border-left: 3px solid var(--kt-rouge);
-            border-radius: 10px;
-            padding: .75rem 1rem;
-            margin-bottom: 1.25rem;
-            font-size: .85rem;
-            color: #991b1b;
+            background: #FFF5F5;
+            border: 1px solid #FEBCBC;
+            border-left: 3px solid #8B0000;
+            border-radius: 8px;
+            padding: .65rem .9rem;
+            font-size: .82rem;
+            color: #742A2A;
+            margin-bottom: 1.1rem;
         }
 
         /* Champs */
-        .field { margin-bottom: 1.1rem; }
+        .field { margin-bottom: .9rem; }
         .field label {
             display: block;
-            font-size: .8rem;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: .4rem;
-            letter-spacing: .02em;
+            font-size: .77rem; font-weight: 600;
+            color: #4A5568; letter-spacing: .03em;
+            margin-bottom: .3rem;
         }
         .field input {
             width: 100%;
-            padding: .7rem 1rem;
+            padding: .72rem 1rem;
             background: #fff;
-            border: 1.5px solid #e5e3de;
+            border: 1.5px solid #E2E0DA;
             border-radius: 10px;
             font-family: 'DM Sans', sans-serif;
-            font-size: .9rem;
-            color: #111;
+            font-size: .9rem; color: #1A202C;
             outline: none;
             transition: border-color .2s, box-shadow .2s;
         }
         .field input:focus {
-            border-color: var(--kt-rouge);
-            box-shadow: 0 0 0 3px rgba(139,0,0,.08);
+            border-color: #003366;
+            box-shadow: 0 0 0 3px rgba(0,51,102,.09);
         }
-        .field input.is-invalid { border-color: var(--kt-rouge); }
-        .invalid-msg { color: var(--kt-rouge); font-size: .78rem; margin-top: .3rem; }
+        .field input.is-invalid { border-color: #8B0000; }
+        .invalid-msg { color: #8B0000; font-size: .75rem; margin-top: .25rem; }
 
-        /* Remember */
         .remember-row {
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-            margin-bottom: 1.5rem;
-            font-size: .83rem;
-            color: #666;
+            display: flex; align-items: center; gap: .45rem;
+            margin-bottom: 1.4rem;
+            font-size: .82rem; color: #718096;
         }
-        .remember-row input[type=checkbox] {
-            width: 16px; height: 16px;
-            accent-color: var(--kt-rouge);
-            cursor: pointer;
-        }
+        .remember-row input[type=checkbox] { accent-color: #003366; width:15px; height:15px; }
 
-        /* Bouton */
-        .btn-login {
+        /* Bouton submit */
+        .btn-submit {
             width: 100%;
-            padding: .8rem;
-            background: var(--kt-rouge);
+            padding: .82rem;
+            background: #003366;
             color: #fff;
             border: none;
             border-radius: 10px;
-            font-family: 'Syne', sans-serif;
-            font-size: 1rem;
-            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: .95rem; font-weight: 600;
+            letter-spacing: .01em;
             cursor: pointer;
-            letter-spacing: .02em;
-            transition: background .2s, transform .15s, box-shadow .2s;
-            position: relative;
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            position: relative; overflow: hidden;
+            transition: all .2s;
         }
-        .btn-login::after {
+        .btn-submit::before {
             content: '';
             position: absolute; inset: 0;
-            background: radial-gradient(circle, rgba(255,255,255,.25) 0%, transparent 70%);
-            transform: scale(0); opacity: 0;
-            transition: transform .4s, opacity .4s;
+            background: linear-gradient(135deg, rgba(255,255,255,.1) 0%, transparent 50%);
         }
-        .btn-login:active::after { transform: scale(2.5); opacity: 1; transition: 0s; }
-        .btn-login:hover {
-            background: #a00000;
-            box-shadow: 0 6px 20px rgba(139,0,0,.35);
+        .btn-submit:hover {
+            background: #00244F;
+            box-shadow: 0 8px 24px rgba(0,51,102,.4);
             transform: translateY(-1px);
         }
+        .btn-submit:active { transform: scale(.98); }
+        .btn-submit svg { flex-shrink: 0; }
+
+        /* Pied de formulaire */
+        .form-divider {
+            display: flex; align-items: center; gap: .6rem;
+            margin: 1.4rem 0 .9rem;
+        }
+        .form-divider::before, .form-divider::after {
+            content: ''; flex: 1; height: 1px; background: #E5E2DC;
+        }
+        .form-divider span { font-size: .7rem; color: #C4C0B8; font-weight: 600; white-space: nowrap; }
 
         .form-footer {
             text-align: center;
-            font-size: .75rem;
-            color: #bbb;
-            margin-top: 2rem;
+            font-size: .7rem; color: #C4C0B8; line-height: 1.6;
         }
-        .form-footer strong { color: var(--kt-rouge); }
+        .form-footer strong { color: #8B0000; }
 
-        /* ── Responsive mobile ───────────────────── */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .panel-left { padding: 2rem 1.5rem; min-height: 220px; }
-            .logo-wrapper { padding: 1.25rem 1.75rem; margin-bottom: 1rem; }
-            .logo-wrapper img { width: 140px; }
-            .left-title { font-size: 1.3rem; }
-            .left-subtitle { display: none; }
-            .panel-right { width: 100%; padding: 2rem 1.5rem; }
+        /* ── Responsive mobile ── */
+        @media (max-width: 680px) {
+            .login-wrap {
+                grid-template-columns: 1fr;
+                width: 100%; min-height: 100vh;
+                border-radius: 0;
+            }
+            .panel-id { padding: 2rem 1.5rem; }
+            .id-title  { font-size: 1.3rem; }
+            .id-stats  { display: none; }
+            .panel-form { padding: 2rem 1.5rem; }
         }
     </style>
 </head>
 <body>
+    <div class="bg-mesh"></div>
+    <div class="bg-dots"></div>
+    <div class="bg-line"></div>
 
-    {{-- Panneau gauche --}}
-    <div class="panel-left">
-        <div class="left-content">
-            <div class="logo-wrapper">
-                <img src="{{ asset('images/logo-kt.jpg') }}" alt="KayTechnologie Gabon"
-                     onerror="this.style.display='none';document.getElementById('logoFallback').style.display='block'">
-                <div id="logoFallback" style="display:none;text-align:center">
-                    <div style="font-size:3.5rem;font-weight:900;font-family:'Syne',sans-serif;color:#fff;letter-spacing:-.03em">
-                        <span style="color:#F47A1F">Kay</span>Tech
+    <div class="login-wrap">
+
+        {{-- Panneau identité --}}
+        <div class="panel-id">
+            <div class="deco-bg-text">SGT</div>
+
+            <div class="id-top">
+                <div class="logo-badge">
+                    <img src="{{ asset('images/logo-kt.jpg') }}" alt="KayTechnologie Gabon"
+                         onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex'">
+                    <span id="logoFallback" style="display:none;align-items:center;gap:.4rem">
+                        <span style="background:#8B0000;color:#fff;border-radius:6px;padding:.25rem .5rem;font-family:'Space Grotesk',sans-serif;font-weight:800">KT</span>
+                        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#1a1a1a">Kay<span style="color:#CC5500">Tech</span></span>
+                    </span>
+                </div>
+
+                <h1 class="id-title">
+                    Système de<br>Gestion des <em>Tâches</em>
+                </h1>
+                <p class="id-desc">
+                    Planifiez, suivez et reportez vos interventions terrain en temps réel depuis un seul outil.
+                </p>
+            </div>
+
+            <div class="id-bottom">
+                <div class="id-stats">
+                    <div class="id-stat">
+                        <div class="id-stat-val">5</div>
+                        <div class="id-stat-lbl">Rôles</div>
                     </div>
-                    <div style="font-size:.75rem;color:rgba(255,255,255,.5);letter-spacing:.15em;text-transform:uppercase;margin-top:.25rem">Gabon</div>
+                    <div class="id-stat">
+                        <div class="id-stat-val">SSL</div>
+                        <div class="id-stat-lbl">Sécurisé</div>
+                    </div>
+                    <div class="id-stat">
+                        <div class="id-stat-val">v1.0</div>
+                        <div class="id-stat-lbl">Version</div>
+                    </div>
                 </div>
-            </div>
-            <h1 class="left-title">Système de Gestion<br>des Tâches</h1>
-            <p class="left-subtitle">Planifiez, suivez et reportez vos interventions terrain en temps réel.</p>
-            <div class="badges">
-                <span class="badge-kt badge-lan">LAN</span>
-                <span class="badge-kt badge-soft">Software</span>
-                <span class="badge-kt badge-hard">Hardware</span>
+                <div class="badges">
+                    <span class="badge-pill bp-lan">LAN</span>
+                    <span class="badge-pill bp-soft">Software</span>
+                    <span class="badge-pill bp-hard">Hardware</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    {{-- Panneau droit — formulaire --}}
-    <div class="panel-right">
-        <div class="form-container">
-            <div class="form-eyebrow">Bienvenue</div>
-            <h2 class="form-title">Connexion</h2>
-            <p class="form-desc">Entrez vos identifiants pour accéder à votre espace.</p>
+        {{-- Panneau formulaire --}}
+        <div class="panel-form">
+            <div class="form-inner">
+                <div class="form-tag">Accès sécurisé</div>
+                <h2 class="form-heading">Connexion</h2>
+                <p class="form-sub">Entrez vos identifiants pour accéder à votre espace.</p>
 
-            @if ($errors->any())
-            <div class="alert-error">{{ $errors->first() }}</div>
-            @endif
+                @if ($errors->any())
+                <div class="alert-error">{{ $errors->first() }}</div>
+                @endif
 
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
+                <form method="POST" action="{{ route('login') }}">
+                    @csrf
 
-                <div class="field">
-                    <label for="username">Identifiant</label>
-                    <input type="text" id="username" name="username"
-                           class="{{ $errors->has('username') ? 'is-invalid' : '' }}"
-                           value="{{ old('username') }}" autofocus autocomplete="username"
-                           placeholder="Votre identifiant">
-                    @error('username')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    <div class="field">
+                        <label for="username">Identifiant</label>
+                        <input type="text" id="username" name="username"
+                               class="{{ $errors->has('username') ? 'is-invalid' : '' }}"
+                               value="{{ old('username') }}" autofocus autocomplete="username"
+                               placeholder="Votre identifiant">
+                        @error('username')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="field">
+                        <label for="password">Mot de passe</label>
+                        <input type="password" id="password" name="password"
+                               class="{{ $errors->has('password') ? 'is-invalid' : '' }}"
+                               autocomplete="current-password"
+                               placeholder="••••••••">
+                        @error('password')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="remember-row">
+                        <input type="checkbox" name="remember" id="remember">
+                        <label for="remember" style="cursor:pointer">Se souvenir de moi</label>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        Se connecter
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </button>
+                </form>
+
+                <div class="form-divider"><span>KayTechnologie Gabon</span></div>
+
+                <div class="form-footer">
+                    Système de Gestion des Tâches &mdash; <strong>SGT v1.0</strong>
                 </div>
-
-                <div class="field">
-                    <label for="password">Mot de passe</label>
-                    <input type="password" id="password" name="password"
-                           class="{{ $errors->has('password') ? 'is-invalid' : '' }}"
-                           autocomplete="current-password"
-                           placeholder="••••••••">
-                    @error('password')<div class="invalid-msg">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="remember-row">
-                    <input type="checkbox" name="remember" id="remember">
-                    <label for="remember" style="cursor:pointer">Se souvenir de moi</label>
-                </div>
-
-                <button type="submit" class="btn-login">Se connecter →</button>
-            </form>
-
-            <div class="form-footer">
-                KayTechnologie Gabon &mdash; <strong>SGT v1.0</strong>
             </div>
         </div>
-    </div>
 
+    </div>
 </body>
 </html>

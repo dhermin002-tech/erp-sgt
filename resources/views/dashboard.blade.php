@@ -2,68 +2,248 @@
 @section('title', 'Tableau de bord')
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-.kpi-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem }
+/* ── Page hero header ── */
+.dash-hero {
+    background: linear-gradient(135deg, #001f3f 0%, #003366 60%, #002244 100%);
+    border-radius: 16px;
+    padding: 1.4rem 1.75rem;
+    margin-bottom: 1.35rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: .75rem;
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.18);
+}
+.dash-hero::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+}
+.dash-hero::after {
+    content: '';
+    position: absolute; bottom: -40px; right: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(204,85,0,.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+.dash-hero-left { position: relative; z-index: 1; }
+.dash-hero-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.35rem; font-weight: 700; color: #fff;
+    letter-spacing: -.03em; line-height: 1.1; margin-bottom: .2rem;
+}
+.dash-hero-sub {
+    font-size: .82rem; color: rgba(255,255,255,.5); line-height: 1.5;
+}
+.dash-hero-sub strong { color: rgba(255,255,255,.85); font-weight: 600; }
+.dash-hero-right { position: relative; z-index: 1; }
+.btn-new-task {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: #CC5500; color: #fff;
+    padding: .55rem 1.1rem;
+    border-radius: 9px; text-decoration: none;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .875rem; font-weight: 600;
+    transition: all .2s;
+    box-shadow: 0 4px 14px rgba(204,85,0,.35);
+    white-space: nowrap;
+}
+.btn-new-task:hover {
+    background: #E06010; color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(204,85,0,.45);
+}
+
+/* ── KPI Grid — Bento style ── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .875rem;
+    margin-bottom: 1.35rem;
+}
 .kpi-card {
-    --kc: var(--kt-navy); --kc-bg: var(--slate-50); --kc-border: var(--slate-200);
-    background:linear-gradient(160deg, var(--kc-bg) 0%, var(--white) 60%);
-    border-radius:14px;padding:1.25rem;border:1px solid var(--kc-border);
-    box-shadow:0 1px 4px rgba(15,23,42,.05);position:relative;overflow:hidden;
-    transition:transform .15s ease, box-shadow .15s ease;
+    background: var(--white);
+    border-radius: 14px;
+    padding: 1.2rem 1.25rem 1rem;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 2px 8px rgba(15,23,42,.06);
+    position: relative; overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease;
+    display: flex; flex-direction: column; gap: .1rem;
 }
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(15,23,42,.11); }
+
+/* Barre supérieure colorée */
 .kpi-card::before {
-    content:""; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--kc);
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; background: var(--kc, #94a3b8);
+    border-radius: 14px 14px 0 0;
 }
-.kpi-card:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(15,23,42,.10) }
-.kpi-card--actives   { --kc: var(--kt-navy);  --kc-bg: #EAF0FB; --kc-border: #D7E3F6; }
-.kpi-card--cours     { --kc: #2563EB;         --kc-bg: #EBF1FE; --kc-border: #D7E4FD; }
-.kpi-card--attente   { --kc: #C97A0A;         --kc-bg: #FCF3E3; --kc-border: #F7E6C8; }
-.kpi-card--terminees { --kc: #15885A;         --kc-bg: #E6F5EE; --kc-border: #CFEADC; }
-.kpi-card--completion{ --kc: #15885A;         --kc-bg: #EEF8F2; --kc-border: #D9EFE3; }
-.kpi-card--retard    { --kc: #B0202E;         --kc-bg: #FBE9EA; --kc-border: #F6D2D5; }
-.kpi-card--retard.is-zero { --kc: var(--slate-300); --kc-bg: var(--slate-50); --kc-border: var(--slate-200); }
-.kpi-card--archives  { --kc: var(--slate-500);--kc-bg: var(--slate-100); --kc-border: var(--slate-200); }
-.kpi-label { font-size:.74rem;font-weight:700;color:var(--th-text-muted, var(--slate-500));text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem }
-.kpi-value { font-size:2.15rem;font-weight:800;font-family:var(--font-display);line-height:1;color:var(--kc) }
-.kpi-sub { font-size:.78rem;color:var(--slate-400);margin-top:.35rem }
-.charts-grid { display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem }
-.charts-grid-3 { display:grid;grid-template-columns:1fr;gap:1rem;margin-bottom:1.5rem }
-.chart-card { background:var(--white);border-radius:14px;border:1px solid var(--slate-200);overflow:hidden;box-shadow:0 1px 4px rgba(15,23,42,.05);transition:box-shadow .2s ease }
-.chart-card:hover { box-shadow:0 6px 20px rgba(15,23,42,.08) }
-.chart-header { padding:.95rem 1.35rem;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,var(--slate-50),var(--white)) }
-.chart-title { font-family:var(--font-display);font-size:.92rem;font-weight:800;color:var(--kt-navy);letter-spacing:-.01em;display:flex;align-items:center;gap:.5rem }
-.chart-title::before { content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--kt-orange,#F47A1F) }
-.chart-tag { font-size:.72rem;font-weight:600;color:var(--slate-500);background:var(--slate-100);padding:.25rem .6rem;border-radius:999px }
-.chart-body { padding:1.35rem;position:relative }
-.chart-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;height:100%;color:var(--slate-400);font-size:.82rem;font-weight:600 }
-.chart-empty span:first-child { font-size:1.6rem }
-.filters-bar { background:var(--white);border-radius:12px;border:1px solid var(--slate-200);padding:.875rem 1.25rem;margin-bottom:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end }
-.filter-group { display:flex;flex-direction:column;gap:.25rem }
-.filter-label { font-size:.72rem;font-weight:700;color:var(--slate-500);text-transform:uppercase;letter-spacing:.04em }
-.filter-select { padding:.4rem .75rem;border:1.5px solid var(--slate-200);border-radius:7px;font-size:.82rem;color:var(--slate-700);background:var(--slate-50);outline:none;min-width:140px }
-.filter-select:focus { border-color:var(--kt-navy) }
-.btn-filter { background:var(--kt-navy);color:#fff;padding:.45rem .9rem;border-radius:7px;border:none;font-size:.82rem;font-weight:600;cursor:pointer }
-.quick-links { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;margin-bottom:1.5rem }
-.quick-link { border-radius:10px;padding:1rem 1.25rem;text-decoration:none;display:flex;align-items:center;gap:.75rem;transition:opacity .15s }
-.quick-link:hover { opacity:.85 }
-@media (max-width:768px) { .charts-grid { grid-template-columns:1fr } }
+/* Pastille icône en haut à droite */
+.kpi-icon {
+    position: absolute; top: 1rem; right: 1rem;
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--kc-soft, #f1f5f9);
+    color: var(--kc, #64748b);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+}
+.kpi-label {
+    font-size: .69rem; font-weight: 700;
+    color: var(--slate-500);
+    text-transform: uppercase; letter-spacing: .07em;
+    margin-bottom: .3rem; padding-right: 2.8rem;
+}
+.kpi-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.4rem; font-weight: 800;
+    line-height: 1; color: var(--kc, var(--kt-navy));
+    letter-spacing: -.04em;
+}
+.kpi-sub {
+    font-size: .76rem; color: var(--slate-400); margin-top: .3rem;
+}
+
+/* Variants KPI */
+.kpi-card--actives   { --kc: #173A7A;  --kc-soft: #EAF0FB; }
+.kpi-card--cours     { --kc: #2563EB;  --kc-soft: #EBF1FE; }
+.kpi-card--attente   { --kc: #C97A0A;  --kc-soft: #FEF3C7; }
+.kpi-card--terminees { --kc: #15885A;  --kc-soft: #D1FAE5; }
+.kpi-card--completion{ --kc: #15885A;  --kc-soft: #D1FAE5; }
+.kpi-card--retard    { --kc: #B0202E;  --kc-soft: #FEE2E2; }
+.kpi-card--retard.is-zero { --kc: #94a3b8; --kc-soft: #f1f5f9; }
+.kpi-card--archives  { --kc: #64748B;  --kc-soft: #F1F5F9; }
+
+/* Barre de progression complétion */
+.kpi-progress-track {
+    height: 4px; border-radius: 999px;
+    background: var(--slate-100);
+    margin-top: .45rem; overflow: hidden;
+}
+.kpi-progress-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #15885A, #22c55e);
+    transition: width .6s cubic-bezier(.16,1,.3,1);
+}
+
+/* ── Filtres ── */
+.filters-bar {
+    background: var(--white); border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    padding: .8rem 1.1rem; margin-bottom: 1.25rem;
+    display: flex; flex-wrap: wrap; gap: .65rem; align-items: flex-end;
+}
+.filter-group { display: flex; flex-direction: column; gap: .2rem; }
+.filter-label { font-size: .7rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase; letter-spacing: .05em; }
+.filter-select {
+    padding: .4rem .75rem;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 7px;
+    font-size: .82rem; color: var(--slate-700);
+    background: var(--slate-50); outline: none; min-width: 140px;
+}
+.filter-select:focus { border-color: var(--kt-navy); }
+
+/* ── Charts ── */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.1rem; }
+.chart-card {
+    background: var(--white); border-radius: 14px;
+    border: 1px solid var(--slate-200); overflow: hidden;
+    box-shadow: 0 2px 8px rgba(15,23,42,.05);
+    transition: box-shadow .2s ease;
+}
+.chart-card:hover { box-shadow: 0 6px 22px rgba(15,23,42,.09); }
+.chart-header {
+    padding: .9rem 1.25rem;
+    border-bottom: 1px solid var(--slate-100);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(180deg, #fafafa, var(--white));
+}
+.chart-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .88rem; font-weight: 700; color: var(--kt-navy);
+    letter-spacing: -.015em;
+    display: flex; align-items: center; gap: .5rem;
+}
+.chart-title-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: linear-gradient(135deg, #CC5500, #FF8C42);
+    flex-shrink: 0;
+}
+.chart-tag {
+    font-size: .7rem; font-weight: 600; color: var(--slate-500);
+    background: var(--slate-100); padding: .22rem .6rem; border-radius: 999px;
+}
+.chart-body { padding: 1.25rem; position: relative; }
+.chart-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: .4rem; height: 100%;
+    color: var(--slate-400); font-size: .82rem; font-weight: 600;
+}
+
+/* ── Accès rapide — Quick links premium ── */
+.quick-links-section { margin-bottom: 1.5rem; }
+.section-title-bar {
+    display: flex; align-items: center; gap: .75rem; margin-bottom: .85rem;
+}
+.section-title-bar-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .78rem; font-weight: 700; color: var(--slate-500);
+    text-transform: uppercase; letter-spacing: .08em;
+    white-space: nowrap;
+}
+.section-title-bar-line { flex: 1; height: 1px; background: var(--slate-200); }
+
+.quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .75rem; }
+.quick-link {
+    border-radius: 12px; padding: .95rem 1.1rem;
+    text-decoration: none;
+    display: flex; align-items: center; gap: .75rem;
+    border: 1px solid transparent;
+    transition: all .18s;
+    box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+.quick-link:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.ql-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; flex-shrink: 0;
+    background: rgba(255,255,255,.15);
+}
+.ql-body div:first-child { font-weight: 700; font-size: .875rem; line-height: 1.2; }
+.ql-body div:last-child  { font-size: .74rem; opacity: .7; margin-top: .1rem; }
+
+@media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px)  {
+    .kpi-grid   { grid-template-columns: 1fr 1fr; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .dash-hero-title { font-size: 1.1rem; }
+}
+@media (max-width: 480px)  { .kpi-grid { grid-template-columns: 1fr; } }
 </style>
 @endpush
 
 @section('content')
 
-{{-- En-tête --}}
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem">
-    <div>
-        <h1 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--kt-navy)">Tableau de bord</h1>
-        <p style="color:var(--slate-500);font-size:.82rem;margin-top:.15rem">
-            Bonjour <strong>{{ auth()->user()->nom_complet }}</strong> · {{ ucfirst(auth()->user()->role) }}
-            · {{ now()->isoFormat('dddd D MMMM YYYY') }}
-        </p>
+{{-- Hero header ──────────────────────────────────────── --}}
+<div class="dash-hero">
+    <div class="dash-hero-left">
+        <div class="dash-hero-title">Tableau de bord</div>
+        <div class="dash-hero-sub">
+            Bonjour <strong>{{ auth()->user()->nom_complet }}</strong>
+            &nbsp;·&nbsp; {{ ucfirst(auth()->user()->role) }}
+            &nbsp;·&nbsp; {{ now()->isoFormat('dddd D MMMM YYYY') }}
+        </div>
     </div>
-    <a href="{{ route('taches.create') }}" style="background:var(--kt-navy);color:#fff;padding:.5rem 1rem;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:700;display:flex;align-items:center;gap:.4rem">
-        ＋ Nouvelle tâche
-    </a>
+    <div class="dash-hero-right">
+        <a href="{{ route('taches.create') }}" class="btn-new-task">
+            <i class="bi bi-plus-lg"></i> Nouvelle tâche
+        </a>
+    </div>
 </div>
 
 {{-- Filtres --}}
@@ -101,48 +281,67 @@
     @endif
 </form>
 
-{{-- KPI Cards --}}
+{{-- KPI Cards — Bento Premium ─────────────────────────── --}}
 <div class="kpi-grid">
+
     <div class="kpi-card kpi-card--actives">
+        <div class="kpi-icon"><i class="bi bi-list-task"></i></div>
         <div class="kpi-label">Tâches actives</div>
         <div class="kpi-value">{{ $stats['total_actives'] }}</div>
         <div class="kpi-sub">en cours de traitement</div>
     </div>
+
     <div class="kpi-card kpi-card--cours">
+        <div class="kpi-icon"><i class="bi bi-activity"></i></div>
         <div class="kpi-label">En cours</div>
         <div class="kpi-value">{{ $stats['en_cours'] }}</div>
         <div class="kpi-sub">travail actif</div>
     </div>
+
     <div class="kpi-card kpi-card--attente">
+        <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
         <div class="kpi-label">En attente</div>
         <div class="kpi-value">{{ $stats['en_attente'] }}</div>
         <div class="kpi-sub">en pause / blocage</div>
     </div>
+
     <div class="kpi-card kpi-card--terminees">
+        <div class="kpi-icon"><i class="bi bi-check2-all"></i></div>
         <div class="kpi-label">Terminées</div>
         <div class="kpi-value">{{ $stats['terminees'] }}</div>
         <div class="kpi-sub">sur la période</div>
     </div>
+
     <div class="kpi-card kpi-card--completion">
+        <div class="kpi-icon"><i class="bi bi-pie-chart-fill"></i></div>
         <div class="kpi-label">Taux de complétion</div>
         <div class="kpi-value">{{ $stats['taux_completion'] }}%</div>
-        <div style="background:var(--slate-100);border-radius:999px;height:5px;margin:.4rem 0">
-            <div style="width:{{ $stats['taux_completion'] }}%;height:5px;border-radius:999px;background:#15885A;transition:width .5s"></div>
+        <div class="kpi-progress-track">
+            <div class="kpi-progress-fill" style="width:{{ $stats['taux_completion'] }}%"></div>
         </div>
         <div class="kpi-sub">tâches terminées</div>
     </div>
+
     <div class="kpi-card kpi-card--retard {{ $stats['en_retard'] == 0 ? 'is-zero' : '' }}">
+        <div class="kpi-icon"><i class="bi bi-exclamation-triangle{{ $stats['en_retard'] > 0 ? '-fill' : '' }}"></i></div>
         <div class="kpi-label">En retard</div>
         <div class="kpi-value">{{ $stats['en_retard'] }}</div>
         <div class="kpi-sub" style="{{ $stats['en_retard'] > 0 ? 'color:#991B1B;font-weight:600' : '' }}">
-            {{ $stats['en_retard'] > 0 ? '⚠ Action requise' : 'Aucun retard' }}
+            {{ $stats['en_retard'] > 0 ? 'Action requise' : 'Aucun retard' }}
         </div>
     </div>
+
     <div class="kpi-card kpi-card--archives">
+        <div class="kpi-icon"><i class="bi bi-archive"></i></div>
         <div class="kpi-label">Archivées ce mois</div>
         <div class="kpi-value">{{ $stats['archivees_mois'] }}</div>
-        <div class="kpi-sub"><a href="{{ route('taches.archives') }}" style="color:var(--kt-navy);text-decoration:none;font-weight:600">Voir les archives →</a></div>
+        <div class="kpi-sub">
+            <a href="{{ route('taches.archives') }}" style="color:var(--kt-navy);text-decoration:none;font-weight:600">
+                Voir les archives →
+            </a>
+        </div>
     </div>
+
 </div>
 
 {{-- Graphiques --}}
@@ -151,7 +350,10 @@
     {{-- Donut : répartition par statut --}}
     <div class="chart-card">
         <div class="chart-header">
-            <span class="chart-title">Répartition par statut</span>
+            <span class="chart-title">
+                <span class="chart-title-dot"></span>
+                Répartition par statut
+            </span>
             <span class="chart-tag">toutes périodes</span>
         </div>
         <div class="chart-body" style="height:260px;display:flex;align-items:center;justify-content:center">
@@ -162,7 +364,10 @@
     {{-- Barres : charge par responsable --}}
     <div class="chart-card">
         <div class="chart-header">
-            <span class="chart-title">Charge par responsable</span>
+            <span class="chart-title">
+                <span class="chart-title-dot"></span>
+                Charge par responsable
+            </span>
             <span class="chart-tag">tâches actives</span>
         </div>
         <div class="chart-body" style="height:260px">
@@ -173,9 +378,12 @@
 </div>
 
 {{-- Courbe pleine largeur --}}
-<div class="chart-card" style="margin-bottom:1.5rem">
+<div class="chart-card" style="margin-bottom:1.35rem">
     <div class="chart-header">
-        <span class="chart-title">Avancement dans le temps</span>
+        <span class="chart-title">
+            <span class="chart-title-dot"></span>
+            Avancement dans le temps
+        </span>
         <span class="chart-tag">tâches créées vs terminées</span>
     </div>
     <div class="chart-body" style="height:220px">
@@ -184,25 +392,49 @@
 </div>
 
 {{-- Accès rapide --}}
-<div class="quick-links">
-    <a href="{{ route('taches.index') }}" class="quick-link" style="background:var(--kt-navy);color:#fff">
-        <span style="font-size:1.4rem">📋</span>
-        <div><div style="font-weight:700;font-size:.9rem">Mes tâches</div><div style="font-size:.75rem;opacity:.75">{{ $stats['total_actives'] }} active(s)</div></div>
-    </a>
-    <a href="{{ route('taches.create') }}" class="quick-link" style="background:var(--white);border:1px solid var(--slate-200);color:var(--slate-700)">
-        <span style="font-size:1.4rem">➕</span>
-        <div><div style="font-weight:700;font-size:.9rem">Nouvelle tâche</div><div style="font-size:.75rem;color:var(--slate-400)">Créer et assigner</div></div>
-    </a>
-    @if($stats['en_retard'] > 0)
-    <a href="{{ route('taches.index') }}" class="quick-link" style="background:#FEE2E2;border:1px solid #FCA5A5;color:#991B1B">
-        <span style="font-size:1.4rem">⚠️</span>
-        <div><div style="font-weight:700;font-size:.9rem">{{ $stats['en_retard'] }} en retard</div><div style="font-size:.75rem;opacity:.8">Action requise</div></div>
-    </a>
-    @endif
-    <a href="{{ route('taches.archives') }}" class="quick-link" style="background:var(--white);border:1px solid var(--slate-200);color:var(--slate-700)">
-        <span style="font-size:1.4rem">🗄</span>
-        <div><div style="font-weight:700;font-size:.9rem">Archives</div><div style="font-size:.75rem;color:var(--slate-400)">{{ $stats['archivees_mois'] }} ce mois</div></div>
-    </a>
+<div class="quick-links-section">
+    <div class="section-title-bar">
+        <div class="section-title-bar-line"></div>
+        <span class="section-title-bar-label">Accès rapide</span>
+        <div class="section-title-bar-line"></div>
+    </div>
+    <div class="quick-links">
+
+        <a href="{{ route('taches.index') }}" class="quick-link" style="background:#003366;color:#fff">
+            <div class="ql-icon"><i class="bi bi-clipboard-check"></i></div>
+            <div class="ql-body">
+                <div>Mes tâches</div>
+                <div>{{ $stats['total_actives'] }} active(s)</div>
+            </div>
+        </a>
+
+        <a href="{{ route('taches.create') }}" class="quick-link" style="background:var(--white);border:1px solid var(--slate-200);color:var(--slate-700)">
+            <div class="ql-icon" style="background:#EAF0FB;color:#003366"><i class="bi bi-plus-circle"></i></div>
+            <div class="ql-body">
+                <div>Nouvelle tâche</div>
+                <div style="color:var(--slate-400)">Créer et assigner</div>
+            </div>
+        </a>
+
+        @if($stats['en_retard'] > 0)
+        <a href="{{ route('taches.index') }}?statut=en_cours" class="quick-link" style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B">
+            <div class="ql-icon" style="background:#FEE2E2;color:#B0202E"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="ql-body">
+                <div>{{ $stats['en_retard'] }} en retard</div>
+                <div>Action requise</div>
+            </div>
+        </a>
+        @endif
+
+        <a href="{{ route('taches.archives') }}" class="quick-link" style="background:var(--white);border:1px solid var(--slate-200);color:var(--slate-700)">
+            <div class="ql-icon" style="background:#F1F5F9;color:#64748B"><i class="bi bi-archive"></i></div>
+            <div class="ql-body">
+                <div>Archives</div>
+                <div style="color:var(--slate-400)">{{ $stats['archivees_mois'] }} ce mois</div>
+            </div>
+        </a>
+
+    </div>
 </div>
 
 @push('scripts')

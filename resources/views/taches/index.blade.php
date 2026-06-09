@@ -13,6 +13,8 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 @endphp
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 .btn { display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:7px;font-size:.875rem;font-weight:600;border:none;cursor:pointer;text-decoration:none;transition:all .15s; }
 .btn-primary { background:var(--kt-navy);color:#fff; }
@@ -29,15 +31,62 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 .filter-input { padding:.45rem .75rem;border:1.5px solid var(--slate-200);border-radius:7px;font-size:.85rem;color:var(--slate-700);background:var(--slate-50);outline:none; }
 .filter-input:focus { border-color:var(--kt-navy); }
 
-.page-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;gap:1rem;flex-wrap:wrap; }
+/* ── Page header premium ── */
+.page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap;
+    background: linear-gradient(135deg, #001f3f 0%, #003366 60%, #002244 100%);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    position: relative; overflow: hidden;
+}
+.page-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+.page-header::after {
+    content: '';
+    position: absolute; bottom: -30px; right: -30px;
+    width: 150px; height: 150px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(204,85,0,.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+.page-header h1 {
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-size: 1.3rem !important; font-weight: 700 !important;
+    color: #fff !important; letter-spacing: -.025em;
+    position: relative; z-index: 1;
+}
+.page-header p {
+    color: rgba(255,255,255,.5) !important;
+    font-size: .82rem; margin-top: .1rem;
+    position: relative; z-index: 1;
+}
+.page-header .btn-primary {
+    background: #CC5500 !important; border: none;
+    box-shadow: 0 4px 14px rgba(204,85,0,.35);
+    position: relative; z-index: 1;
+}
+.page-header .btn-primary:hover { background: #E06010 !important; }
+
 .empty-state { text-align:center;padding:3rem;color:var(--slate-400);background:var(--white);border-radius:12px;border:1px solid var(--slate-200); }
 
 /* ---- Liste de tâches ---- */
 .task-list { display:flex; flex-direction:column; gap:.6rem; }
 
 .task-row-link { text-decoration:none; color:inherit; display:block; }
-.task-row-link:hover .kt-task-row { box-shadow:0 4px 14px rgba(15,23,42,.10); transform:translateY(-1px); }
-.kt-task-row { transition: box-shadow .15s ease, transform .15s ease; }
+.task-row-link:hover .kt-task-row {
+    box-shadow: 0 6px 20px rgba(15,23,42,.12);
+    transform: translateY(-2px);
+}
+.kt-task-row {
+    transition: box-shadow .18s ease, transform .18s ease;
+    box-shadow: 0 1px 4px rgba(15,23,42,.06);
+}
 
 /* Carte "Mes tâches" — fond bleu très léger + bordure supérieure */
 .kt-task-row.mine { background:#EFF6FF !important; border-top-color:#BFDBFE !important; }
@@ -51,33 +100,49 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
     white-space:nowrap; letter-spacing:.02em;
 }
 
-/* Séparateurs de sections */
+/* ── Séparateurs de sections — design premium ── */
 .section-sep {
-    display:flex; align-items:center; gap:.75rem;
-    margin: 1rem 0 .6rem;
+    display: flex; align-items: center; gap: .75rem;
+    margin: 1.1rem 0 .7rem;
 }
-.section-sep-line {
-    flex:1; height:1.5px; background:var(--slate-200);
-}
+.section-sep-line { flex: 1; height: 1.5px; }
 .section-sep-label {
-    display:flex; align-items:center; gap:.4rem;
-    font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-    white-space:nowrap;
+    display: flex; align-items: center; gap: .5rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    white-space: nowrap;
+    padding: .3rem .85rem;
+    border-radius: 999px;
+    border: 1.5px solid transparent;
 }
-.section-sep.mine .section-sep-label  { color:#1E40AF; }
-.section-sep.mine .section-sep-line   { background:#BFDBFE; }
-.section-sep.equipe .section-sep-label { color:var(--slate-500); }
 .section-sep-count {
-    display:inline-flex; align-items:center; justify-content:center;
-    min-width:1.4rem; height:1.4rem;
-    border-radius:999px; font-size:.7rem; font-weight:700;
-    padding:0 .4rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.5rem; height: 1.5rem;
+    border-radius: 999px; font-size: .68rem; font-weight: 800;
+    padding: 0 .4rem;
 }
-.section-sep.mine .section-sep-count   { background:#DBEAFE; color:#1E40AF; }
-.section-sep.equipe .section-sep-count { background:var(--slate-100); color:var(--slate-600); }
+
+/* Section "Mes tâches" — bleu avec fond */
+.section-sep.mine .section-sep-line   { background: linear-gradient(90deg, transparent, #BFDBFE, #BFDBFE, transparent); }
+.section-sep.mine .section-sep-label  {
+    color: #1D4ED8;
+    background: #EFF6FF;
+    border-color: #BFDBFE;
+}
+.section-sep.mine .section-sep-count  { background: #DBEAFE; color: #1D4ED8; }
+
+/* Section "Équipe" — gris slate */
+.section-sep.equipe .section-sep-line  { background: linear-gradient(90deg, transparent, var(--slate-200), var(--slate-200), transparent); }
+.section-sep.equipe .section-sep-label {
+    color: var(--slate-600);
+    background: var(--slate-50);
+    border-color: var(--slate-200);
+}
+.section-sep.equipe .section-sep-count { background: var(--slate-200); color: var(--slate-600); }
 
 .task-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
-.task-titre { font-family:var(--font-display); font-weight:700; font-size:.95rem; color:var(--kt-navy); line-height:1.3; }
+.task-titre { font-family:'Space Grotesk', var(--font-display), sans-serif; font-weight:700; font-size:.95rem; color:var(--kt-navy); line-height:1.3; }
 .task-sub { font-size:.74rem; color:var(--slate-400); margin-top:.15rem; }
 .task-badges { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
 .badge-retard { background:var(--st-stop); color:#fff; font-size:.65rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; white-space:nowrap; }
