@@ -12,8 +12,8 @@
     <meta name="theme-color" content="#003366">
 
     <link rel="stylesheet" href="{{ asset('charte-graphique.css') }}">
+    <link rel="stylesheet" href="{{ asset('sgt-premium.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
     @stack('styles')
 
     <style>
@@ -515,6 +515,87 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', syncDirectionUI);
+</script>
+
+{{-- SGT Premium JS — animations + compteurs ─────────────────────────── --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── 1. Scroll-triggered animations (.animate-in) ───────────────────────
+    const animObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                animObserver.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -32px 0px' });
+
+    document.querySelectorAll('.animate-in').forEach(function (el) {
+        animObserver.observe(el);
+    });
+
+    // ── 2. Compteurs KPI animés (data-target) ─────────────────────────────
+    function animateCounter(el) {
+        var target = parseInt(el.dataset.target, 10);
+        if (isNaN(target)) return;
+        var duration = 900;
+        var start = performance.now();
+        function update(now) {
+            var progress = Math.min((now - start) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(eased * target);
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    }
+
+    var kpiObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) {
+                animateCounter(e.target);
+                kpiObserver.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.kpi-value[data-target]').forEach(function (el) {
+        kpiObserver.observe(el);
+    });
+
+    // ── 3. Fade-out au clic sur lien interne ──────────────────────────────
+    document.querySelectorAll('a[href]').forEach(function (a) {
+        var href = a.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript')
+            || a.target === '_blank' || a.hasAttribute('data-no-transition')) return;
+        a.addEventListener('click', function (e) {
+            var el = document.querySelector('.page-body');
+            if (!el) return;
+            e.preventDefault();
+            var dest = href;
+            el.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(6px)';
+            setTimeout(function () { window.location.href = dest; }, 185);
+        });
+    });
+
+    // ── 4. Classes stagger-grid + reveal-up sur KPI grid ─────────────────
+    var kpiGrid = document.querySelector('.kpi-grid');
+    if (kpiGrid) {
+        kpiGrid.classList.add('stagger-grid');
+        kpiGrid.querySelectorAll('.kpi-card').forEach(function (card) {
+            card.classList.add('reveal-up');
+        });
+    }
+
+    // Task rows — animate-in au scroll
+    document.querySelectorAll('.kt-task-row').forEach(function (row) {
+        row.classList.add('animate-in');
+        animObserver.observe(row);
+    });
+
+});
 </script>
 @stack('scripts')
 </body>

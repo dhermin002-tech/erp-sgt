@@ -1,0 +1,564 @@
+/* ============================================================================
+   SGT KayTechnologie — PREMIUM LAYER v1.0
+   Injecter APRÈS charte-graphique.css dans layouts/app.blade.php
+   Objectif : porter la note design de 85 → 98/100
+   ============================================================================
+
+   SOMMAIRE
+   1. Typographie — unification Archivo / IBM Plex Sans
+   2. Scrollbar custom (global + sidebar)
+   3. Transitions de page
+   4. Animations d'entrée staguées
+   5. Compteurs KPI animés (classe .kt-counter)
+   6. Focus states — accessibilité WCAG
+   7. Formulaires — focus brandé
+   8. Sidebar — polish (barre active, hover glow)
+   9. Hover sur lignes de tâches — glow coloré statut
+  10. KPI cards — icône animée + polish
+  11. Boutons — micro-interactions
+  12. Page header — subtilités supplémentaires
+  13. Print styles (rapports)
+  14. Skeleton loaders
+  15. Mobile — safe area + bottom nav padding
+   ============================================================================ */
+
+/* ── 1. TYPOGRAPHIE — unification ───────────────────────────────────────────
+   On écrase Space Grotesk partout : Archivo prend le rôle display,
+   IBM Plex Sans reste le corps. Plus aucune font fantôme.
+   ── */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+.dash-hero-title,
+.page-header h1,
+.tache-titre-show,
+.kpi-value,
+.chart-title,
+.section-title-bar-label,
+[class*="Space Grotesk"],
+[style*="Space Grotesk"] {
+  font-family: 'Archivo', var(--font-display), system-ui, sans-serif !important;
+}
+
+body, .kt-app,
+.filter-label, .filter-select, .filter-input,
+.btn, .kt-btn,
+.ql-body, .stat-label,
+.nav-item-kt span,
+[data-direction="A"] .sidebar-nav a {
+  font-family: 'IBM Plex Sans', var(--font-ui), system-ui, sans-serif;
+}
+
+/* ── 2. SCROLLBAR CUSTOM ─────────────────────────────────────────────────────
+   Fine, brandée, subtile. Fonctionne sur Chromium/Edge.
+   ── */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(204,85,0,.35) transparent;
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(204,85,0,.3);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(204,85,0,.55); }
+
+/* Sidebar — scrollbar encore plus fine sur fond marine */
+[data-direction="A"] .sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.15) transparent;
+}
+[data-direction="A"] .sidebar-nav::-webkit-scrollbar { width: 3px; }
+[data-direction="A"] .sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.2);
+  border-radius: 999px;
+}
+
+/* ── 3. TRANSITIONS DE PAGE ──────────────────────────────────────────────────
+   Fade-out au clic sur lien interne, fade-in au chargement.
+   ── */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-body {
+  animation: pageFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── 4. ANIMATIONS D'ENTRÉE STAGUÉES ─────────────────────────────────────────
+   .reveal-up  → s'anime au chargement (statique)
+   .animate-in → s'anime au scroll (IntersectionObserver via JS inline)
+   ── */
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(24px); filter: blur(3px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+@keyframes revealLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.reveal-up {
+  animation: revealUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  opacity: 0;
+}
+.reveal-left {
+  animation: revealLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  opacity: 0;
+}
+
+/* Délais stagués — poser sur les enfants d'une grille */
+.stagger-grid > *:nth-child(1)  { animation-delay: 0.04s; }
+.stagger-grid > *:nth-child(2)  { animation-delay: 0.08s; }
+.stagger-grid > *:nth-child(3)  { animation-delay: 0.12s; }
+.stagger-grid > *:nth-child(4)  { animation-delay: 0.16s; }
+.stagger-grid > *:nth-child(5)  { animation-delay: 0.20s; }
+.stagger-grid > *:nth-child(6)  { animation-delay: 0.24s; }
+.stagger-grid > *:nth-child(7)  { animation-delay: 0.28s; }
+.stagger-grid > *:nth-child(8)  { animation-delay: 0.32s; }
+
+/* Scroll-triggered */
+.animate-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.animate-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ── 5. COMPTEURS KPI ANIMÉS ─────────────────────────────────────────────────
+   Ajouter data-target="42" sur l'élément .kpi-value.
+   Le JS au bas de ce fichier (injecté via app.blade.php) anime le chiffre.
+   ── */
+.kpi-value[data-target] {
+  transition: color 0.3s ease;
+}
+
+/* ── 6. FOCUS STATES — WCAG AA ───────────────────────────────────────────────
+   Outline visible, cohérent avec la marque.
+   ── */
+:focus-visible {
+  outline: 2px solid #CC5500;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* Effacer l'outline natif Chrome qui s'empile */
+:focus:not(:focus-visible) { outline: none; }
+
+/* Liens nav sidebar */
+[data-direction="A"] .sidebar-nav a:focus-visible {
+  outline: 2px solid rgba(204,85,0,.7);
+  outline-offset: -2px;
+}
+
+/* ── 7. FORMULAIRES — FOCUS BRANDÉ ───────────────────────────────────────────
+   Toutes les inputs/selects reçoivent le même focus premium.
+   ── */
+input:focus,
+select:focus,
+textarea:focus,
+.filter-select:focus,
+.filter-input:focus {
+  border-color: var(--kt-navy) !important;
+  box-shadow: 0 0 0 3px rgba(23,58,122,.12) !important;
+  outline: none !important;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+/* Placeholder plus subtil */
+::placeholder { color: var(--slate-400); opacity: 1; }
+
+/* ── 8. SIDEBAR — POLISH ─────────────────────────────────────────────────────
+   Barre latérale gauche sur l'item actif + hover glow orange
+   ── */
+[data-direction="A"] .sidebar-nav a {
+  position: relative;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Barre de gauche sur item actif */
+[data-direction="A"] .sidebar-nav a.active::before {
+  content: '';
+  position: absolute;
+  left: -0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: #CC5500;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Hover glow sur icône */
+[data-direction="A"] .sidebar-nav a:hover i,
+[data-direction="A"] .sidebar-nav a:hover .nav-icon {
+  color: #CC5500;
+  text-shadow: 0 0 12px rgba(204,85,0,.5);
+  transition: color 0.15s, text-shadow 0.15s;
+}
+
+/* Label section sidebar légèrement plus visible */
+[data-direction="A"] .sidebar-nav .nav-label {
+  color: rgba(255,255,255,.35);
+  letter-spacing: .12em;
+}
+
+/* ── 9. LIGNES DE TÂCHES — HOVER GLOW COLORÉ SELON STATUT ───────────────────
+   Le glow suit la couleur du rail de statut de la tâche.
+   ── */
+.task-row-link:hover .kt-task-row {
+  box-shadow: 0 8px 28px rgba(15,23,42,.13),
+              0 0 0 1px rgba(15,23,42,.05) !important;
+}
+
+/* Glow coloré sur les lignes avec statut connu */
+.kt-task-row[style*="--rail-color: var(--st-progress)"],
+.kt-task-row[style*="--rail-color:var(--st-progress)"] {
+  --hover-glow: rgba(37,99,235,.12);
+}
+.kt-task-row[style*="--rail-color: var(--st-done)"],
+.kt-task-row[style*="--rail-color:var(--st-done)"] {
+  --hover-glow: rgba(21,136,90,.12);
+}
+.kt-task-row[style*="--rail-color: var(--st-wait)"],
+.kt-task-row[style*="--rail-color:var(--st-wait)"] {
+  --hover-glow: rgba(201,122,10,.12);
+}
+.kt-task-row[style*="--rail-color: var(--st-stop)"],
+.kt-task-row[style*="--rail-color:var(--st-stop)"] {
+  --hover-glow: rgba(176,32,46,.12);
+}
+
+.task-row-link:hover .kt-task-row {
+  background: color-mix(in srgb, var(--hover-glow, rgba(23,58,122,.05)) 100%, white) !important;
+}
+
+/* ── 10. KPI CARDS — ICÔNE ANIMÉE + POLISH ──────────────────────────────────
+   Scale + légère rotation de l'icône au hover de la carte.
+   ── */
+.kpi-card {
+  transition: transform 0.22s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.22s cubic-bezier(0.16,1,0.3,1) !important;
+}
+.kpi-card:hover .kpi-icon {
+  transform: scale(1.12) rotate(-6deg);
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.kpi-icon {
+  transition: transform 0.2s ease;
+}
+
+/* Séparateur dégradé sous la barre supérieure colorée */
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 0; right: 0;
+  height: 32px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--kc, #94a3b8) 8%, transparent), transparent);
+  border-radius: 14px 14px 0 0;
+  pointer-events: none;
+}
+
+/* ── 11. BOUTONS — MICRO-INTERACTIONS ────────────────────────────────────────
+   Ripple CSS + glow KT sur les boutons primaires.
+   ── */
+.btn-new-task,
+.btn-kt-primary,
+.kt-btn--action,
+.kt-btn--primary {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ripple au clic */
+.btn-new-task::after,
+.kt-btn--action::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,.28) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+.btn-new-task:active::after,
+.kt-btn--action:active::after {
+  transform: scale(2.5);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* Glow KT sur hover bouton action */
+.btn-new-task:hover {
+  box-shadow: 0 6px 22px rgba(204,85,0,.48),
+              0 0 0 1px rgba(204,85,0,.2) !important;
+}
+
+/* Bouton danger — micro-shake au hover */
+@keyframes microShake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-2px); }
+  75%       { transform: translateX(2px); }
+}
+.btn-danger:hover {
+  animation: microShake 0.25s ease;
+}
+
+/* ── 12. PAGE HEADER — SUBTILITÉS ────────────────────────────────────────────
+   Grain texture sur le fond marine + shimmer très subtil.
+   ── */
+.dash-hero,
+.page-header {
+  isolation: isolate;
+}
+
+/* Grain texture */
+.dash-hero::before,
+.page-header::before {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.042) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E") !important;
+  background-size: 22px 22px, 180px 180px !important;
+}
+
+/* Top-bar ombre subtile */
+[data-direction="A"] .top-bar {
+  box-shadow: 0 1px 0 var(--slate-200),
+              0 2px 8px rgba(15,23,42,.04) !important;
+}
+
+/* ── 13. PRINT STYLES — RAPPORTS ─────────────────────────────────────────────
+   Impression propre : fond blanc, sidebar masquée, texte noir.
+   ── */
+@media print {
+  .sidebar,
+  .top-bar,
+  .hamburger,
+  .sidebar-overlay,
+  .filters-bar,
+  .no-print,
+  .btn,
+  .kt-btn { display: none !important; }
+
+  .main-content,
+  .page-body {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .app-wrapper {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+  }
+
+  .kt-card,
+  .chart-card,
+  .kpi-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Forcer les couleurs de statut à s'imprimer */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+/* ── 14. SKELETON LOADERS ────────────────────────────────────────────────────
+   Pour zones AJAX / chargement asynchrone.
+   ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--slate-100) 25%,
+    var(--slate-50)  50%,
+    var(--slate-100) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: var(--th-radius, 10px);
+  color: transparent !important;
+  pointer-events: none;
+}
+.skeleton * { visibility: hidden; }
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.skeleton-line.w-3\/4 { width: 75%; }
+.skeleton-line.w-1\/2 { width: 50%; }
+.skeleton-line.w-full { width: 100%; }
+
+/* ── 15. MOBILE — SAFE AREA + POLISH ────────────────────────────────────────
+   Safe area iOS notch/Dynamic Island + tap targets uniformes.
+   ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  [data-direction="B"] .top-bar {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+  .page-body {
+    padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));
+  }
+}
+
+@media (max-width: 768px) {
+  /* Tap targets minimum 44px partout */
+  .btn, .kt-btn, .btn-new-task,
+  .notif-btn, .hamburger,
+  .filter-select, .filter-input {
+    min-height: 44px;
+  }
+
+  /* Cards KPI — légèrement plus compactes sur mobile */
+  .kpi-card { padding: 1rem; }
+  .kpi-value { font-size: 1.9rem !important; }
+
+  /* Lignes de tâches — plus d'espace tactile */
+  .kt-task-row > .content { padding: 1rem 1rem !important; }
+
+  /* Flash messages — plein écran sur mobile */
+  .flash { border-radius: 0 !important; margin: 0 -1.5rem 1rem !important; }
+
+  /* Sidebar overlay — transition plus douce */
+  .sidebar-overlay {
+    transition: opacity 0.25s ease;
+  }
+  .sidebar-overlay.show { opacity: 1; }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { gap: .6rem !important; }
+  .kpi-value { font-size: 1.7rem !important; }
+  .dash-hero { padding: 1rem 1.1rem !important; }
+}
+
+/* ── QUICK LINKS — hover premium ─────────────────────────────────────────── */
+.quick-link {
+  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.2s ease,
+              border-color 0.2s ease !important;
+}
+.quick-link:hover {
+  border-color: rgba(255,255,255,.25) !important;
+}
+
+/* ── CHART CARDS — entrée différée ──────────────────────────────────────── */
+.chart-card {
+  animation: revealUp 0.5s cubic-bezier(0.16,1,0.3,1) both;
+  opacity: 0;
+}
+.charts-grid > .chart-card:nth-child(1) { animation-delay: 0.20s; }
+.charts-grid > .chart-card:nth-child(2) { animation-delay: 0.28s; }
+.charts-grid > .chart-card:nth-child(3) { animation-delay: 0.36s; }
+.charts-grid > .chart-card:nth-child(4) { animation-delay: 0.44s; }
+
+/* ── BADGES STATUT — dot pulse sur "En cours" ────────────────────────────── */
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.5); opacity: .6; }
+}
+.kt-status[data-st="progress"] .dot {
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+/* ── ROLE CHIP — polish ──────────────────────────────────────────────────── */
+.role-chip {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: .02em;
+}
+
+/* ── USER AVATAR — gradient premium ─────────────────────────────────────── */
+.user-avatar-wrap,
+[class*="avatar"] {
+  background: linear-gradient(135deg, var(--kt-navy) 0%, #1a4f99 100%);
+}
+
+/* ── TOP BAR user btn — hover state ─────────────────────────────────────── */
+.user-btn:hover {
+  background: var(--slate-100);
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+/* ── NOTIFICATION BELL — pulse quand non lue ─────────────────────────────── */
+@keyframes bellWobble {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(-8deg); }
+  40%       { transform: rotate(8deg); }
+  60%       { transform: rotate(-5deg); }
+  80%       { transform: rotate(5deg); }
+}
+.notif-btn:hover i {
+  animation: bellWobble 0.5s ease;
+  display: inline-block;
+}
+
+/* ── TABLE KT — alternance lignes raffinée ───────────────────────────────── */
+.kt-table tbody tr:nth-child(even) td {
+  background: rgba(246,248,251,.6);
+}
+.kt-table tbody tr {
+  transition: background 0.12s ease;
+}
+.kt-table tbody tr:hover td {
+  background: rgba(23,58,122,.04) !important;
+}
+
+/* ── PROGRESS BAR — animation au chargement ─────────────────────────────── */
+.kt-prog .fill {
+  animation: progressReveal 0.8s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes progressReveal {
+  from { width: 0 !important; }
+}
+
+/* ── TASK HEADER (show.blade) — accent amélioré ─────────────────────────── */
+.tache-header {
+  transition: box-shadow 0.2s ease;
+}
+.tache-header:hover {
+  box-shadow: 0 4px 16px rgba(15,23,42,.08);
+}
+
+/* ── EMPTY STATE — polish ────────────────────────────────────────────────── */
+.empty-state {
+  padding: 4rem 2rem !important;
+  border-radius: 16px !important;
+}
+.empty-state i {
+  font-size: 3rem;
+  color: var(--slate-300);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+/* ── FLASH MESSAGES — animation d'entrée ────────────────────────────────── */
+.flash {
+  animation: revealUp 0.35s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+/* ── DROPDOWN USER — animation ───────────────────────────────────────────── */
+.user-dropdown.open {
+  animation: revealUp 0.2s cubic-bezier(0.16,1,0.3,1) both !important;
+}

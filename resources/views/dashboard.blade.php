@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
 <style>
 /* ── Page hero header ── */
 .dash-hero {
@@ -287,35 +287,35 @@
     <div class="kpi-card kpi-card--actives">
         <div class="kpi-icon"><i class="bi bi-list-task"></i></div>
         <div class="kpi-label">Tâches actives</div>
-        <div class="kpi-value">{{ $stats['total_actives'] }}</div>
+        <div class="kpi-value" data-target="{{ $stats['total_actives'] }}">{{ $stats['total_actives'] }}</div>
         <div class="kpi-sub">en cours de traitement</div>
     </div>
 
     <div class="kpi-card kpi-card--cours">
         <div class="kpi-icon"><i class="bi bi-activity"></i></div>
         <div class="kpi-label">En cours</div>
-        <div class="kpi-value">{{ $stats['en_cours'] }}</div>
+        <div class="kpi-value" data-target="{{ $stats['en_cours'] }}">{{ $stats['en_cours'] }}</div>
         <div class="kpi-sub">travail actif</div>
     </div>
 
     <div class="kpi-card kpi-card--attente">
         <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
         <div class="kpi-label">En attente</div>
-        <div class="kpi-value">{{ $stats['en_attente'] }}</div>
+        <div class="kpi-value" data-target="{{ $stats['en_attente'] }}">{{ $stats['en_attente'] }}</div>
         <div class="kpi-sub">en pause / blocage</div>
     </div>
 
     <div class="kpi-card kpi-card--terminees">
         <div class="kpi-icon"><i class="bi bi-check2-all"></i></div>
         <div class="kpi-label">Terminées</div>
-        <div class="kpi-value">{{ $stats['terminees'] }}</div>
+        <div class="kpi-value" data-target="{{ $stats['terminees'] }}">{{ $stats['terminees'] }}</div>
         <div class="kpi-sub">sur la période</div>
     </div>
 
     <div class="kpi-card kpi-card--completion">
         <div class="kpi-icon"><i class="bi bi-pie-chart-fill"></i></div>
         <div class="kpi-label">Taux de complétion</div>
-        <div class="kpi-value">{{ $stats['taux_completion'] }}%</div>
+        <div class="kpi-value" data-target="{{ $stats['taux_completion'] }}">{{ $stats['taux_completion'] }}%</div>
         <div class="kpi-progress-track">
             <div class="kpi-progress-fill" style="width:{{ $stats['taux_completion'] }}%"></div>
         </div>
@@ -325,7 +325,7 @@
     <div class="kpi-card kpi-card--retard {{ $stats['en_retard'] == 0 ? 'is-zero' : '' }}">
         <div class="kpi-icon"><i class="bi bi-exclamation-triangle{{ $stats['en_retard'] > 0 ? '-fill' : '' }}"></i></div>
         <div class="kpi-label">En retard</div>
-        <div class="kpi-value">{{ $stats['en_retard'] }}</div>
+        <div class="kpi-value" data-target="{{ $stats['en_retard'] }}">{{ $stats['en_retard'] }}</div>
         <div class="kpi-sub" style="{{ $stats['en_retard'] > 0 ? 'color:#991B1B;font-weight:600' : '' }}">
             {{ $stats['en_retard'] > 0 ? 'Action requise' : 'Aucun retard' }}
         </div>
@@ -334,7 +334,7 @@
     <div class="kpi-card kpi-card--archives">
         <div class="kpi-icon"><i class="bi bi-archive"></i></div>
         <div class="kpi-label">Archivées ce mois</div>
-        <div class="kpi-value">{{ $stats['archivees_mois'] }}</div>
+        <div class="kpi-value" data-target="{{ $stats['archivees_mois'] }}">{{ $stats['archivees_mois'] }}</div>
         <div class="kpi-sub">
             <a href="{{ route('taches.archives') }}" style="color:var(--kt-navy);text-decoration:none;font-weight:600">
                 Voir les archives →
