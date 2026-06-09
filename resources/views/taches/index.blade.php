@@ -32,12 +32,49 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 .page-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;gap:1rem;flex-wrap:wrap; }
 .empty-state { text-align:center;padding:3rem;color:var(--slate-400);background:var(--white);border-radius:12px;border:1px solid var(--slate-200); }
 
-/* ---- Liste de tâches en cartes (remplace la table qui débordait en mobile) --- */
+/* ---- Liste de tâches ---- */
 .task-list { display:flex; flex-direction:column; gap:.6rem; }
 
 .task-row-link { text-decoration:none; color:inherit; display:block; }
 .task-row-link:hover .kt-task-row { box-shadow:0 4px 14px rgba(15,23,42,.10); transform:translateY(-1px); }
 .kt-task-row { transition: box-shadow .15s ease, transform .15s ease; }
+
+/* Carte "Mes tâches" — fond bleu très léger + bordure supérieure */
+.kt-task-row.mine { background:#EFF6FF !important; border-top-color:#BFDBFE !important; }
+
+/* Badge "Moi" */
+.badge-mine {
+    display:inline-flex; align-items:center; gap:.25rem;
+    background:#1E40AF; color:#fff;
+    font-size:.65rem; font-weight:700;
+    padding:.15rem .5rem; border-radius:999px;
+    white-space:nowrap; letter-spacing:.02em;
+}
+
+/* Séparateurs de sections */
+.section-sep {
+    display:flex; align-items:center; gap:.75rem;
+    margin: 1rem 0 .6rem;
+}
+.section-sep-line {
+    flex:1; height:1.5px; background:var(--slate-200);
+}
+.section-sep-label {
+    display:flex; align-items:center; gap:.4rem;
+    font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    white-space:nowrap;
+}
+.section-sep.mine .section-sep-label  { color:#1E40AF; }
+.section-sep.mine .section-sep-line   { background:#BFDBFE; }
+.section-sep.equipe .section-sep-label { color:var(--slate-500); }
+.section-sep-count {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:1.4rem; height:1.4rem;
+    border-radius:999px; font-size:.7rem; font-weight:700;
+    padding:0 .4rem;
+}
+.section-sep.mine .section-sep-count   { background:#DBEAFE; color:#1E40AF; }
+.section-sep.equipe .section-sep-count { background:var(--slate-100); color:var(--slate-600); }
 
 .task-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
 .task-titre { font-family:var(--font-display); font-weight:700; font-size:.95rem; color:var(--kt-navy); line-height:1.3; }
@@ -126,66 +163,74 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
     </div>
 </div>
 @else
-<div class="task-list">
-@foreach($taches as $tache)
-    <div class="kt-task-row" style="--rail-color: {{ $railVar[$tache->priorite] ?? 'var(--slate-300)' }}">
-        <span class="rail"></span>
-        <div class="content">
-            <a href="{{ route('taches.show', $tache) }}" class="task-row-link">
-                <div class="task-top">
-                    <div>
-                        <div class="task-titre">{{ $tache->titre }}</div>
-                        @if($tache->sousTaches->count() > 0)
-                        <div class="task-sub">{{ $tache->sousTaches->where('termine',true)->count() }}/{{ $tache->sousTaches->count() }} sous-tâches terminées</div>
-                        @endif
-                    </div>
-                    <div class="task-badges">
-                        @if($tache->estEnRetard())<span class="badge-retard">⚠ En retard</span>@endif
-                        @include('partials.badge_statut', ['statut' => $tache->statut])
-                        @include('partials.badge_priorite', ['priorite' => $tache->priorite])
-                    </div>
-                </div>
 
-                <div class="task-meta">
-                    @if($tache->site)
-                    <span class="meta-item kt-site">📍 {{ $tache->site->nom }}</span>
-                    @endif
-                    @if($tache->date_echeance)
-                    <span class="meta-item echeance {{ $tache->estEnRetard() ? 'late' : '' }}">
-                        🗓 {{ $tache->date_echeance->format('d/m/Y') }}
-                    </span>
-                    @endif
-                    <span class="meta-item kt-prog">
-                        <span class="track"><span class="fill" style="width:{{ $tache->progression }}%"></span></span>
-                        <span class="val">{{ $tache->progression }}%</span>
-                    </span>
-                    @if($tache->responsables->count())
-                    <span class="meta-item avatar-stack">
-                        @foreach($tache->responsables->take(4) as $i => $r)
-                        <span class="kt-avatar" style="background:{{ $avatarBg[$i % count($avatarBg)] }}" title="{{ $r->prenom }} {{ $r->nom }}">{{ $initiales($r) }}</span>
-                        @endforeach
-                        @if($tache->responsables->count() > 4)
-                        <span class="kt-avatar" style="background:var(--slate-400)">+{{ $tache->responsables->count() - 4 }}</span>
-                        @endif
-                    </span>
-                    @endif
-                </div>
-            </a>
+@php
+$isManager = auth()->user()->isManager();
+$myId      = auth()->id();
 
-            <div class="task-actions">
-                <a href="{{ route('taches.show', $tache) }}" class="btn btn-ghost btn-sm">Voir</a>
-                <a href="{{ route('taches.edit', $tache) }}" class="btn btn-ghost btn-sm">Éditer</a>
-                @if(auth()->user()->isManager())
-                <form method="POST" action="{{ route('taches.destroy', $tache) }}" onsubmit="return confirm('Supprimer cette tâche ?')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm">✕</button>
-                </form>
-                @endif
-            </div>
-        </div>
+if ($isManager) {
+    [$mesTaches, $tachesEquipe] = $taches->getCollection()->partition(
+        fn($t) => $t->responsables->contains('id', $myId)
+    );
+}
+@endphp
+
+@if($isManager)
+{{-- ═══════════════ VUE MANAGER : 2 sections ═══════════════ --}}
+
+{{-- Section : Mes tâches --}}
+<div class="section-sep mine">
+    <div class="section-sep-line"></div>
+    <div class="section-sep-label">
+        <span>👤 Mes tâches</span>
+        <span class="section-sep-count">{{ $mesTaches->count() }}</span>
     </div>
+    <div class="section-sep-line"></div>
+</div>
+
+@if($mesTaches->isEmpty())
+<div class="empty-state" style="padding:1.5rem;margin-bottom:.5rem">
+    <span style="font-size:.875rem">Aucune tâche assignée à vous sur cette page.</span>
+</div>
+@else
+<div class="task-list">
+@foreach($mesTaches as $tache)
+    @include('taches._card', ['tache' => $tache, 'isMine' => true, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
 @endforeach
 </div>
+@endif
+
+{{-- Section : Tâches équipe --}}
+<div class="section-sep equipe" style="margin-top:1.5rem">
+    <div class="section-sep-line"></div>
+    <div class="section-sep-label">
+        <span>👥 Tâches équipe</span>
+        <span class="section-sep-count">{{ $tachesEquipe->count() }}</span>
+    </div>
+    <div class="section-sep-line"></div>
+</div>
+
+@if($tachesEquipe->isEmpty())
+<div class="empty-state" style="padding:1.5rem">
+    <span style="font-size:.875rem">Toutes les tâches de cette page vous sont assignées.</span>
+</div>
+@else
+<div class="task-list">
+@foreach($tachesEquipe as $tache)
+    @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+@endforeach
+</div>
+@endif
+
+@else
+{{-- ═══════════════ VUE COLLABORATEUR : liste simple ═══════════════ --}}
+<div class="task-list">
+@foreach($taches as $tache)
+    @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+@endforeach
+</div>
+@endif
+
 @endif
 
 @if($taches->hasPages())
