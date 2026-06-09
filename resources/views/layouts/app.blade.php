@@ -196,11 +196,69 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* ── Role badge ──────────────────────────────────── */
+        /* ── Role badge — couleur selon rôle ─────────────── */
         .role-chip {
             font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px;
-            background: var(--kt-orange-soft); color: var(--kt-orange);
-            text-transform: capitalize;
+            text-transform: capitalize; white-space: nowrap;
+        }
+        .role-chip[data-role="manager"]    { background: rgba(0,51,102,.12);  color: #003366; }
+        .role-chip[data-role="technicien"] { background: rgba(37,99,235,.12); color: #1D4ED8; }
+        .role-chip[data-role="agent"]      { background: rgba(22,163,74,.12); color: #16A34A; }
+        .role-chip[data-role="dev"]        { background: rgba(126,34,206,.12);color: #7E22CE; }
+        .role-chip[data-role="stagiaire"]  { background: rgba(100,116,139,.12);color: #475569; }
+        /* fallback si rôle inconnu */
+        .role-chip:not([data-role])        { background: var(--kt-orange-soft); color: var(--kt-orange); }
+
+        /* ── Top-bar mobile améliorée ─────────────────────── */
+        @media (max-width: 768px) {
+            /* Logo SGT visible à gauche du hamburger */
+            .mobile-logo-wrap {
+                display: flex !important;
+                align-items: center;
+                gap: .45rem;
+            }
+            .mobile-logo-wrap img {
+                height: 30px; width: auto;
+                background: #fff;
+                border-radius: 6px;
+                padding: 2px 5px;
+                display: block;
+            }
+            .mobile-logo-wrap .mobile-logo-name {
+                font-family: 'Space Grotesk', sans-serif;
+                font-size: .82rem; font-weight: 700;
+                color: var(--kt-navy, #003366);
+                letter-spacing: .03em;
+                white-space: nowrap;
+            }
+            /* Top-bar hauteur min 56px */
+            [data-direction="A"] .top-bar,
+            [data-direction="B"] .top-bar {
+                min-height: 56px;
+            }
+            /* Cloche — zone de tap 44×44 */
+            .notif-btn {
+                min-width: 44px !important; min-height: 44px !important;
+                display: flex !important; align-items: center; justify-content: center;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Logo wrap mobile — caché sur desktop */
+        .mobile-logo-wrap { display: none; }
+
+        /* ── Sidebar — ligne décorative orange en bas du logo ─ */
+        [data-direction="A"] .sidebar-logo {
+            border-bottom: 2px solid transparent !important;
+            position: relative;
+        }
+        [data-direction="A"] .sidebar-logo::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 1.25rem; right: 1.25rem;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #CC5500 30%, #CC5500 70%, transparent);
+            border-radius: 999px;
         }
     </style>
 </head>
@@ -235,6 +293,9 @@
             <a href="{{ route('taches.archives') }}" class="{{ request()->routeIs('taches.archives') ? 'active' : '' }}">
                 🗄 Archives
             </a>
+            <a href="{{ route('rapports.index') }}" class="{{ request()->routeIs('rapports.index') ? 'active' : '' }}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Rapport
+            </a>
             @if(auth()->user()->isManager())
             <div class="nav-label">Administration</div>
             <a href="{{ route('membres.index') }}" class="{{ request()->routeIs('membres.*') ? 'active' : '' }}">👥 Membres</a>
@@ -253,6 +314,12 @@
         <header class="top-bar">
             {{-- Direction A : titre page + hamburger --}}
             <div style="display:flex;align-items:center;gap:.75rem">
+                {{-- Logo SGT visible sur mobile à gauche du hamburger --}}
+                <span class="mobile-logo-wrap">
+                    <img src="{{ asset('images/logo-kt.jpg') }}" alt="SGT"
+                         onerror="this.style.display='none'">
+                    <span class="mobile-logo-name">SGT</span>
+                </span>
                 <button class="hamburger" onclick="toggleSidebarMobile()" aria-label="Menu">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
@@ -267,6 +334,9 @@
                     <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
                     <a href="{{ route('taches.index') }}" class="{{ request()->routeIs('taches.index','taches.show','taches.create','taches.edit') ? 'active' : '' }}">Tâches</a>
                     <a href="{{ route('taches.archives') }}" class="{{ request()->routeIs('taches.archives') ? 'active' : '' }}">Archives</a>
+                    <a href="{{ route('rapports.index') }}" class="{{ request()->routeIs('rapports.index') ? 'active' : '' }}">
+                        <i class="bi bi-file-earmark-bar-graph"></i> Rapport
+                    </a>
                     @if(auth()->user()->isManager())
                     <a href="#">Membres</a>
                     <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">Sites</a>
@@ -334,7 +404,7 @@
                 <div class="user-menu">
                     <button class="user-btn" onclick="this.nextElementSibling.classList.toggle('open')">
                         <span class="user-fullname" style="font-size:.875rem;font-weight:600;color:var(--slate-700)">{{ auth()->user()->nom_complet }}</span>
-                        <span class="role-chip">{{ auth()->user()->role }}</span>
+                        <span class="role-chip" data-role="{{ strtolower(auth()->user()->role) }}">{{ auth()->user()->role }}</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="user-dropdown">

@@ -7,6 +7,7 @@ use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PageRapportController;
 use App\Http\Controllers\RapportController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SousTacheController;
@@ -39,6 +40,9 @@ Route::middleware('auth')->group(function () {
     // ── Commentaires ──────────────────────────────────────────────────────────
     Route::post('/taches/{tache}/commentaires', [CommentaireController::class, 'store'])->name('commentaires.store');
     Route::delete('/commentaires/{commentaire}', [CommentaireController::class, 'destroy'])->name('commentaires.destroy');
+
+    // ── Page Rapport général ──────────────────────────────────────────────────
+    Route::get('/rapports', [PageRapportController::class, 'index'])->name('rapports.index');
 
     // ── Rapports & Actions ────────────────────────────────────────────────────
     Route::post('/taches/{tache}/rapports', [RapportController::class, 'store'])->name('rapports.store');

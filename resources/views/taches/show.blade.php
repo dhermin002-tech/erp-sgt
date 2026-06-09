@@ -3,28 +3,175 @@
 @php use Illuminate\Support\Facades\Storage; @endphp
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-.tache-header { background:var(--white);border-radius:12px;border:1px solid var(--slate-200);padding:1.5rem;margin-bottom:1rem; }
+/* ── Layout général ── */
 .tache-body { display:grid;grid-template-columns:1fr 320px;gap:1rem; }
 .main-col, .side-col { display:flex;flex-direction:column;gap:1rem; }
 .card { background:var(--white);border-radius:12px;border:1px solid var(--slate-200);overflow:hidden; }
 .card.overflow-visible { overflow:visible; }
-.card-header { padding:.85rem 1.25rem;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;justify-content:space-between; }
-.card-title { font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--kt-navy); }
 .card-body { padding:1.25rem; }
 .btn { display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:7px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;text-decoration:none;transition:all .15s; }
 .btn-primary { background:var(--kt-navy);color:#fff; }
 .btn-ghost { background:none;color:var(--slate-600);border:1px solid var(--slate-200); }
 .btn-sm { padding:.3rem .6rem;font-size:.78rem; }
 .btn-danger { background:#FEE2E2;color:#991B1B;border:none; }
-/* Statut dropdown */
+
+/* ── Header tâche compact ── */
+.tache-header {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    border-left: 4px solid var(--rail-color, var(--slate-300));
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+/* Ligne 1 : badges + actions en haut à droite */
+.tache-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .5rem;
+}
+.tache-header-badges {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+.tache-header-actions {
+    display: flex;
+    gap: .4rem;
+    flex-shrink: 0;
+    align-items: flex-start;
+}
+/* Titre — 2 lignes max, taille adaptative */
+.tache-titre-show {
+    font-family: 'Space Grotesk', var(--font-display), sans-serif;
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    font-weight: 800;
+    color: var(--kt-navy);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: .5rem;
+}
+/* Description tronquée */
+.tache-desc-wrap {
+    position: relative;
+}
+.tache-desc-text {
+    color: var(--slate-600);
+    font-size: .88rem;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: all .25s ease;
+}
+.tache-desc-text.expanded {
+    display: block;
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: visible;
+}
+.btn-lire-plus {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--kt-navy);
+    padding: .2rem 0;
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    margin-top: .25rem;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+/* Méta-info horizontale scrollable sur mobile */
+.tache-meta-scroll {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: .65rem;
+    padding-top: .6rem;
+    border-top: 1px solid var(--slate-100);
+    font-size: .8rem;
+    color: var(--slate-500);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    white-space: nowrap;
+}
+.tache-meta-scroll::-webkit-scrollbar { display: none; }
+.tache-meta-scroll .meta-pill {
+    display: inline-flex; align-items: center; gap: .3rem;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 999px;
+    padding: .25rem .65rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.tache-meta-scroll .meta-pill.late { background:#FEE2E2; border-color:#FCA5A5; color:#991B1B; font-weight:700; }
+.tache-meta-scroll .meta-pill .kt-avatar-xs {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--kt-navy); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .65rem; font-weight: 700;
+}
+
+/* ── Card sections avec séparateur premium ── */
+.card-header-sep {
+    padding: .75rem 1.25rem;
+    border-bottom: 1px solid var(--slate-100);
+}
+/* Séparateur premium dans les card-headers */
+.sep-premium {
+    display: flex; align-items: center; gap: .65rem;
+}
+.sep-premium-line { flex: 1; height: 1.5px; }
+.sep-premium-line.left  { background: linear-gradient(90deg, transparent, var(--slate-200)); }
+.sep-premium-line.right { background: linear-gradient(90deg, var(--slate-200), transparent); }
+.sep-premium-label {
+    display: inline-flex; align-items: center; gap: .45rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    color: var(--kt-navy);
+    background: var(--white);
+    border: 1.5px solid var(--slate-200);
+    border-radius: 999px;
+    padding: .25rem .75rem;
+    white-space: nowrap;
+}
+.sep-premium-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.4rem; height: 1.4rem;
+    background: var(--slate-100); color: var(--slate-600);
+    border-radius: 999px; font-size: .68rem; font-weight: 800;
+    padding: 0 .35rem;
+}
+
+/* ── Statut dropdown ── */
 .statut-btn { display:flex;align-items:center;gap:.5rem;background:none;border:1.5px solid var(--slate-200);border-radius:8px;padding:.4rem .75rem;cursor:pointer;font-family:var(--font-ui);font-size:.875rem; }
 .statut-dropdown { position:relative; }
 .statut-menu { display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--white);border:1px solid var(--slate-200);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:20;min-width:160px;overflow:hidden; }
 .statut-menu.open { display:block; }
 .statut-menu button { display:flex;align-items:center;gap:.6rem;width:100%;padding:.55rem .9rem;background:none;border:none;cursor:pointer;font-size:.85rem;text-align:left;transition:background .1s; }
 .statut-menu button:hover { background:var(--slate-50); }
-/* Sous-tâches */
+
+/* ── Sous-tâches ── */
 .sous-tache-item { display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--slate-100); }
 .sous-tache-item:last-child { border-bottom:none; }
 .sous-tache-cb { width:18px;height:18px;accent-color:var(--st-done);cursor:pointer; }
@@ -35,14 +182,17 @@
 .add-input { display:flex;gap:.5rem;margin-top:.75rem; }
 .add-input input { flex:1;padding:.4rem .75rem;border:1.5px solid var(--slate-200);border-radius:7px;font-size:.85rem;outline:none; }
 .add-input input:focus { border-color:var(--kt-navy); }
-/* Progress bar */
+
+/* ── Progress bar ── */
 .prog-wrap { background:var(--slate-100);border-radius:999px;height:8px;margin:.5rem 0; }
 .prog-fill { height:8px;border-radius:999px;background:var(--kt-navy);transition:width .4s; }
-/* Méta */
+
+/* ── Méta sidebar ── */
 .meta-row { display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--slate-50);font-size:.85rem; }
 .meta-row:last-child { border-bottom:none; }
 .meta-label { color:var(--slate-500);font-weight:600; }
 .meta-value { color:var(--slate-700); }
+
 @media (max-width:768px) { .tache-body { grid-template-columns:1fr; } }
 </style>
 @endpush
@@ -53,35 +203,78 @@
     <a href="{{ route('taches.index') }}" style="color:var(--slate-500);font-size:.875rem;text-decoration:none">← Toutes les tâches</a>
 </div>
 
-{{-- En-tête tâche --}}
+{{-- En-tête tâche compact ──────────────────────────────────────── --}}
 @php
 $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'var(--st-progress)','basse'=>'var(--st-todo)'];
+$railColor = $railVar[$tache->priorite] ?? 'var(--slate-300)';
 @endphp
-<div class="tache-header" style="border-left:4px solid {{ $railVar[$tache->priorite] ?? 'var(--slate-300)' }}">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-        <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem">
-                @include('partials.badge_statut', ['statut' => $tache->statut])
-                @include('partials.badge_priorite', ['priorite' => $tache->priorite])
-                @if($tache->estEnRetard())
-                <span style="background:var(--st-stop);color:#fff;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:999px">⚠ En retard</span>
-                @endif
-            </div>
-            <h1 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--kt-navy);margin-bottom:.4rem">{{ $tache->titre }}</h1>
-            @if($tache->description)
-            <p style="color:var(--slate-600);font-size:.9rem;line-height:1.6">{{ $tache->description }}</p>
+<div class="tache-header" style="--rail-color:{{ $railColor }}">
+
+    {{-- Ligne 1 : badges à gauche, actions à droite ── --}}
+    <div class="tache-header-top">
+        <div class="tache-header-badges">
+            @include('partials.badge_statut', ['statut' => $tache->statut])
+            @include('partials.badge_priorite', ['priorite' => $tache->priorite])
+            @if($tache->estEnRetard())
+            <span style="background:var(--st-stop);color:#fff;font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:999px;white-space:nowrap">⚠ Retard</span>
             @endif
         </div>
-        <div style="display:flex;gap:.5rem;flex-shrink:0">
-            <a href="{{ route('taches.edit', $tache) }}" class="btn btn-ghost">Modifier</a>
+        <div class="tache-header-actions">
+            <a href="{{ route('taches.edit', $tache) }}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-pencil"></i><span class="d-none d-sm-inline"> Modifier</span>
+            </a>
             @if(auth()->user()->isManager())
             <form method="POST" action="{{ route('taches.destroy', $tache) }}" onsubmit="return confirm('Supprimer cette tâche ?')">
                 @csrf @method('DELETE')
-                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash"></i><span class="d-none d-sm-inline"> Supprimer</span>
+                </button>
             </form>
             @endif
         </div>
     </div>
+
+    {{-- Titre — 2 lignes max, taille clamp ── --}}
+    <h1 class="tache-titre-show">{{ $tache->titre }}</h1>
+
+    {{-- Description tronquée à 4 lignes avec "Lire plus" ── --}}
+    @if($tache->description)
+    <div class="tache-desc-wrap">
+        <p class="tache-desc-text" id="descText">{{ $tache->description }}</p>
+        <button class="btn-lire-plus" id="btnLirePlus" onclick="toggleDesc()" aria-expanded="false">
+            <i class="bi bi-chevron-down" id="btnLirePlusIcon"></i>
+            <span id="btnLirePlusLabel">Lire plus</span>
+        </button>
+    </div>
+    @endif
+
+    {{-- Méta-info sur une ligne scrollable ── --}}
+    <div class="tache-meta-scroll">
+        @if($tache->site)
+        <span class="meta-pill"><i class="bi bi-geo-alt"></i> {{ $tache->site->nom }}</span>
+        @endif
+        @if($tache->date_debut)
+        <span class="meta-pill"><i class="bi bi-calendar"></i> Début : {{ $tache->date_debut->format('d/m/Y') }}</span>
+        @endif
+        @if($tache->date_echeance)
+        <span class="meta-pill {{ $tache->estEnRetard() ? 'late' : '' }}">
+            <i class="bi bi-calendar-event"></i> Échéance : {{ $tache->date_echeance->format('d/m/Y') }}
+        </span>
+        @endif
+        @if($tache->responsables->count())
+        <span class="meta-pill" style="gap:.35rem">
+            <i class="bi bi-people"></i>
+            @foreach($tache->responsables->take(3) as $r)
+            <span class="kt-avatar-xs" title="{{ $r->nom_complet }}" style="background:var(--kt-navy)">{{ strtoupper(substr($r->prenom,0,1).substr($r->nom,0,1)) }}</span>
+            @endforeach
+            @if($tache->responsables->count() > 3)
+            <span style="font-size:.75rem;color:var(--slate-500)">+{{ $tache->responsables->count()-3 }}</span>
+            @endif
+        </span>
+        @endif
+        <span class="meta-pill"><i class="bi bi-person"></i> {{ $tache->createur->nom_complet }}</span>
+    </div>
+
 </div>
 
 <div class="tache-body">
@@ -91,9 +284,15 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 
         {{-- Sous-tâches --}}
         <div class="card">
-            <div class="card-header">
-                <span class="card-title">Sous-tâches</span>
-                <span style="font-size:.8rem;color:var(--slate-500)">{{ $tache->sousTaches->where('termine',true)->count() }} / {{ $tache->sousTaches->count() }}</span>
+            <div class="card-header-sep">
+                <div class="sep-premium">
+                    <span class="sep-premium-line left"></span>
+                    <span class="sep-premium-label">
+                        <i class="bi bi-check2-square"></i> Sous-tâches
+                        <span class="sep-premium-count">{{ $tache->sousTaches->where('termine',true)->count() }}/{{ $tache->sousTaches->count() }}</span>
+                    </span>
+                    <span class="sep-premium-line right"></span>
+                </div>
             </div>
             <div class="card-body">
                 @if($tache->progression > 0 || $tache->sousTaches->count() > 0)
@@ -128,9 +327,15 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 
         {{-- Commentaires --}}
         <div class="card" id="commentaires">
-            <div class="card-header">
-                <span class="card-title">Commentaires</span>
-                <span style="font-size:.8rem;color:var(--slate-500)">{{ $tache->commentaires->count() }} commentaire(s)</span>
+            <div class="card-header-sep">
+                <div class="sep-premium">
+                    <span class="sep-premium-line left"></span>
+                    <span class="sep-premium-label">
+                        <i class="bi bi-chat-left-text"></i> Commentaires
+                        <span class="sep-premium-count">{{ $tache->commentaires->count() }}</span>
+                    </span>
+                    <span class="sep-premium-line right"></span>
+                </div>
             </div>
             <div class="card-body" style="padding:0">
 
@@ -195,9 +400,15 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 
         {{-- Rapports d'intervention --}}
         <div class="card">
-            <div class="card-header">
-                <span class="card-title">Rapports d'intervention</span>
-                <span style="font-size:.8rem;color:var(--slate-500)">{{ $tache->rapports->count() }} rapport(s)</span>
+            <div class="card-header-sep">
+                <div class="sep-premium">
+                    <span class="sep-premium-line left"></span>
+                    <span class="sep-premium-label">
+                        <i class="bi bi-file-text"></i> Rapports
+                        <span class="sep-premium-count">{{ $tache->rapports->count() }}</span>
+                    </span>
+                    <span class="sep-premium-line right"></span>
+                </div>
             </div>
             <div class="card-body" style="padding:0">
 
@@ -253,10 +464,16 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 
         {{-- Actions de suivi --}}
         <div class="card">
-            <div class="card-header">
-                <span class="card-title">Actions à entreprendre</span>
-                @php $totalActions = $tache->actionsSuivi->count(); $faites = $tache->actionsSuivi->where('fait', true)->count(); @endphp
-                <span style="font-size:.8rem;color:var(--slate-500)">{{ $faites }}/{{ $totalActions }} faites</span>
+            @php $totalActions = $tache->actionsSuivi->count(); $faites = $tache->actionsSuivi->where('fait', true)->count(); @endphp
+            <div class="card-header-sep">
+                <div class="sep-premium">
+                    <span class="sep-premium-line left"></span>
+                    <span class="sep-premium-label">
+                        <i class="bi bi-list-check"></i> Actions
+                        <span class="sep-premium-count">{{ $faites }}/{{ $totalActions }}</span>
+                    </span>
+                    <span class="sep-premium-line right"></span>
+                </div>
             </div>
             <div class="card-body">
 
@@ -288,7 +505,13 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 
         {{-- Changement de statut --}}
         <div class="card overflow-visible">
-            <div class="card-header"><span class="card-title">Statut</span></div>
+            <div class="card-header-sep">
+                <div class="sep-premium">
+                    <span class="sep-premium-line left"></span>
+                    <span class="sep-premium-label"><i class="bi bi-toggle-on"></i> Statut</span>
+                    <span class="sep-premium-line right"></span>
+                </div>
+            </div>
             <div class="card-body">
                 <div class="statut-dropdown" id="statutDD">
                     <button class="statut-btn" onclick="document.getElementById('statutMenu').classList.toggle('open')">
@@ -315,7 +538,13 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 
         {{-- Méta-données --}}
         <div class="card">
-            <div class="card-header"><span class="card-title">Informations</span></div>
+            <div class="card-header-sep">
+                <div class="sep-premium">
+                    <span class="sep-premium-line left"></span>
+                    <span class="sep-premium-label"><i class="bi bi-info-circle"></i> Informations</span>
+                    <span class="sep-premium-line right"></span>
+                </div>
+            </div>
             <div class="card-body">
                 <div class="meta-row">
                     <span class="meta-label">Créateur</span>
@@ -344,7 +573,13 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 
         {{-- Responsables --}}
         <div class="card">
-            <div class="card-header"><span class="card-title">Responsables</span></div>
+            <div class="card-header-sep">
+                <div class="sep-premium">
+                    <span class="sep-premium-line left"></span>
+                    <span class="sep-premium-label"><i class="bi bi-people"></i> Responsables</span>
+                    <span class="sep-premium-line right"></span>
+                </div>
+            </div>
             <div class="card-body">
                 @foreach($tache->responsables as $r)
                 <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0;border-bottom:1px solid var(--slate-50)">
@@ -368,6 +603,32 @@ $railVar = ['urgente'=>'var(--st-stop)','haute'=>'var(--st-wait)','normale'=>'va
 <script>
 const tacheId = {{ $tache->id }};
 const csrfToken = document.querySelector('meta[name=csrf-token]').content;
+
+// ── Description "Lire plus / Réduire" (JS pur) ───────────────────────────
+(function() {
+    const desc = document.getElementById('descText');
+    const btn  = document.getElementById('btnLirePlus');
+    const icon = document.getElementById('btnLirePlusIcon');
+    const lbl  = document.getElementById('btnLirePlusLabel');
+    if (!desc || !btn) return;
+    // Cacher le bouton si le texte n'est pas tronqué
+    if (desc.scrollHeight <= desc.clientHeight + 2) {
+        btn.style.display = 'none';
+        return;
+    }
+    btn.style.display = 'inline-flex';
+})();
+
+function toggleDesc() {
+    const desc = document.getElementById('descText');
+    const btn  = document.getElementById('btnLirePlus');
+    const icon = document.getElementById('btnLirePlusIcon');
+    const lbl  = document.getElementById('btnLirePlusLabel');
+    const expanded = desc.classList.toggle('expanded');
+    btn.setAttribute('aria-expanded', expanded);
+    icon.className = expanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+    lbl.textContent = expanded ? 'Réduire' : 'Lire plus';
+}
 
 // ── Changement de statut (AJAX) ───────────────────────────────────────────
 function changerStatut(statut) {

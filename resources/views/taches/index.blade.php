@@ -141,6 +141,40 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 }
 .section-sep.equipe .section-sep-count { background: var(--slate-200); color: var(--slate-600); }
 
+/* ── Groupes collaborateur ── */
+.collab-group { margin-bottom: 1.25rem; }
+.collab-group-header {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .6rem .85rem;
+    background: var(--white);
+    border-radius: 10px;
+    border: 1px solid var(--slate-200);
+    margin-bottom: .5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.collab-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .78rem; font-weight: 700;
+    color: #fff; flex-shrink: 0;
+}
+.collab-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .88rem; font-weight: 700;
+    color: var(--kt-navy);
+    flex: 1;
+}
+.collab-count {
+    font-size: .72rem; font-weight: 700;
+    padding: .2rem .55rem; border-radius: 999px;
+    background: var(--slate-100); color: var(--slate-600);
+}
+/* Cartes équipe — border-left couleur de l'avatar */
+.collab-group .kt-task-row {
+    border-left: 3px solid var(--collab-color, var(--slate-300)) !important;
+}
+
 .task-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
 .task-titre { font-family:'Space Grotesk', var(--font-display), sans-serif; font-weight:700; font-size:.95rem; color:var(--kt-navy); line-height:1.3; }
 .task-sub { font-size:.74rem; color:var(--slate-400); margin-top:.15rem; }
@@ -280,11 +314,47 @@ if ($isManager) {
     <span style="font-size:.875rem">Toutes les tâches de cette page vous sont assignées.</span>
 </div>
 @else
-<div class="task-list">
-@foreach($tachesEquipe as $tache)
-    @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
-@endforeach
+@php
+/* Palette de 8 couleurs d'accent pour les collaborateurs */
+$collabColors = [
+    '#003366', '#CC5500', '#8B0000', '#1D4ED8',
+    '#16A34A', '#7E22CE', '#B45309', '#0E7490',
+];
+/* Grouper les tâches équipe par responsable principal */
+$parCollaborateur = $tachesEquipe->groupBy(fn($t) => optional($t->responsables->first())->id ?? 0);
+/* Index de couleur par user id */
+$collabColorMap = [];
+$colorIdx = 0;
+foreach ($parCollaborateur->keys() as $uid) {
+    $collabColorMap[$uid] = $collabColors[$colorIdx % count($collabColors)];
+    $colorIdx++;
+}
+@endphp
+
+@foreach($parCollaborateur as $userId => $groupTaches)
+@php
+    $responsablePrincipal = $groupTaches->first()->responsables->first();
+    $collabColor = $collabColorMap[$userId] ?? '#64748B';
+    $collabInitiales = $responsablePrincipal
+        ? strtoupper(mb_substr($responsablePrincipal->prenom,0,1).mb_substr($responsablePrincipal->nom,0,1))
+        : '?';
+    $collabNomComplet = $responsablePrincipal?->nom_complet ?? 'Non assigné';
+@endphp
+<div class="collab-group">
+    {{-- En-tête de groupe collaborateur --}}
+    <div class="collab-group-header">
+        <div class="collab-avatar" style="background:{{ $collabColor }}">{{ $collabInitiales }}</div>
+        <span class="collab-name">{{ $collabNomComplet }}</span>
+        <span class="collab-count">{{ $groupTaches->count() }} tâche{{ $groupTaches->count() > 1 ? 's' : '' }}</span>
+    </div>
+    {{-- Cartes de ce collaborateur, avec border-left à sa couleur --}}
+    <div class="task-list" style="--collab-color:{{ $collabColor }}">
+        @foreach($groupTaches as $tache)
+            @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+        @endforeach
+    </div>
 </div>
+@endforeach
 @endif
 
 @else
