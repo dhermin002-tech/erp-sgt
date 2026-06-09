@@ -77,6 +77,8 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            align-items: center;
+            text-align: center;
             position: relative;
             overflow: hidden;
             border-right: 1px solid rgba(255,255,255,.05);
@@ -103,7 +105,7 @@
             line-height: 1;
         }
 
-        .id-top { position: relative; z-index: 1; }
+        .id-top { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
 
         /* Logo badge — compact, discret */
         .logo-badge {
@@ -123,29 +125,37 @@
             line-height: 1.18;
             letter-spacing: -0.04em;
             margin-bottom: .7rem;
+            text-align: center;
         }
         .id-title em {
             font-style: normal;
+            color: #fff;
+            -webkit-text-fill-color: #fff;
+        }
+        /* Séparateur décoratif orange sous le titre */
+        .id-title-sep {
+            width: 48px; height: 3px;
             background: linear-gradient(90deg, #CC5500, #FF8C42);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            border-radius: 999px;
+            margin: 0 auto .85rem;
         }
         .id-desc {
             font-size: .875rem;
             color: rgba(255,255,255,.62);
             line-height: 1.72;
-            max-width: 270px;
+            max-width: 250px;
             margin-bottom: .2rem;
+            text-align: center;
         }
 
-        .id-bottom { position: relative; z-index: 1; }
+        .id-bottom { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
 
         /* Stats KPI mini */
-        .id-stats { display: flex; gap: 1.4rem; margin-bottom: 1.4rem; }
+        .id-stats { display: flex; gap: 1.4rem; margin-bottom: 1.4rem; justify-content: center; }
         .id-stat {
             border-left: 2px solid rgba(204,85,0,.4);
             padding-left: .65rem;
+            text-align: left;
         }
         .id-stat-val {
             font-family: 'Space Grotesk', sans-serif;
@@ -158,7 +168,7 @@
             margin-top: .2rem;
         }
 
-        .badges { display: flex; gap: .45rem; flex-wrap: wrap; }
+        .badges { display: flex; gap: .45rem; flex-wrap: wrap; justify-content: center; }
         .badge-pill {
             min-width: 110px;
             padding: .3rem .7rem;
@@ -341,8 +351,9 @@
                 </div>
 
                 <h1 class="id-title">
-                    Système de<br>Gestion des <em>Tâches</em>
+                    Système de<br>Gestion des Tâches
                 </h1>
+                <div class="id-title-sep"></div>
                 <p class="id-desc">
                     Planifiez, suivez et reportez vos interventions terrain en temps réel depuis un seul outil.
                 </p>
