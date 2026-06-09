@@ -11,6 +11,15 @@ class SousTacheController extends Controller
 {
     public function store(Request $request, Tache $tache)
     {
+        $user = Auth::user();
+        if (! $user->isManager()) {
+            abort_unless(
+                $tache->createur_id === $user->id
+                    || $tache->responsables()->where('users.id', $user->id)->exists(),
+                403
+            );
+        }
+
         $request->validate(['titre' => 'required|string|max:255']);
 
         $ordre = $tache->sousTaches()->max('ordre') + 1;
