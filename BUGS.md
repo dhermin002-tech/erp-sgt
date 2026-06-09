@@ -1,10 +1,18 @@
 # BUGS.md — SGT (Système de Gestion des Tâches)
-**Mis à jour par** : QAAgent
-**Dernière mise à jour** : 2026-06-05
+**Mis à jour par** : SecurityAgent
+**Dernière mise à jour** : 2026-06-09
 
 | ID | Priorité | Tâche liée | Description | Statut |
 |----|----------|------------|-------------|--------|
-| — | — | — | Aucun bug ouvert (projet non démarré) | — |
+| SEC-001 | 🔴 P0 | Sécurité | `APP_DEBUG=true` et `APP_ENV=local` actifs sur le VPS — à corriger dans `.env` production | 🔴 Ouvert (action VPS manuelle requise) |
+| SEC-002 | 🔴 P0 | Auth | Pas de throttle sur `POST /login` — brute-force possible | ✅ Corrigé — commit d088382 |
+| SEC-003 | 🟠 P1 | TacheController | IDOR sur `restaurer()` — manque `authorizeAccess()` | ✅ Corrigé — commit d088382 |
+| SEC-004 | 🟠 P1 | Middleware | Headers de sécurité HTTP absents (X-Frame-Options, CSP) | 🔴 Ouvert |
+| SEC-005 | 🟠 P1 | Config | `SESSION_ENCRYPT=false` — sessions non chiffrées | 🔴 Ouvert (action VPS manuelle requise) |
+| SEC-006 | 🟡 P2 | MembresController | Mot de passe minimum 6 chars (trop court) | ✅ Corrigé — min:8 — commit d088382 |
+| SEC-007 | 🟡 P2 | Middleware | Pas de Content-Security-Policy | 🔴 Ouvert |
+| SEC-008 | 🟡 P2 | SousTache/ActionSuivi | Pas de contrôle d'accès sur la tâche parente | 🟡 En cours d'analyse |
+| SEC-009 | 🟢 P3 | .env.example | `.env.example` contient `APP_DEBUG=true` | 🔴 Ouvert |
 
 ---
 

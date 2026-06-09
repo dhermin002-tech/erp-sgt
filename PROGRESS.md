@@ -1,7 +1,42 @@
 # PROGRESS.md — SGT (Système de Gestion des Tâches)
-**Dernière mise à jour** : 2026-06-05 — DÉPLOIEMENT PRODUCTION ✅
-**Agent actif** : DeployAgent
-**Avancement global** : 100% (28/28 tâches)
+**Dernière mise à jour** : 2026-06-09 — SESSION UI + SÉCURITÉ
+**Agent actif** : DesignUIAgent + SecurityAgent
+**Avancement global** : 100% fonctionnel — améliorations UI + correctifs sécurité en cours
+
+---
+
+## Session 2026-06-09 — Améliorations UI & Audit Sécurité
+
+### Commits de la session
+| Commit | Description |
+|--------|-------------|
+| b3aeda8 | feat(ui+rapport): groupement équipe par collaborateur, show.blade.php compact, menu Rapport |
+| d80b2f1 | feat(ui): redesign sidebar (icônes BI, item actif orange), membres, sites, rapport (thead navy) |
+| 549d865 | fix(ui): logo sidebar compact + page Archives redesign premium |
+| f05d1ed | fix(login): logo compact + titre 800 + badges largeur uniforme min-width:110px |
+| 8d81473 | feat(login): centrage panneau gauche + titre blanc + séparateur orange |
+| **d088382** | **security: corrections audit P0/P1/P2 — throttle login + IDOR restaurer + mdp min:8** |
+
+### Nouvelles fonctionnalités livrées
+- ✅ Menu **Rapport** (`/rapports`) — tâches actives + archivées + KPI par responsable + impression PDF CSS
+- ✅ Tâches équipe groupées par collaborateur (avatars colorés + compteur)
+- ✅ Page détail tâche : header compact, méta scrollable, "Lire plus"
+- ✅ Sidebar : Bootstrap Icons, item actif orange #CC5500, logo compact
+- ✅ Pages Membres + Sites + Archives : tableau premium (thead navy, lignes alternées)
+- ✅ Page login : centrage, titre blanc uniforme, badges largeur fixe 110px avec icônes BI
+
+### Correctifs sécurité appliqués (voir SECURITY_REPORT.md + BUGS.md)
+- ✅ SEC-002 : throttle:5,1 sur POST /login
+- ✅ SEC-003 : authorizeAccess() dans restaurer()
+- ✅ SEC-006 : mot de passe min:8
+
+### Actions VPS restantes (manuelles)
+```bash
+cd /var/www/erp-sgt && git pull origin main && php artisan view:clear && php artisan config:cache && php artisan route:cache
+```
+Et dans `.env` VPS : `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_ENCRYPT=true`
+
+---
 
 ---
 
