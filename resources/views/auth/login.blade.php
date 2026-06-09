@@ -6,6 +6,7 @@
     <title>Connexion — SGT KayTechnologie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -104,24 +105,24 @@
 
         .id-top { position: relative; z-index: 1; }
 
-        /* Logo badge */
+        /* Logo badge — compact, discret */
         .logo-badge {
             background: #fff;
-            border-radius: 14px;
-            padding: .75rem 1.1rem;
+            border-radius: 8px;
+            padding: .35rem .65rem;
             display: inline-flex; align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,.3);
-            margin-bottom: 1.75rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,.25);
+            margin-bottom: 1.5rem;
         }
-        .logo-badge img { width: 148px; height: auto; display: block; }
+        .logo-badge img { width: 100px; height: auto; display: block; }
 
         .id-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.7rem; font-weight: 700;
+            font-size: 1.9rem; font-weight: 800;
             color: #fff;
-            line-height: 1.2;
-            letter-spacing: -0.03em;
-            margin-bottom: .65rem;
+            line-height: 1.18;
+            letter-spacing: -0.04em;
+            margin-bottom: .7rem;
         }
         .id-title em {
             font-style: normal;
@@ -132,9 +133,10 @@
         }
         .id-desc {
             font-size: .875rem;
-            color: rgba(255,255,255,.42);
-            line-height: 1.7;
+            color: rgba(255,255,255,.62);
+            line-height: 1.72;
             max-width: 270px;
+            margin-bottom: .2rem;
         }
 
         .id-bottom { position: relative; z-index: 1; }
@@ -156,12 +158,15 @@
             margin-top: .2rem;
         }
 
-        .badges { display: flex; gap: .35rem; flex-wrap: wrap; }
+        .badges { display: flex; gap: .45rem; flex-wrap: wrap; }
         .badge-pill {
-            padding: .22rem .7rem;
+            min-width: 110px;
+            padding: .3rem .7rem;
             border-radius: 999px;
             font-size: .67rem; font-weight: 700;
-            letter-spacing: .07em; text-transform: uppercase;
+            letter-spacing: .06em; text-transform: uppercase;
+            display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+            text-align: center;
         }
         .bp-lan  { background: rgba(0,51,102,.5);  color: #7EB8FF; border: 1px solid rgba(0,80,180,.3); }
         .bp-soft { background: rgba(204,85,0,.3);  color: #FFAA6A; border: 1px solid rgba(204,85,0,.3); }
@@ -359,9 +364,9 @@
                     </div>
                 </div>
                 <div class="badges">
-                    <span class="badge-pill bp-lan">LAN</span>
-                    <span class="badge-pill bp-soft">Software</span>
-                    <span class="badge-pill bp-hard">Hardware</span>
+                    <span class="badge-pill bp-lan"><i class="bi bi-wifi"></i> LAN</span>
+                    <span class="badge-pill bp-soft"><i class="bi bi-code-slash"></i> Software</span>
+                    <span class="badge-pill bp-hard"><i class="bi bi-cpu"></i> Hardware</span>
                 </div>
             </div>
         </div>
