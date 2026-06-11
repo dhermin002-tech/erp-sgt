@@ -9,6 +9,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageRapportController;
 use App\Http\Controllers\RapportController;
+use App\Http\Controllers\RapportsAgentsController;
+use App\Http\Controllers\SessionsAgentsController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SousTacheController;
 use App\Http\Controllers\TacheController;
@@ -60,6 +62,10 @@ Route::middleware(['auth', 'not-agent-account'])->group(function () {
     // ── Préférences utilisateur ───────────────────────────────────────────────
     Route::post('/preferences/locale', [PreferenceController::class, 'setLocale'])->name('preferences.locale');
     Route::patch('/preferences/direction', [PreferenceController::class, 'setDirection'])->name('preferences.direction');
+
+    // ── Agents IA — Rapports & Sessions (Manager uniquement) ─────────────────
+    Route::get('/agents/rapports', [RapportsAgentsController::class, 'index'])->name('agents.rapports')->middleware('role:manager');
+    Route::get('/agents/sessions', [SessionsAgentsController::class, 'index'])->name('agents.sessions')->middleware('role:manager');
 
     // ── Membres (Manager uniquement) ──────────────────────────────────────────
     Route::resource('membres', MembresController::class)->middleware('role:manager')->parameters(['membres' => 'membre']);

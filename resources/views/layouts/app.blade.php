@@ -316,6 +316,13 @@
             <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">
                 <i class="bi bi-geo-alt"></i> Sites
             </a>
+            <div class="nav-label">Agents IA</div>
+            <a href="{{ route('agents.rapports') }}" class="{{ request()->routeIs('agents.rapports') ? 'active' : '' }}" style="{{ request()->routeIs('agents.*') ? '' : 'opacity:.85' }}">
+                <i class="bi bi-file-earmark-text"></i> Rapports IA
+            </a>
+            <a href="{{ route('agents.sessions') }}" class="{{ request()->routeIs('agents.sessions') ? 'active' : '' }}" style="{{ request()->routeIs('agents.*') ? '' : 'opacity:.85' }}">
+                <i class="bi bi-play-circle"></i> Sessions IA
+            </a>
             @endif
         </nav>
         <div class="sidebar-footer" style="color:rgba(255,255,255,.35);font-size:.72rem;text-align:center">

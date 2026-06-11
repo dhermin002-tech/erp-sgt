@@ -391,6 +391,95 @@
     </div>
 </div>
 
+{{-- Bloc supervision Agents IA (Managers uniquement) ──── --}}
+@if(auth()->user()->isManager() && $agentsSupervision)
+<div style="margin-bottom:1.35rem">
+    <div class="section-title-bar">
+        <div class="section-title-bar-line"></div>
+        <span class="section-title-bar-label">🤖 Activité Agents IA — aujourd'hui</span>
+        <div class="section-title-bar-line"></div>
+    </div>
+
+    {{-- KPIs agents ── --}}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;margin-bottom:1rem">
+        <div style="background:#f5f3ff;border-radius:12px;padding:1rem 1.1rem;border:1px solid #ede9fe">
+            <div style="font-size:.68rem;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem">Sessions actives</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:800;color:#5b21b6;line-height:1">{{ $agentsSupervision['sessions_actives'] }}</div>
+            <div style="font-size:.75rem;color:#8b5cf6;margin-top:.25rem">en ce moment</div>
+        </div>
+        <div style="background:#faf5ff;border-radius:12px;padding:1rem 1.1rem;border:1px solid #ede9fe">
+            <div style="font-size:.68rem;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem">Rapports publiés</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:800;color:#5b21b6;line-height:1">{{ $agentsSupervision['rapports_jour'] }}</div>
+            <div style="font-size:.75rem;color:#8b5cf6;margin-top:.25rem">aujourd'hui</div>
+        </div>
+        <div style="background:#f5f3ff;border-radius:12px;padding:1rem 1.1rem;border:1px solid #ede9fe;display:flex;align-items:center;gap:.75rem">
+            <div>
+                <div style="font-size:.68rem;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem">Agents enregistrés</div>
+                <div style="font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:800;color:#5b21b6;line-height:1">{{ $agentsSupervision['agents']->count() }}</div>
+                <div style="font-size:.75rem;color:#8b5cf6;margin-top:.25rem">comptes actifs</div>
+            </div>
+        </div>
+        <div style="background:#faf5ff;border-radius:12px;padding:1rem 1.1rem;border:1px solid #ede9fe;display:flex;align-items:center;gap:.75rem">
+            <div style="flex:1">
+                <a href="{{ route('agents.rapports') }}" style="display:flex;align-items:center;gap:.4rem;text-decoration:none;color:#7c3aed;font-weight:700;font-size:.85rem;margin-bottom:.4rem">
+                    <i class="bi bi-file-earmark-text"></i> Rapports agents →
+                </a>
+                <a href="{{ route('agents.sessions') }}" style="display:flex;align-items:center;gap:.4rem;text-decoration:none;color:#7c3aed;font-weight:700;font-size:.85rem">
+                    <i class="bi bi-play-circle"></i> Sessions agents →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Ligne par agent ── --}}
+    @if($agentsSupervision['agents']->isNotEmpty())
+    <div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;overflow:hidden">
+        @foreach($agentsSupervision['agents'] as $item)
+        @php $agent = $item['agent']; $session = $item['session_active']; @endphp
+        <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.1rem;border-bottom:1px solid #f5f3ff;{{ $loop->last ? 'border-bottom:none' : '' }}">
+            {{-- Avatar ── --}}
+            <div style="width:34px;height:34px;border-radius:50%;background:{{ $agent->agent_couleur ?? '#7c3aed' }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">
+                {{ strtoupper(substr($agent->agent_code ?? 'A', 0, 1)) }}
+            </div>
+            {{-- Nom + code ── --}}
+            <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:.875rem;color:#1e1b4b">{{ $agent->nom_complet }}</div>
+                <div style="font-size:.75rem;color:#7c3aed;font-family:'IBM Plex Mono',monospace">{{ $agent->agent_code }}</div>
+            </div>
+            {{-- Session ── --}}
+            <div style="min-width:180px">
+                @if($session)
+                <div style="display:inline-flex;align-items:center;gap:.35rem;background:#f0fdf4;color:#15803d;padding:.2rem .65rem;border-radius:20px;font-size:.75rem;font-weight:700;border:1px solid #bbf7d0">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#15803d;animation:pulse-ag 1.5s ease infinite;display:inline-block"></span>
+                    Session active — {{ $session->projet }}
+                </div>
+                @else
+                <span style="font-size:.75rem;color:#94a3b8">Hors session</span>
+                @endif
+            </div>
+            {{-- Rapports aujourd'hui ── --}}
+            <div style="text-align:right;min-width:80px">
+                @if($item['rapports_jour'] > 0)
+                <span style="background:#f5f3ff;color:#7c3aed;font-size:.75rem;font-weight:700;padding:.18rem .55rem;border-radius:20px">
+                    {{ $item['rapports_jour'] }} rapport(s)
+                </span>
+                @else
+                <span style="font-size:.75rem;color:#94a3b8">0 rapport</span>
+                @endif
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @endif
+</div>
+<style>
+@keyframes pulse-ag {
+    0%, 100% { opacity:1; transform:scale(1); }
+    50%       { opacity:.3; transform:scale(1.4); }
+}
+</style>
+@endif
+
 {{-- Accès rapide --}}
 <div class="quick-links-section">
     <div class="section-title-bar">

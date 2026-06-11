@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RapportAgent;
+use App\Models\SessionAgent;
 use App\Models\Tache;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -46,7 +48,13 @@ class DashboardController extends Controller
         $membres = $user->isManager() ? User::orderBy('nom')->get() : collect();
         $sites   = \App\Models\Site::where('actif', true)->orderBy('nom')->get();
 
-        return view('dashboard', compact('stats', 'membres', 'sites', 'periode', 'responsableId', 'siteId'));
+        // Bloc supervision agents IA (managers uniquement)
+        $agentsSupervision = null;
+        if ($user->isManager()) {
+            $agentsSupervision = $this->donneesSupervisionAgents();
+        }
+
+        return view('dashboard', compact('stats', 'membres', 'sites', 'periode', 'responsableId', 'siteId', 'agentsSupervision'));
     }
 
     // ── API JSON pour Chart.js ─────────────────────────────────────────────────
@@ -190,6 +198,32 @@ class DashboardController extends Controller
         return [
             'labels' => $data->pluck('nom')->toArray(),
             'data'   => $data->pluck('total')->toArray(),
+        ];
+    }
+
+    // ── Bloc supervision agents IA ────────────────────────────────────────────
+    private function donneesSupervisionAgents(): array
+    {
+        $agents = User::where('type_compte', 'agent_ia')->get();
+
+        $sessionsActives = SessionAgent::where('statut', 'en_cours')
+            ->with('user')->get();
+
+        $rapportsAujourdhui = RapportAgent::whereDate('created_at', today())
+            ->with('user')->get();
+
+        $parAgent = $agents->map(function ($agent) use ($sessionsActives, $rapportsAujourdhui) {
+            return [
+                'agent'         => $agent,
+                'session_active'=> $sessionsActives->where('user_id', $agent->id)->first(),
+                'rapports_jour' => $rapportsAujourdhui->where('user_id', $agent->id)->count(),
+            ];
+        });
+
+        return [
+            'agents'          => $parAgent,
+            'sessions_actives'=> $sessionsActives->count(),
+            'rapports_jour'   => $rapportsAujourdhui->count(),
         ];
     }
 
