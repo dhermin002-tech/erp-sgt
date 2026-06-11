@@ -11,6 +11,8 @@ class RapportController extends Controller
 {
     public function store(Request $request, Tache $tache)
     {
+        abort_unless(Auth::user()->canAccessTache($tache), 403);
+
         $request->validate([
             'contenu'           => 'required|string|max:5000',
             'date_intervention' => 'nullable|date',

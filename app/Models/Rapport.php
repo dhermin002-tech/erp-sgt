@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+// Modèle pour les rapports de suivi de tâches (table rapports — existante)
 class Rapport extends Model
 {
     protected $fillable = ['tache_id', 'user_id', 'contenu', 'date_intervention'];

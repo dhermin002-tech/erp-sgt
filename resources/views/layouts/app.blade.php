@@ -460,6 +460,8 @@
 
 <script src="{{ asset('theme-switcher.js') }}"></script>
 <script>
+const csrfToken = document.querySelector('meta[name=csrf-token]').content;
+
 function toggleSidebarMobile() {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('show');

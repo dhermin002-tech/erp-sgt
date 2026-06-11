@@ -19,8 +19,8 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->
 Route::post('/login', [LoginController::class, 'login'])->middleware(['guest', 'throttle:5,1']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
-// ── App (auth requise) ────────────────────────────────────────────────────────
-Route::middleware('auth')->group(function () {
+// ── App (auth requise — agents IA bloqués du web) ────────────────────────────
+Route::middleware(['auth', 'not-agent-account'])->group(function () {
 
     Route::get('/', fn() => redirect()->route('dashboard'));
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

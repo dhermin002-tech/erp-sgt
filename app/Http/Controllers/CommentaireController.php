@@ -12,6 +12,8 @@ class CommentaireController extends Controller
 {
     public function store(Request $request, Tache $tache)
     {
+        abort_unless(Auth::user()->canAccessTache($tache), 403);
+
         $request->validate([
             'contenu' => 'required|string|max:3000',
             'photo'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',

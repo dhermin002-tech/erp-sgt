@@ -42,12 +42,25 @@ class TacheController extends Controller
             $query->orderBy($sort, $dir === 'desc' ? 'desc' : 'asc');
         }
 
-        $taches   = $query->paginate(15)->withQueryString();
         $sites    = Site::where('actif', true)->orderBy('nom')->get();
-        $membres  = User::orderBy('nom')->get();
+        $membres  = User::where('type_compte', 'humain')->orderBy('nom')->get();
         $statuts  = ['nouveau', 'en_cours', 'en_attente', 'en_arret', 'termine'];
 
-        return view('taches.index', compact('taches', 'sites', 'membres', 'statuts'));
+        // Mode groupé par responsable (avec collapsible)
+        $grouperParUser = $request->boolean('grouper', false);
+        if ($grouperParUser) {
+            $toutesLesToutes = $query->get();
+            $tachesGroupees  = $toutesLesToutes->groupBy(function ($tache) {
+                $resp = $tache->responsables->first();
+                return $resp ? $resp->id : 0;
+            })->map(fn($group) => $group->sortBy('date_echeance'));
+            $taches = null;
+            return view('taches.index', compact('taches', 'tachesGroupees', 'sites', 'membres', 'statuts', 'grouperParUser'));
+        }
+
+        $taches = $query->paginate(15)->withQueryString();
+        $tachesGroupees = null;
+        return view('taches.index', compact('taches', 'tachesGroupees', 'sites', 'membres', 'statuts', 'grouperParUser'));
     }
 
     public function create()

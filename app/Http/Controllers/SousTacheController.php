@@ -34,6 +34,8 @@ class SousTacheController extends Controller
 
     public function toggle(Request $request, SousTache $sousTache)
     {
+        abort_unless(Auth::user()->canAccessTache($sousTache->tache), 403);
+
         $request->validate(['termine' => 'required|boolean']);
 
         $sousTache->update(['termine' => $request->termine]);
@@ -47,6 +49,8 @@ class SousTacheController extends Controller
     public function destroy(SousTache $sousTache)
     {
         $tache = $sousTache->tache;
+        abort_unless(Auth::user()->canAccessTache($tache), 403);
+
         $sousTache->delete();
         $tache->recalculerProgression();
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Browser;
 
+use App\Models\Tache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
@@ -43,9 +44,12 @@ class VisualCaptureTest extends DuskTestCase
             $browser->visit('/taches/create')
                     ->screenshot('03-taches-formulaire');
 
-            $browser->visit('/taches/1')
-                    ->pause(800)
-                    ->screenshot('04-taches-detail');
+            $premiereTache = Tache::withoutTrashed()->first();
+            if ($premiereTache) {
+                $browser->visit('/taches/' . $premiereTache->id)
+                        ->pause(800)
+                        ->screenshot('04-taches-detail');
+            }
 
             $browser->visit('/taches/archives')
                     ->screenshot('05-taches-archives');

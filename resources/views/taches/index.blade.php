@@ -175,6 +175,43 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
     border-left: 3px solid var(--collab-color, var(--slate-300)) !important;
 }
 
+/* ── Badge Agent IA ── */
+.badge-agent-ia {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .65rem; font-weight: 700; letter-spacing: .03em;
+    padding: .2rem .55rem; border-radius: 999px;
+    background: #1E1B4B; color: #C4B5FD;
+    border: 1px solid #4C1D95;
+    white-space: nowrap;
+}
+.badge-agent-ia .dot-pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #A78BFA;
+    animation: pulse-ia 2s infinite;
+}
+@keyframes pulse-ia {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: .4; transform: scale(.7); }
+}
+/* Groupe agent IA — fond légèrement teinté pour le distinguer */
+.collab-group.is-agent .collab-group-header {
+    background: linear-gradient(135deg, #EDE9FE, #F5F3FF);
+    border-color: #DDD6FE;
+}
+.collab-group.is-agent .collab-name { color: #5B21B6; }
+.collab-group.is-agent .collab-count { background: #EDE9FE; color: #6D28D9; }
+.collab-group.is-agent .collab-avatar {
+    font-size: 1rem;
+    background: linear-gradient(135deg, #4C1D95, #6D28D9) !important;
+    letter-spacing: 0;
+}
+/* Séparateur section Agents IA */
+.section-sep.agents-ia .section-sep-line   { background: linear-gradient(90deg, transparent, #DDD6FE, #DDD6FE, transparent); }
+.section-sep.agents-ia .section-sep-label  {
+    color: #6D28D9; background: #F5F3FF; border-color: #DDD6FE;
+}
+.section-sep.agents-ia .section-sep-count  { background: #EDE9FE; color: #6D28D9; }
+
 .task-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
 .task-titre { font-family:'Space Grotesk', var(--font-display), sans-serif; font-weight:700; font-size:.95rem; color:var(--kt-navy); line-height:1.3; }
 .task-sub { font-size:.74rem; color:var(--slate-400); margin-top:.15rem; }
@@ -202,7 +239,7 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 <div class="page-header">
     <div>
         <h1 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--kt-navy)">Tâches actives</h1>
-        <p style="color:var(--slate-500);font-size:.85rem;margin-top:.15rem">{{ $taches->total() }} tâche(s) trouvée(s)</p>
+        <p style="color:var(--slate-500);font-size:.85rem;margin-top:.15rem">{{ $taches ? $taches->total() : $tachesGroupees?->flatten()->count() ?? 0 }} tâche(s) trouvée(s)</p>
     </div>
     <a href="{{ route('taches.create') }}" class="btn btn-primary">+ Nouvelle tâche</a>
 </div>
@@ -253,7 +290,7 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 </form>
 
 {{-- Liste des tâches --}}
-@if($taches->isEmpty())
+@if(($taches && $taches->isEmpty()) || ($tachesGroupees && $tachesGroupees->isEmpty()))
 <div class="empty-state">
     <div style="font-size:2.5rem;margin-bottom:.5rem">📋</div>
     <div style="font-weight:600">Aucune tâche trouvée</div>
@@ -315,46 +352,92 @@ if ($isManager) {
 </div>
 @else
 @php
-/* Palette de 8 couleurs d'accent pour les collaborateurs */
-$collabColors = [
-    '#003366', '#CC5500', '#8B0000', '#1D4ED8',
-    '#16A34A', '#7E22CE', '#B45309', '#0E7490',
-];
-/* Grouper les tâches équipe par responsable principal */
+$collabColors = ['#003366','#CC5500','#8B0000','#1D4ED8','#16A34A','#7E22CE','#B45309','#0E7490'];
 $parCollaborateur = $tachesEquipe->groupBy(fn($t) => optional($t->responsables->first())->id ?? 0);
-/* Index de couleur par user id */
-$collabColorMap = [];
-$colorIdx = 0;
+$collabColorMap = []; $colorIdx = 0;
 foreach ($parCollaborateur->keys() as $uid) {
-    $collabColorMap[$uid] = $collabColors[$colorIdx % count($collabColors)];
-    $colorIdx++;
+    $collabColorMap[$uid] = $collabColors[$colorIdx % count($collabColors)]; $colorIdx++;
 }
+// Séparer humains et agents IA
+$groupsHumains = $parCollaborateur->filter(fn($g) => optional($g->first()->responsables->first())->type_compte !== 'agent_ia');
+$groupsAgents  = $parCollaborateur->filter(fn($g) => optional($g->first()->responsables->first())->type_compte === 'agent_ia');
 @endphp
 
-@foreach($parCollaborateur as $userId => $groupTaches)
+{{-- Groupes humains --}}
+@foreach($groupsHumains as $userId => $groupTaches)
 @php
     $responsablePrincipal = $groupTaches->first()->responsables->first();
-    $collabColor = $collabColorMap[$userId] ?? '#64748B';
+    $collabColor     = $collabColorMap[$userId] ?? '#64748B';
     $collabInitiales = $responsablePrincipal
         ? strtoupper(mb_substr($responsablePrincipal->prenom,0,1).mb_substr($responsablePrincipal->nom,0,1))
         : '?';
     $collabNomComplet = $responsablePrincipal?->nom_complet ?? 'Non assigné';
 @endphp
 <div class="collab-group">
-    {{-- En-tête de groupe collaborateur --}}
     <div class="collab-group-header">
         <div class="collab-avatar" style="background:{{ $collabColor }}">{{ $collabInitiales }}</div>
         <span class="collab-name">{{ $collabNomComplet }}</span>
         <span class="collab-count">{{ $groupTaches->count() }} tâche{{ $groupTaches->count() > 1 ? 's' : '' }}</span>
     </div>
-    {{-- Cartes de ce collaborateur, avec border-left à sa couleur --}}
     <div class="task-list" style="--collab-color:{{ $collabColor }}">
-        @foreach($groupTaches as $tache)
+        @foreach($groupTaches->take(5) as $tache)
             @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
         @endforeach
+        @if($groupTaches->count() > 5)
+        <div style="text-align:center;padding:.5rem">
+            <a href="{{ route('taches.index', ['responsable_id' => $userId] + request()->except('responsable_id')) }}"
+               style="font-size:.8rem;color:var(--kt-navy);font-weight:600;text-decoration:none">
+                ↓ Voir les {{ $groupTaches->count() - 5 }} tâche(s) supplémentaire(s)
+            </a>
+        </div>
+        @endif
     </div>
 </div>
 @endforeach
+
+{{-- Séparateur + Groupes Agents IA --}}
+@if($groupsAgents->isNotEmpty())
+<div class="section-sep agents-ia" style="margin-top:1.5rem">
+    <div class="section-sep-line"></div>
+    <div class="section-sep-label">
+        <span>🤖 Agents IA</span>
+        <span class="section-sep-count">{{ $groupsAgents->flatten()->count() }}</span>
+    </div>
+    <div class="section-sep-line"></div>
+</div>
+
+@foreach($groupsAgents as $userId => $groupTaches)
+@php
+    $agent = $groupTaches->first()->responsables->first();
+    $agentCouleur = $agent?->agent_couleur ?? '#6D28D9';
+    $agentCode    = $agent?->agent_code ?? 'agent';
+    $agentNom     = $agent?->nom_complet ?? 'Agent IA';
+    $agentInitiale = strtoupper(substr($agentCode, 0, 2));
+@endphp
+<div class="collab-group is-agent" style="--collab-color:{{ $agentCouleur }}">
+    <div class="collab-group-header" onclick="toggleGroupeAgent(this)" style="cursor:pointer;user-select:none">
+        <div class="collab-avatar" style="background:{{ $agentCouleur }}">🤖</div>
+        <span class="collab-name">{{ $agentNom }}</span>
+        <span class="badge-agent-ia"><span class="dot-pulse"></span>{{ $agentCode }}</span>
+        <span class="collab-count" style="margin-left:auto">{{ $groupTaches->count() }} tâche{{ $groupTaches->count() > 1 ? 's' : '' }}</span>
+        <span class="toggle-icon" style="color:#6D28D9;font-size:.75rem;margin-left:.5rem">▼</span>
+    </div>
+    <div class="task-list agent-group-body" style="--collab-color:{{ $agentCouleur }}">
+        @foreach($groupTaches->take(5) as $tache)
+            @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+        @endforeach
+        @if($groupTaches->count() > 5)
+        <div style="text-align:center;padding:.5rem">
+            <a href="{{ route('taches.index', ['responsable_id' => $userId] + request()->except('responsable_id')) }}"
+               style="font-size:.8rem;color:#6D28D9;font-weight:600;text-decoration:none">
+                ↓ Voir les {{ $groupTaches->count() - 5 }} tâche(s) supplémentaire(s)
+            </a>
+        </div>
+        @endif
+    </div>
+</div>
+@endforeach
+@endif
 @endif
 
 @else
@@ -368,7 +451,27 @@ foreach ($parCollaborateur->keys() as $uid) {
 
 @endif
 
-@if($taches->hasPages())
+@if($taches && $taches->hasPages())
 <div style="margin-top:1.25rem">{{ $taches->links('pagination::bootstrap-4') }}</div>
 @endif
+
+@push('scripts')
+<script>
+function toggleGroupeAgent(header) {
+    const body = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'flex';
+    icon.textContent = isOpen ? '▶' : '▼';
+}
+// Replier les groupes agents par défaut au chargement (allège la vue)
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.collab-group.is-agent .collab-group-header').forEach(h => {
+        const body = h.nextElementSibling;
+        const icon = h.querySelector('.toggle-icon');
+        if (body && icon) { body.style.display = 'none'; icon.textContent = '▶'; }
+    });
+});
+</script>
+@endpush
 @endsection

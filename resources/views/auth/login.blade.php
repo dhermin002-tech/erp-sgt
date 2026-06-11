@@ -317,15 +317,16 @@
 
         /* ── Responsive mobile ── */
         @media (max-width: 680px) {
+            body { align-items: flex-start; overflow-y: auto; }
             .login-wrap {
                 grid-template-columns: 1fr;
                 width: 100%; min-height: 100vh;
                 border-radius: 0;
             }
-            .panel-id { padding: 2rem 1.5rem; }
+            .panel-id { padding: 1.5rem 1.5rem 1rem; }
             .id-title  { font-size: 1.3rem; }
             .id-stats  { display: none; }
-            .panel-form { padding: 2rem 1.5rem; }
+            .panel-form { padding: 1.5rem 1.5rem 2rem; }
         }
     </style>
 </head>

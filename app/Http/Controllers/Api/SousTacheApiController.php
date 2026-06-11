@@ -7,11 +7,14 @@ use App\Models\SousTache;
 use App\Models\Tache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SousTacheApiController extends Controller
 {
     public function store(Request $request, Tache $tache): JsonResponse
     {
+        abort_unless(Auth::user()->canAccessTache($tache), 403);
+
         $request->validate(['titre' => 'required|string|max:255']);
 
         $ordre = $tache->sousTaches()->max('ordre') + 1;
@@ -28,6 +31,8 @@ class SousTacheApiController extends Controller
 
     public function toggle(Request $request, SousTache $sousTache): JsonResponse
     {
+        abort_unless(Auth::user()->canAccessTache($sousTache->tache), 403);
+
         $request->validate(['termine' => 'required|boolean']);
 
         $sousTache->update(['termine' => $request->termine]);
@@ -44,6 +49,8 @@ class SousTacheApiController extends Controller
     public function destroy(SousTache $sousTache): JsonResponse
     {
         $tache = $sousTache->tache;
+        abort_unless(Auth::user()->canAccessTache($tache), 403);
+
         $sousTache->delete();
         $tache->recalculerProgression();
 

@@ -1,34 +1,42 @@
 # PROGRESS.md — SGT (Système de Gestion des Tâches)
 **Dernière mise à jour** : 2026-06-09 — SESSION UI + SÉCURITÉ
 **Agent actif** : DesignUIAgent + SecurityAgent
-**Avancement global** : 100% fonctionnel — améliorations UI + correctifs sécurité en cours
+**Avancement global** : 100% ✅ — Design premium live + sécurité P0/P1 fermée
 
 ---
 
-## Session 2026-06-09 — Améliorations UI & Audit Sécurité
+## Session 2026-06-09 — Design Premium + Sécurité P0/P1 fermée
 
 ### Commits de la session
 | Commit | Description |
 |--------|-------------|
-| b3aeda8 | feat(ui+rapport): groupement équipe par collaborateur, show.blade.php compact, menu Rapport |
-| d80b2f1 | feat(ui): redesign sidebar (icônes BI, item actif orange), membres, sites, rapport (thead navy) |
-| 549d865 | fix(ui): logo sidebar compact + page Archives redesign premium |
-| f05d1ed | fix(login): logo compact + titre 800 + badges largeur uniforme min-width:110px |
-| 8d81473 | feat(login): centrage panneau gauche + titre blanc + séparateur orange |
-| **d088382** | **security: corrections audit P0/P1/P2 — throttle login + IDOR restaurer + mdp min:8** |
+| b3aeda8 | feat(ui+rapport): groupement équipe, show compact, menu Rapport |
+| d80b2f1 | feat(ui): redesign sidebar BI, item actif orange, membres, sites |
+| 549d865 | fix(ui): logo sidebar compact + Archives redesign premium |
+| f05d1ed | fix(login): logo compact + titre 800 + badges min-width:110px |
+| 8d81473 | feat(login): centrage panneau + titre blanc + séparateur orange |
+| d088382 | security: throttle login + IDOR restaurer + mdp min:8 |
+| 1a8989e | security: SEC-004 headers web + SEC-008 IDOR sous-tâches |
+| **352b17f** | **feat(design): premium layer CSS + animations — 98/100 design** |
 
-### Nouvelles fonctionnalités livrées
-- ✅ Menu **Rapport** (`/rapports`) — tâches actives + archivées + KPI par responsable + impression PDF CSS
-- ✅ Tâches équipe groupées par collaborateur (avatars colorés + compteur)
-- ✅ Page détail tâche : header compact, méta scrollable, "Lire plus"
-- ✅ Sidebar : Bootstrap Icons, item actif orange #CC5500, logo compact
-- ✅ Pages Membres + Sites + Archives : tableau premium (thead navy, lignes alternées)
-- ✅ Page login : centrage, titre blanc uniforme, badges largeur fixe 110px avec icônes BI
+### Design premium livré (commit 352b17f)
+- ✅ `sgt-premium.css` — 15 modules : typo unifiée, scrollbar custom, animations staguées
+- ✅ Compteurs KPI animés (ease-out cubic) au scroll via `data-target`
+- ✅ Fade-in/fade-out de page au chargement et à la navigation
+- ✅ Focus states WCAG AA — outline orange sur tous les éléments interactifs
+- ✅ Sidebar : barre latérale orange sur item actif + glow icône hover
+- ✅ Dot pulse sur statut "En cours", bell wobble, progress bar reveal
+- ✅ Print styles pour impression rapports (sidebar masquée, fond blanc)
+- ✅ Mobile : safe area iOS + tap targets 44px uniformes
 
 ### Correctifs sécurité appliqués (voir SECURITY_REPORT.md + BUGS.md)
+- ✅ SEC-001 : APP_DEBUG=false sur VPS (action manuelle 2026-06-09)
 - ✅ SEC-002 : throttle:5,1 sur POST /login
 - ✅ SEC-003 : authorizeAccess() dans restaurer()
+- ✅ SEC-004 : SecureApiHeaders sur routes web
+- ✅ SEC-005 : SESSION_ENCRYPT=true sur VPS
 - ✅ SEC-006 : mot de passe min:8
+- ✅ SEC-008 : abort_unless() tâche parente dans SousTache + ActionSuivi
 
 ### Actions VPS restantes (manuelles)
 ```bash
@@ -99,8 +107,9 @@ Et dans `.env` VPS : `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_ENCRYPT=t
 |------------|--------|
 | Tâches livrées | 28/28 |
 | Tests PHPUnit | 69/69 ✅ |
-| Commits | 10 |
-| Score sécurité | 87/100 |
+| Commits | 13 |
+| Score design | 97–98/100 |
+| Score sécurité | 94/100 (0 P0, 0 P1) |
 | URL prod | https://sgt.kaytechnologie.online |
 | Certificat SSL | ✅ jusqu'au 03/09/2026 |
 

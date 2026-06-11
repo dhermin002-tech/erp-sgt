@@ -45,8 +45,10 @@ class Tache extends Model
         if ($user->isManager()) {
             return $query;
         }
-        return $query->whereHas('responsables', fn($q) => $q->where('users.id', $user->id))
-                     ->orWhere('createur_id', $user->id);
+        return $query->where(function ($q) use ($user) {
+            $q->whereHas('responsables', fn($r) => $r->where('users.id', $user->id))
+              ->orWhere('createur_id', $user->id);
+        });
     }
 
     // ── Relations ─────────────────────────────────────────────────────────────
