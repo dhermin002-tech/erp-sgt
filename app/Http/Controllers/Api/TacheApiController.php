@@ -131,6 +131,26 @@ class TacheApiController extends Controller
         ]);
     }
 
+    public function majProgression(Request $request, Tache $tache): JsonResponse
+    {
+        $this->authorizeAccess($request->user(), $tache);
+
+        $request->user()->tokenCan('taches:update')
+            || abort(403, 'Token sans permission taches:update.');
+
+        $data = $request->validate([
+            'progression' => 'required|integer|min:0|max:100',
+        ]);
+
+        $tache->update(['progression' => $data['progression']]);
+
+        return response()->json([
+            'ok'          => true,
+            'progression' => $tache->progression,
+            'tache_id'    => $tache->id,
+        ]);
+    }
+
     public function destroy(Request $request, Tache $tache): JsonResponse
     {
         if (! $request->user()->isManager()) {
