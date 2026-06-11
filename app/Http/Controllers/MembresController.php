@@ -11,11 +11,20 @@ class MembresController extends Controller
 {
     public function index()
     {
-        $humains = User::where('type_compte', 'humain')
-                       ->orderBy('role')->orderBy('nom')->get();
+        $ordreGrade = ['manager'=>1, 'developpeur'=>2, 'technicien'=>3, 'agent'=>4, 'stagiaire'=>5];
 
+        $humains = User::where('type_compte', 'humain')
+            ->orderBy('nom')
+            ->get()
+            ->sortBy(fn($u) => [$ordreGrade[$u->role] ?? 99, $u->nom])
+            ->values();
+
+        // Agents IA : actifs en session d'abord, puis alphabétique
         $agentsIa = User::where('type_compte', 'agent_ia')
-                        ->orderBy('nom')->get();
+            ->orderBy('agent_code')
+            ->get()
+            ->sortByDesc(fn($a) => $a->sessionActive() !== null)
+            ->values();
 
         return view('membres.index', compact('humains', 'agentsIa'));
     }

@@ -192,6 +192,28 @@ table.kt-table tbody tr.is-me { background:#FFFBEB !important; }
 }
 .btn-modal-submit:hover { background:#6d28d9; }
 
+/* ── Badge niveau ── */
+.niveau-badge {
+    display:inline-flex;align-items:center;justify-content:center;
+    width:28px;height:28px;border-radius:8px;
+    font-family:'Space Grotesk',sans-serif;font-size:.72rem;font-weight:800;
+    letter-spacing:-.01em;flex-shrink:0;
+}
+.niveau-pip {
+    display:inline-flex;gap:2px;align-items:center;
+}
+.niveau-pip span {
+    width:6px;height:6px;border-radius:50%;
+}
+/* séparateur de groupe dans la table */
+.group-separator td {
+    padding:.3rem 1.25rem .2rem;
+    background:linear-gradient(90deg,#f8faff,#fff);
+    font-family:'Space Grotesk',sans-serif;font-size:.68rem;font-weight:800;
+    text-transform:uppercase;letter-spacing:.09em;color:#94a3b8;
+    border-bottom:1px solid #e2e8f0;
+}
+
 @media (max-width:640px) {
     table.kt-table thead th.hide-mobile,
     table.kt-table tbody td.hide-mobile { display:none; }
@@ -203,11 +225,11 @@ table.kt-table tbody tr.is-me { background:#FFFBEB !important; }
 @section('content')
 @php
 $roleConfig = [
-    'manager'     => ['bg'=>'#EFF6FF','color'=>'#1D4ED8','icon'=>'bi-shield-check'],
-    'technicien'  => ['bg'=>'#F0FDF4','color'=>'#15803D','icon'=>'bi-tools'],
-    'agent'       => ['bg'=>'#FFF7ED','color'=>'#C2410C','icon'=>'bi-person-badge'],
-    'developpeur' => ['bg'=>'#F5F3FF','color'=>'#7C3AED','icon'=>'bi-code-slash'],
-    'stagiaire'   => ['bg'=>'#F1F5F9','color'=>'#475569','icon'=>'bi-mortarboard'],
+    'manager'     => ['bg'=>'#EFF6FF','color'=>'#1D4ED8','icon'=>'bi-shield-check',  'niveau'=>1,'label'=>'N1'],
+    'developpeur' => ['bg'=>'#F5F3FF','color'=>'#7C3AED','icon'=>'bi-code-slash',    'niveau'=>2,'label'=>'N2'],
+    'technicien'  => ['bg'=>'#F0FDF4','color'=>'#15803D','icon'=>'bi-tools',          'niveau'=>3,'label'=>'N3'],
+    'agent'       => ['bg'=>'#FFF7ED','color'=>'#C2410C','icon'=>'bi-person-badge',   'niveau'=>4,'label'=>'N4'],
+    'stagiaire'   => ['bg'=>'#F1F5F9','color'=>'#475569','icon'=>'bi-mortarboard',    'niveau'=>5,'label'=>'N5'],
 ];
 $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0891B2','#BE185D'];
 @endphp
@@ -253,6 +275,7 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
         <table class="kt-table">
             <thead>
                 <tr>
+                    <th style="width:36px">Niv.</th>
                     <th>Membre</th>
                     <th class="hide-mobile">Identifiant</th>
                     <th>Rôle</th>
@@ -261,14 +284,36 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
                 </tr>
             </thead>
             <tbody>
+                @php $dernierNiveau = null; @endphp
                 @foreach($humains as $i => $membre)
                 @php
                     $rc       = $roleConfig[$membre->role] ?? $roleConfig['stagiaire'];
-                    $aColor   = $avatarColors[$i % count($avatarColors)];
+                    $aColor   = $avatarColors[$rc['niveau'] % count($avatarColors)];
                     $initiales= strtoupper(mb_substr($membre->prenom??'',0,1).mb_substr($membre->nom,0,1));
                     $nbTaches = $membre->taches()->whereNull('archived_at')->where('statut','!=','termine')->count();
+                    $niveauLabel = ['manager'=>'Management','developpeur'=>'Développement','technicien'=>'Technique','agent'=>'Agent','stagiaire'=>'Stagiaire'];
                 @endphp
+
+                {{-- Séparateur de groupe quand le niveau change --}}
+                @if($dernierNiveau !== $rc['niveau'])
+                <tr class="group-separator">
+                    <td colspan="6">
+                        <span class="niveau-badge" style="background:{{ $rc['bg'] }};color:{{ $rc['color'] }};margin-right:.5rem">{{ $rc['label'] }}</span>
+                        {{ $niveauLabel[$membre->role] ?? $membre->role }}
+                    </td>
+                </tr>
+                @php $dernierNiveau = $rc['niveau']; @endphp
+                @endif
+
                 <tr class="{{ $membre->id === auth()->id() ? 'is-me' : '' }}">
+                    <td>
+                        {{-- Pastilles de niveau --}}
+                        <div class="niveau-pip">
+                            @for($p = 1; $p <= 5; $p++)
+                            <span style="background:{{ $p <= $rc['niveau'] ? $rc['color'] : '#e2e8f0' }};opacity:{{ $p <= $rc['niveau'] ? 1 : 0.4 }}"></span>
+                            @endfor
+                        </div>
+                    </td>
                     <td>
                         <div style="display:flex;align-items:center;gap:.75rem">
                             <div class="membre-avatar" style="background:{{ $aColor }}">{{ $initiales }}</div>
@@ -340,6 +385,7 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
             <table class="kt-table agents-table">
                 <thead>
                     <tr>
+                        <th style="width:32px">Act.</th>
                         <th>Agent</th>
                         <th>Code</th>
                         <th class="hide-mobile">Session</th>
@@ -348,12 +394,39 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
                     </tr>
                 </thead>
                 <tbody>
+                    @php $agentGroupeActif = null; @endphp
                     @foreach($agentsIa as $agent)
                     @php
                         $session   = $agent->sessionActive();
                         $rapports  = $agent->rapportsAgents()->whereDate('created_at', today())->count();
+                        $estActif  = $session !== null;
+                        $groupeKey = $estActif ? 'actif' : 'inactif';
                     @endphp
+                    {{-- Séparateur de groupe actifs / inactifs --}}
+                    @if($agentGroupeActif !== $groupeKey)
+                    @php $agentGroupeActif = $groupeKey; @endphp
+                    <tr class="group-separator" style="background:linear-gradient(90deg,#faf5ff,#fff)">
+                        <td colspan="6" style="color:#7c3aed">
+                            @if($estActif)
+                                <span style="display:inline-flex;align-items:center;gap:.35rem">
+                                    <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block"></span>
+                                    En session
+                                </span>
+                            @else
+                                <i class="bi bi-moon" style="margin-right:.4rem"></i>Hors session
+                            @endif
+                        </td>
+                    </tr>
+                    @endif
                     <tr>
+                        <td>
+                            {{-- Indicateur d'activité --}}
+                            @if($estActif)
+                            <span title="En session" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a;animation:pulse-m 1.5s ease infinite"></span>
+                            @else
+                            <span title="Inactif" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#e2e8f0"></span>
+                            @endif
+                        </td>
                         <td>
                             <div style="display:flex;align-items:center;gap:.75rem">
                                 <div class="membre-avatar" style="background:{{ $agent->agent_couleur ?? '#7c3aed' }};border-radius:50%">
