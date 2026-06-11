@@ -161,4 +161,43 @@ class MembresAgentTest extends TestCase
             ->post(route('membres.storeAgent'), [])
             ->assertSessionHasErrors(['username', 'nom', 'agent_code', 'agent_couleur']);
     }
+
+    // ── destroy — protection agent IA en session active ──────────────────────
+
+    public function test_agent_ia_avec_session_active_ne_peut_pas_etre_supprime(): void
+    {
+        $agent = User::factory()->create([
+            'type_compte' => 'agent_ia',
+            'agent_code'  => 'agent-occupe',
+            'role'        => 'agent',
+        ]);
+        \App\Models\SessionAgent::create([
+            'user_id'    => $agent->id,
+            'projet'     => 'sgt',
+            'statut'     => 'en_cours',
+            'demarree_a' => now(),
+        ]);
+
+        $this->actingAs($this->manager)
+            ->delete(route('membres.destroy', $agent))
+            ->assertSessionHasErrors('delete');
+
+        $this->assertDatabaseHas('users', ['id' => $agent->id, 'deleted_at' => null]);
+    }
+
+    public function test_agent_ia_sans_session_peut_etre_supprime(): void
+    {
+        $agent = User::factory()->create([
+            'type_compte' => 'agent_ia',
+            'agent_code'  => 'agent-libre',
+            'role'        => 'agent',
+        ]);
+
+        $this->actingAs($this->manager)
+            ->delete(route('membres.destroy', $agent))
+            ->assertRedirect(route('membres.index'))
+            ->assertSessionHas('success');
+
+        $this->assertSoftDeleted('users', ['id' => $agent->id]);
+    }
 }

@@ -397,8 +397,9 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
                     @php $agentGroupeActif = null; @endphp
                     @foreach($agentsIa as $agent)
                     @php
-                        $session   = $agent->sessionActive();
-                        $rapports  = $agent->rapportsAgents()->whereDate('created_at', today())->count();
+                        // Relations déjà eager-loaded dans le contrôleur (sessions en_cours + rapports du jour)
+                        $session   = $agent->sessionsAgents->first();
+                        $rapports  = $agent->rapportsAgents->count();
                         $estActif  = $session !== null;
                         $groupeKey = $estActif ? 'actif' : 'inactif';
                     @endphp

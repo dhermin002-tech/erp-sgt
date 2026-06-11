@@ -47,6 +47,11 @@ class ProfilController extends Controller
 
         $user->update(['password' => Hash::make($request->password)]);
 
+        // Invalide toutes les autres sessions de cet utilisateur (sécurité : si le compte
+        // était compromis, l'attaquant est déconnecté immédiatement). Requiert le middleware
+        // AuthenticateSession (cf. bootstrap/app.php).
+        auth()->logoutOtherDevices($request->password);
+
         return back()->with('success_password', 'Mot de passe modifié avec succès.')->with('tab', 'password');
     }
 

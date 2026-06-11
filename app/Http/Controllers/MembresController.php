@@ -19,11 +19,16 @@ class MembresController extends Controller
             ->sortBy(fn($u) => [$ordreGrade[$u->role] ?? 99, $u->nom])
             ->values();
 
-        // Agents IA : actifs en session d'abord, puis alphabétique
+        // Agents IA : actifs en session d'abord, puis alphabétique.
+        // Eager-load des sessions en cours + rapports du jour pour éviter le N+1 dans la vue.
         $agentsIa = User::where('type_compte', 'agent_ia')
+            ->with([
+                'sessionsAgents' => fn($q) => $q->where('statut', 'en_cours')->latest(),
+                'rapportsAgents' => fn($q) => $q->whereDate('created_at', today()),
+            ])
             ->orderBy('agent_code')
             ->get()
-            ->sortByDesc(fn($a) => $a->sessionActive() !== null)
+            ->sortByDesc(fn($a) => $a->sessionsAgents->isNotEmpty())
             ->values();
 
         return view('membres.index', compact('humains', 'agentsIa'));
@@ -113,6 +118,14 @@ class MembresController extends Controller
     public function destroy(User $membre)
     {
         abort_if($membre->id === auth()->id(), 403, 'Vous ne pouvez pas vous supprimer vous-même.');
+
+        // Un agent IA avec une session en cours laisserait une session orpheline en base.
+        if ($membre->isAgentIa() && $membre->sessionActive()) {
+            return back()->withErrors([
+                'delete' => "L'agent « {$membre->agent_code} » a une session active. Fermez-la avant de le supprimer.",
+            ]);
+        }
+
         $membre->delete();
         return redirect()->route('membres.index')->with('success', 'Membre supprimé.');
     }
