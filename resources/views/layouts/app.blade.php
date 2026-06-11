@@ -431,8 +431,8 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="user-dropdown">
-                        <a href="#">👤 Mon profil</a>
-                        <a href="#">⚙️ Préférences</a>
+                        <a href="{{ route('profil.index') }}">👤 Mon profil</a>
+                        <a href="{{ route('preferences.index') }}">⚙️ Préférences</a>
                         <hr class="divider">
                         {{-- ERR-PHP-002 : logout via fetch() + finally pour éviter erreur CSRF 419 --}}
                         <button onclick="logoutSafe()">🚪 Se déconnecter</button>

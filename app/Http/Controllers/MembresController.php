@@ -5,13 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class MembresController extends Controller
 {
     public function index()
     {
-        $membres = User::orderBy('role')->orderBy('nom')->paginate(20);
-        return view('membres.index', compact('membres'));
+        $humains = User::where('type_compte', 'humain')
+                       ->orderBy('role')->orderBy('nom')->get();
+
+        $agentsIa = User::where('type_compte', 'agent_ia')
+                        ->orderBy('nom')->get();
+
+        return view('membres.index', compact('humains', 'agentsIa'));
     }
 
     public function create()
@@ -66,6 +72,33 @@ class MembresController extends Controller
         $membre->update($data);
 
         return redirect()->route('membres.index')->with('success', 'Membre mis à jour.');
+    }
+
+    public function storeAgent(Request $request)
+    {
+        $request->validate([
+            'username'      => 'required|string|max:50|unique:users,username',
+            'nom'           => 'required|string|max:100',
+            'agent_code'    => 'required|string|max:40|unique:users,agent_code|regex:/^[a-z0-9\-]+$/',
+            'agent_couleur' => 'required|string|regex:/^#[0-9a-fA-F]{6}$/',
+        ], [
+            'agent_code.regex'   => 'Le code doit être en minuscules, chiffres et tirets uniquement.',
+            'agent_code.unique'  => 'Ce code agent est déjà utilisé.',
+            'username.unique'    => 'Cet identifiant est déjà utilisé.',
+        ]);
+
+        User::create([
+            'username'      => $request->username,
+            'nom'           => $request->nom,
+            'prenom'        => 'Agent',
+            'role'          => 'agent',
+            'type_compte'   => 'agent_ia',
+            'agent_code'    => $request->agent_code,
+            'agent_couleur' => $request->agent_couleur,
+            'password'      => Hash::make(\Illuminate\Support\Str::random(32)),
+        ]);
+
+        return redirect()->route('membres.index')->with('success', "Agent IA « {$request->agent_code} » créé. Générez son token via : php artisan sgt:agent-token --agent={$request->agent_code}");
     }
 
     public function destroy(User $membre)

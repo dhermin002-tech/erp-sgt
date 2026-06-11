@@ -9,6 +9,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageRapportController;
 use App\Http\Controllers\RapportController;
+use App\Http\Controllers\PreferencesPageController;
+use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RapportsAgentsController;
 use App\Http\Controllers\SessionsAgentsController;
 use App\Http\Controllers\SiteController;
@@ -63,12 +65,22 @@ Route::middleware(['auth', 'not-agent-account'])->group(function () {
     Route::post('/preferences/locale', [PreferenceController::class, 'setLocale'])->name('preferences.locale');
     Route::patch('/preferences/direction', [PreferenceController::class, 'setDirection'])->name('preferences.direction');
 
+    // ── Profil utilisateur ────────────────────────────────────────────────────
+    Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
+    Route::patch('/profil/infos', [ProfilController::class, 'updateInfos'])->name('profil.updateInfos');
+    Route::patch('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.updatePassword');
+    Route::patch('/profil/preferences', [ProfilController::class, 'updatePreferences'])->name('profil.updatePreferences');
+
+    // ── Page Préférences (redirige vers profil) ───────────────────────────────
+    Route::get('/preferences', [PreferencesPageController::class, 'index'])->name('preferences.index');
+
     // ── Agents IA — Rapports & Sessions (Manager uniquement) ─────────────────
     Route::get('/agents/rapports', [RapportsAgentsController::class, 'index'])->name('agents.rapports')->middleware('role:manager');
     Route::get('/agents/sessions', [SessionsAgentsController::class, 'index'])->name('agents.sessions')->middleware('role:manager');
 
     // ── Membres (Manager uniquement) ──────────────────────────────────────────
     Route::resource('membres', MembresController::class)->middleware('role:manager')->parameters(['membres' => 'membre']);
+    Route::post('/membres/agents', [MembresController::class, 'storeAgent'])->name('membres.storeAgent')->middleware('role:manager');
 
     // ── Sites (Manager uniquement) ────────────────────────────────────────────
     Route::resource('sites', SiteController::class)->middleware('role:manager');
