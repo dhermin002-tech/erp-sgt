@@ -5,7 +5,16 @@
 > Validation = `php artisan test` 100% vert. Marquer chaque tâche `terminé` dans SGT.
 > **Pour chaque tâche : créer d'abord ses sous-tâches** (règle [[feedback-sous-taches-auto]]).
 
+## ⚠️ TÂCHE #0 — À FAIRE EN PREMIER (correction affichage rôles agents)
+**Anomalie signalée** : la page `/agents/taches` groupe par CRÉATEUR → tout apparaît sous project-agent.
+**Correction** (cf. [[feedback-roles-agents-sgt]]) :
+- `TachesAgentsController` : filtrer `whereHas('responsables', type_compte=agent_ia)` (tâches assignées aux agents) + eager-load createur/responsables.
+- Vue `agents/taches.blade.php` : **grouper par agent RESPONSABLE** (l'exécutant), afficher le créateur (project-agent) en méta « défini par 🤖 project-agent » sur chaque tâche.
+- Résultat attendu : voir design-ui-agent (11 tâches), dev-agent (2), audit-agent (1)… chacun avec SON travail ; project-agent identifié comme définisseur.
+- Tester (`TachesAgentsTest` adapté) + deploy.
+
 ## Règles d'exécution (toutes sessions)
+0. **Affichage** : page agents = par responsable (exécutant), créateur project-agent en méta.
 1. Avant de coder une tâche : `creer_sous_tache` pour chaque action individuelle.
 2. Coder en jouant l'agent assigné (design-ui-agent, dev-agent, qa-agent, audit-agent).
 3. `php artisan test` → si vert : `toggle_sous_tache` sur les actions faites + `changer_statut` → `termine`.
