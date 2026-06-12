@@ -45,10 +45,15 @@ class TachesAgentsTest extends TestCase
 
     // ── Contenu ──────────────────────────────────────────────────────────────
 
-    public function test_liste_uniquement_les_taches_creees_par_agents(): void
+    public function test_liste_uniquement_les_taches_attribuees_aux_agents(): void
     {
-        $tacheAgent  = Tache::factory()->create(['createur_id' => $this->agentIa->id]);
+        // Créée par project-agent (peu importe), responsable = agent IA → visible
+        $tacheAgent = Tache::factory()->create(['createur_id' => $this->manager->id]);
+        $tacheAgent->responsables()->attach($this->agentIa->id);
+
+        // Responsable = humain → NON visible dans cette page
         $tacheHumain = Tache::factory()->create(['createur_id' => $this->manager->id]);
+        $tacheHumain->responsables()->attach($this->manager->id);
 
         $response = $this->actingAs($this->manager)->get(route('agents.taches'));
         $response->assertOk();
@@ -58,7 +63,7 @@ class TachesAgentsTest extends TestCase
         $this->assertFalse($ids->contains($tacheHumain->id));
     }
 
-    public function test_filtre_par_agent(): void
+    public function test_filtre_par_agent_responsable(): void
     {
         $autreAgent = User::factory()->create([
             'type_compte' => 'agent_ia',
@@ -66,21 +71,25 @@ class TachesAgentsTest extends TestCase
             'role'        => 'agent',
         ]);
 
-        $tProject = Tache::factory()->create(['createur_id' => $this->agentIa->id]);
-        $tDev     = Tache::factory()->create(['createur_id' => $autreAgent->id]);
+        $tDesign = Tache::factory()->create(['createur_id' => $this->manager->id]);
+        $tDesign->responsables()->attach($this->agentIa->id);   // design-ui-agent
+        $tDev = Tache::factory()->create(['createur_id' => $this->manager->id]);
+        $tDev->responsables()->attach($autreAgent->id);          // dev-agent
 
         $response = $this->actingAs($this->manager)
             ->get(route('agents.taches', ['agent_id' => $this->agentIa->id]));
 
         $ids = $response->viewData('taches')->pluck('id');
-        $this->assertTrue($ids->contains($tProject->id));
+        $this->assertTrue($ids->contains($tDesign->id));
         $this->assertFalse($ids->contains($tDev->id));
     }
 
     public function test_kpis_corrects(): void
     {
-        Tache::factory()->create(['createur_id' => $this->agentIa->id, 'statut' => 'en_cours']);
-        Tache::factory()->create(['createur_id' => $this->agentIa->id, 'statut' => 'nouveau']);
+        $t1 = Tache::factory()->create(['createur_id' => $this->manager->id, 'statut' => 'en_cours']);
+        $t1->responsables()->attach($this->agentIa->id);
+        $t2 = Tache::factory()->create(['createur_id' => $this->manager->id, 'statut' => 'nouveau']);
+        $t2->responsables()->attach($this->agentIa->id);
 
         $response = $this->actingAs($this->manager)->get(route('agents.taches'));
         $kpis = $response->viewData('kpis');

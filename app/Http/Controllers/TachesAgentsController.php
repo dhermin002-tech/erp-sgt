@@ -9,30 +9,28 @@ use Illuminate\Http\Request;
 class TachesAgentsController extends Controller
 {
     /**
-     * Liste dédiée des tâches créées par les agents IA (suivi isolé).
+     * Tâches attribuées aux agents IA, groupées par agent RESPONSABLE (l'exécutant).
+     * project-agent reste le créateur (définisseur) — affiché en méta sur chaque tâche.
      */
     public function index(Request $request)
     {
         $query = Tache::query()
             ->whereNull('archived_at')
-            ->whereHas('createur', fn($q) => $q->where('type_compte', 'agent_ia'))
+            ->whereHas('responsables', fn($q) => $q->where('type_compte', 'agent_ia'))
             ->with(['createur', 'responsables', 'site']);
 
         if ($request->filled('agent_id')) {
-            $query->where('createur_id', $request->agent_id);
+            $query->whereHas('responsables', fn($q) => $q->where('users.id', $request->agent_id));
         }
         if ($request->filled('statut')) {
             $query->where('statut', $request->statut);
         }
 
-        // Tri par rang hiérarchique du créateur agent, puis par date récente
-        $taches = $query->get()
-            ->sortBy(fn($t) => [$t->createur->rangHierarchique(), $t->createur->agent_code, -$t->created_at->timestamp])
-            ->values();
+        $taches = $query->get();
 
-        // Agents IA ayant au moins une tâche (pour le filtre), classés par rôle métier
+        // Agents exécutants (responsables) ayant au moins une tâche, classés par rôle métier
         $agentsAvecTaches = User::where('type_compte', 'agent_ia')
-            ->whereHas('tachesCreees', fn($q) => $q->whereNull('archived_at'))
+            ->whereHas('taches', fn($q) => $q->whereNull('archived_at'))
             ->get()
             ->sortBy(fn($a) => [$a->rangHierarchique(), $a->agent_code])
             ->values();
@@ -40,7 +38,7 @@ class TachesAgentsController extends Controller
         // KPIs
         $kpis = [
             'total'      => $taches->count(),
-            'agents'     => $taches->pluck('createur_id')->unique()->count(),
+            'agents'     => $agentsAvecTaches->count(),
             'en_cours'   => $taches->where('statut', 'en_cours')->count(),
             'terminees'  => $taches->where('statut', 'termine')->count(),
         ];

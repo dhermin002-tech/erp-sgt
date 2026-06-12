@@ -91,7 +91,7 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 <div class="agents-hero">
     <div>
         <div class="agents-hero-title">🤖 Tâches des agents IA</div>
-        <div class="agents-hero-sub">Suivi isolé des tâches créées par les agents — {{ $kpis['total'] }} tâche(s) active(s)</div>
+        <div class="agents-hero-sub">Travail attribué à chaque agent (exécutant) — {{ $kpis['total'] }} tâche(s) active(s)</div>
     </div>
     <a href="{{ route('taches.index', ['createur' => 'agent_ia']) }}" class="btn-filter" style="text-decoration:none">Voir dans les tâches →</a>
 </div>
@@ -99,7 +99,7 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 {{-- KPIs --}}
 <div class="kpi-grid">
     <div class="kpi-card"><div class="kpi-val">{{ $kpis['total'] }}</div><div class="kpi-label">Tâches actives</div></div>
-    <div class="kpi-card"><div class="kpi-val">{{ $kpis['agents'] }}</div><div class="kpi-label">Agents contributeurs</div></div>
+    <div class="kpi-card"><div class="kpi-val">{{ $kpis['agents'] }}</div><div class="kpi-label">Agents mobilisés</div></div>
     <div class="kpi-card"><div class="kpi-val">{{ $kpis['en_cours'] }}</div><div class="kpi-label">En cours</div></div>
     <div class="kpi-card"><div class="kpi-val">{{ $kpis['terminees'] }}</div><div class="kpi-label">Terminées</div></div>
 </div>
@@ -138,10 +138,15 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
     <div style="font-size:.875rem;margin-top:.25rem">Les tâches créées par les agents via le MCP apparaîtront ici.</div>
 </div>
 @else
-@php $parAgent = $taches->groupBy(fn($t) => $t->createur->id); @endphp
-@foreach($parAgent as $createurId => $groupe)
 @php
-    $agent = $groupe->first()->createur;
+    // Groupé par agent RESPONSABLE (l'exécutant), trié par rang hiérarchique métier
+    $parAgent = $taches
+        ->sortBy(fn($t) => optional($t->responsables->firstWhere('type_compte','agent_ia'))->rangHierarchique() ?? 99)
+        ->groupBy(fn($t) => optional($t->responsables->firstWhere('type_compte','agent_ia'))->id);
+@endphp
+@foreach($parAgent as $agentId => $groupe)
+@php
+    $agent = $groupe->first()->responsables->firstWhere('type_compte','agent_ia');
     $couleur = $agent?->agent_couleur ?? '#6D28D9';
 @endphp
 <div class="agent-block">
@@ -149,7 +154,7 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
         <div class="agent-block-avatar" style="background:{{ $couleur }}">🤖</div>
         <span class="agent-block-name">{{ $agent?->nom_complet ?? 'Agent IA' }}</span>
         <span class="agent-block-code"><i class="bi bi-cpu"></i> {{ $agent?->agent_code }}</span>
-        <span class="agent-block-count">{{ $groupe->count() }} tâche{{ $groupe->count() > 1 ? 's' : '' }}</span>
+        <span class="agent-block-count">{{ $groupe->count() }} tâche{{ $groupe->count() > 1 ? 's' : '' }} à exécuter</span>
     </div>
     <div class="task-list" style="--collab-color:{{ $couleur }}">
         @foreach($groupe as $tache)
