@@ -1,0 +1,82 @@
+/* ============================================================================
+   SGT KayTechnologie — COUCHE ÉCLAT v1.0
+   Injecter APRÈS sgt-premium.css. Objectif : rendre les couleurs plus VIVES
+   et brillantes (gradients, glow coloré, accents saturés) SANS changer la
+   palette de la charte. Chaque carte KPI fournit déjà --kc (couleur) et
+   --kc-soft (teinte douce) — on s'appuie dessus.
+   Fallback : si color-mix() n'est pas supporté, on retombe sur le style sobre.
+   ============================================================================ */
+
+/* ── Cartes KPI — fond dégradé teinté + glow coloré ── */
+.kpi-card {
+    background: linear-gradient(162deg, var(--kc-soft) 0%, #ffffff 58%) !important;
+    border: 1px solid color-mix(in srgb, var(--kc) 22%, #ffffff) !important;
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--kc) 15%, transparent) !important;
+}
+.kpi-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--kc) 30%, transparent) !important;
+}
+/* Barre supérieure → dégradé lumineux plus épais */
+.kpi-card::before {
+    height: 4px !important;
+    background: linear-gradient(90deg, var(--kc), color-mix(in srgb, var(--kc) 50%, #ffffff)) !important;
+    box-shadow: 0 1px 8px color-mix(in srgb, var(--kc) 45%, transparent) !important;
+}
+/* Icône → pastille dégradée + halo coloré */
+.kpi-icon {
+    background: linear-gradient(135deg, var(--kc), color-mix(in srgb, var(--kc) 62%, #000000)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--kc) 38%, transparent) !important;
+}
+/* Chiffre KPI → couleur vive (comme la maquette) */
+.kpi-value {
+    color: var(--kc) !important;
+    text-shadow: 0 1px 0 color-mix(in srgb, var(--kc) 12%, transparent);
+}
+/* Barre de progression → dégradé brillant */
+.kpi-progress-fill {
+    background: linear-gradient(90deg, var(--kc), color-mix(in srgb, var(--kc) 55%, #ffffff)) !important;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--kc) 45%, transparent);
+}
+
+/* ── Cartes graphiques & panneaux — halo subtil au survol ── */
+.chart-card { transition: box-shadow .22s ease, transform .22s ease; }
+.chart-card:hover {
+    box-shadow: 0 10px 30px rgba(23,58,122,.12) !important;
+    transform: translateY(-2px);
+}
+/* Pastille de titre de panneau → plus lumineuse */
+.chart-title-dot { box-shadow: 0 0 8px currentColor; }
+
+/* ── Hero du dashboard — dégradé plus riche + lueur orange ── */
+.dash-hero, .page-header {
+    background: linear-gradient(125deg, #0E2350 0%, #173A7A 52%, #102A5C 100%) !important;
+    box-shadow: 0 8px 30px rgba(14,35,80,.28) !important;
+}
+
+/* ── Boutons primaires — dégradé orange éclatant ── */
+.btn-primary, .btn-kt-primary, button[type="submit"].btn-primary {
+    background: linear-gradient(135deg, #F47A1F, #CC5500) !important;
+    box-shadow: 0 4px 16px rgba(244,122,31,.35) !important;
+    border: none !important;
+}
+.btn-primary:hover, .btn-kt-primary:hover {
+    background: linear-gradient(135deg, #FF8C2F, #E0600F) !important;
+    box-shadow: 0 6px 22px rgba(244,122,31,.5) !important;
+}
+
+/* ── Badges de statut/priorité — plus saturés ── */
+.badge-status, .badge-statut, .badge-priorite {
+    box-shadow: 0 2px 6px rgba(15,23,42,.10);
+}
+
+/* ── Sidebar item actif — halo orange ── */
+[data-direction="A"] .sidebar-nav a.active {
+    box-shadow: 0 4px 18px rgba(244,122,31,.45) !important;
+}
+
+/* ── Avatar / pastilles agents — léger relief ── */
+.collab-avatar, .agent-block-avatar, .membre-avatar {
+    box-shadow: 0 3px 10px rgba(15,23,42,.18);
+}
