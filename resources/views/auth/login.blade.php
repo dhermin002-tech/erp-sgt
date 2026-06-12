@@ -297,7 +297,17 @@
             transform: translateY(-1px);
         }
         .btn-submit:active { transform: scale(.98); }
+        .btn-submit:disabled { opacity: .75; cursor: wait; transform: none; }
         .btn-submit svg { flex-shrink: 0; }
+        .btn-spinner {
+            width: 15px; height: 15px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            display: inline-block;
+            animation: btnSpin .6s linear infinite;
+        }
+        @keyframes btnSpin { to { transform: rotate(360deg); } }
 
         /* Pied de formulaire */
         .form-divider {
@@ -408,10 +418,16 @@
 
                     <div class="field">
                         <label for="password">Mot de passe</label>
-                        <input type="password" id="password" name="password"
-                               class="{{ $errors->has('password') ? 'is-invalid' : '' }}"
-                               autocomplete="current-password"
-                               placeholder="••••••••">
+                        <div style="position:relative">
+                            <input type="password" id="password" name="password"
+                                   class="{{ $errors->has('password') ? 'is-invalid' : '' }}"
+                                   autocomplete="current-password"
+                                   placeholder="••••••••" style="padding-right:2.6rem">
+                            <button type="button" onclick="togglePwd()" aria-label="Afficher le mot de passe"
+                                    style="position:absolute;right:.55rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9AA3AF;padding:.3rem;display:flex;align-items:center">
+                                <i class="bi bi-eye" id="pwdIcon"></i>
+                            </button>
+                        </div>
                         @error('password')<div class="invalid-msg">{{ $message }}</div>@enderror
                     </div>
 
@@ -420,12 +436,14 @@
                         <label for="remember" style="cursor:pointer">Se souvenir de moi</label>
                     </div>
 
-                    <button type="submit" class="btn-submit">
-                        Se connecter
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                            <polyline points="12 5 19 12 12 19"/>
-                        </svg>
+                    <button type="submit" class="btn-submit" id="btnSubmit">
+                        <span id="btnLabel" style="display:inline-flex;align-items:center;gap:.5rem">
+                            Se connecter
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                <polyline points="12 5 19 12 12 19"/>
+                            </svg>
+                        </span>
                     </button>
                 </form>
 
@@ -438,5 +456,23 @@
         </div>
 
     </div>
+
+    <script>
+        // Révéler / masquer le mot de passe
+        function togglePwd() {
+            const inp = document.getElementById('password');
+            const ic  = document.getElementById('pwdIcon');
+            const show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            ic.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+        }
+        // État loading au submit (évite le double-envoi en 3G lent)
+        document.querySelector('form').addEventListener('submit', function () {
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            document.getElementById('btnLabel').innerHTML =
+                '<span class="btn-spinner"></span> Connexion…';
+        });
+    </script>
 </body>
 </html>

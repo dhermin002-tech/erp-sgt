@@ -391,6 +391,111 @@
     </div>
 </div>
 
+{{-- ══ Panneaux secondaires (maquette premium) ══ --}}
+@php
+$rangPrioColor = ['urgente'=>'#B0202E','haute'=>'#C97A0A','normale'=>'#2563EB','basse'=>'#64748B'];
+$avatarBgDash  = ['var(--kt-navy)','var(--kt-orange)','var(--kt-purple)','var(--kt-maroon)','#15885A'];
+@endphp
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.35rem;margin-bottom:1.35rem">
+
+    {{-- Tâches critiques --}}
+    <div class="chart-card">
+        <div class="chart-header">
+            <span class="chart-title"><span class="chart-title-dot" style="background:#B0202E"></span> Tâches critiques</span>
+            <a href="{{ route('taches.index', ['statut' => '']) }}" class="chart-tag" style="text-decoration:none">Voir toutes</a>
+        </div>
+        <div style="padding:.35rem 0">
+            @forelse($panneaux['critiques'] as $t)
+            <a href="{{ route('taches.show', $t) }}" style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.6rem .25rem;border-bottom:1px solid var(--slate-100);text-decoration:none">
+                <div style="min-width:0">
+                    <div style="font-weight:600;color:var(--slate-800);font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:{{ $rangPrioColor[$t->priorite] ?? '#64748B' }};margin-right:.4rem"></span>{{ $t->titre }}
+                    </div>
+                    <div style="font-size:.74rem;color:var(--slate-400);margin-top:.1rem">{{ $t->site?->nom ?? '—' }}</div>
+                </div>
+                <div style="text-align:right;white-space:nowrap">
+                    @if($t->estEnRetard())
+                    <span style="font-size:.7rem;font-weight:700;color:#B0202E">{{ (int) now()->startOfDay()->diffInDays($t->date_echeance) }} j en retard</span>
+                    @else
+                    <span style="font-size:.7rem;font-weight:600;color:{{ $rangPrioColor[$t->priorite] ?? '#64748B' }};text-transform:capitalize">{{ $t->priorite }}</span>
+                    @endif
+                </div>
+            </a>
+            @empty
+            <div style="text-align:center;padding:1.5rem;color:var(--slate-400);font-size:.85rem">Aucune tâche critique 🎉</div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Échéances à venir --}}
+    <div class="chart-card">
+        <div class="chart-header">
+            <span class="chart-title"><span class="chart-title-dot" style="background:#C97A0A"></span> Échéances à venir</span>
+            <span class="chart-tag">14 jours</span>
+        </div>
+        <div style="padding:.35rem 0">
+            @forelse($panneaux['echeances'] as $t)
+            <a href="{{ route('taches.show', $t) }}" style="display:flex;align-items:center;gap:.75rem;padding:.6rem .25rem;border-bottom:1px solid var(--slate-100);text-decoration:none">
+                <div style="flex-shrink:0;width:42px;text-align:center;background:var(--slate-50);border-radius:8px;padding:.25rem 0">
+                    <div style="font-size:.62rem;font-weight:700;color:var(--slate-400);text-transform:uppercase">{{ $t->date_echeance->translatedFormat('M') }}</div>
+                    <div style="font-family:var(--font-display);font-weight:800;color:var(--kt-navy);font-size:1rem;line-height:1">{{ $t->date_echeance->format('d') }}</div>
+                </div>
+                <div style="min-width:0;flex:1">
+                    <div style="font-weight:600;color:var(--slate-800);font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $t->titre }}</div>
+                    <div style="font-size:.74rem;color:var(--slate-400)">{{ $t->site?->nom ?? '—' }}</div>
+                </div>
+                <span style="font-size:.68rem;font-weight:700;color:#fff;background:{{ $rangPrioColor[$t->priorite] ?? '#64748B' }};padding:.15rem .5rem;border-radius:20px;text-transform:capitalize;flex-shrink:0">{{ $t->priorite }}</span>
+            </a>
+            @empty
+            <div style="text-align:center;padding:1.5rem;color:var(--slate-400);font-size:.85rem">Aucune échéance dans les 14 jours</div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Activités récentes --}}
+    <div class="chart-card">
+        <div class="chart-header">
+            <span class="chart-title"><span class="chart-title-dot" style="background:#2563EB"></span> Activités récentes</span>
+        </div>
+        <div style="padding:.35rem 0">
+            @forelse($panneaux['activites'] as $i => $t)
+            @php $init = strtoupper(mb_substr($t->createur->prenom ?? '', 0, 1) . mb_substr($t->createur->nom ?? '?', 0, 1)); @endphp
+            <a href="{{ route('taches.show', $t) }}" style="display:flex;align-items:center;gap:.7rem;padding:.6rem .25rem;border-bottom:1px solid var(--slate-100);text-decoration:none">
+                <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:{{ $avatarBgDash[$i % count($avatarBgDash)] }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700">{{ $init }}</div>
+                <div style="min-width:0;flex:1">
+                    <div style="font-size:.82rem;color:var(--slate-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        <strong>{{ $t->createur->nom_complet ?? 'Système' }}</strong> · {{ \App\Models\Tache::libelleStatut($t->statut) }}
+                    </div>
+                    <div style="font-size:.74rem;color:var(--slate-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $t->titre }} · {{ $t->updated_at->diffForHumans() }}</div>
+                </div>
+            </a>
+            @empty
+            <div style="text-align:center;padding:1.5rem;color:var(--slate-400);font-size:.85rem">Aucune activité récente</div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Actions IA recommandées --}}
+    <div class="chart-card" style="background:linear-gradient(135deg,#faf9ff,#fff)">
+        <div class="chart-header">
+            <span class="chart-title"><span class="chart-title-dot" style="background:#7C3FBF"></span> Actions IA recommandées</span>
+            <span class="chart-tag" style="background:#7C3FBF;color:#fff">IA</span>
+        </div>
+        <div style="padding:.35rem 0">
+            @foreach($panneaux['actionsIA'] as $a)
+            <div style="display:flex;align-items:flex-start;gap:.7rem;padding:.65rem .25rem;border-bottom:1px solid var(--slate-100)">
+                <div style="flex-shrink:0;width:34px;height:34px;border-radius:9px;background:{{ $a['couleur'] }}18;color:{{ $a['couleur'] }};display:flex;align-items:center;justify-content:center;font-size:1rem"><i class="bi {{ $a['icone'] }}"></i></div>
+                <div style="min-width:0">
+                    <div style="font-weight:600;color:var(--slate-800);font-size:.84rem">{{ $a['titre'] }}</div>
+                    <div style="font-size:.76rem;color:var(--slate-500);margin-top:.1rem">{{ $a['texte'] }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+</div>
+
 {{-- Bloc supervision Agents IA (Managers uniquement) ──── --}}
 @if(auth()->user()->isManager() && $agentsSupervision)
 <div style="margin-bottom:1.35rem">

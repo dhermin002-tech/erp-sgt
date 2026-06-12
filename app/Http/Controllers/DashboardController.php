@@ -54,7 +54,10 @@ class DashboardController extends Controller
             $agentsSupervision = $this->donneesSupervisionAgents();
         }
 
-        return view('dashboard', compact('stats', 'membres', 'sites', 'periode', 'responsableId', 'siteId', 'agentsSupervision'));
+        // Panneaux secondaires (maquette premium) : critiques / activités / actions IA / échéances
+        $panneaux = $this->donneesPanneaux($query, $stats);
+
+        return view('dashboard', compact('stats', 'membres', 'sites', 'periode', 'responsableId', 'siteId', 'agentsSupervision', 'panneaux'));
     }
 
     // ── API JSON pour Chart.js ─────────────────────────────────────────────────
@@ -199,6 +202,64 @@ class DashboardController extends Controller
             'labels' => $data->pluck('nom')->toArray(),
             'data'   => $data->pluck('total')->toArray(),
         ];
+    }
+
+    // ── Panneaux secondaires du dashboard (maquette premium) ──────────────────
+    private function donneesPanneaux($query, array $stats): array
+    {
+        $rangPriorite = ['urgente' => 0, 'haute' => 1, 'normale' => 2, 'basse' => 3];
+
+        // Tâches critiques : actives, en retard OU priorité haute/urgente
+        $critiques = (clone $query)->actives()
+            ->where(fn($q) => $q->where('date_echeance', '<', now()->toDateString())
+                                ->orWhereIn('priorite', ['haute', 'urgente']))
+            ->with(['site', 'responsables'])
+            ->get()
+            ->sortBy(fn($t) => [$rangPriorite[$t->priorite] ?? 9, $t->date_echeance?->timestamp ?? PHP_INT_MAX])
+            ->take(5)->values();
+
+        // Activités récentes : dernières tâches modifiées
+        $activites = (clone $query)->with('createur')
+            ->orderByDesc('updated_at')->limit(5)->get();
+
+        // Échéances à venir : actives, échéance dans les 14 prochains jours
+        $echeances = (clone $query)->actives()
+            ->whereNotNull('date_echeance')
+            ->whereBetween('date_echeance', [now()->toDateString(), now()->addDays(14)->toDateString()])
+            ->with('site')
+            ->orderBy('date_echeance')->limit(5)->get();
+
+        // Actions IA recommandées : suggestions dérivées des indicateurs
+        $actionsIA = [];
+        if (($stats['en_retard'] ?? 0) > 0) {
+            $actionsIA[] = [
+                'icone' => 'bi-exclamation-triangle', 'couleur' => '#B0202E',
+                'titre' => "{$stats['en_retard']} tâche(s) en retard détectée(s)",
+                'texte' => 'Priorisez les tâches critiques pour éviter les impacts.',
+            ];
+        }
+        if (($stats['en_attente'] ?? 0) >= 3) {
+            $actionsIA[] = [
+                'icone' => 'bi-pause-circle', 'couleur' => '#C97A0A',
+                'titre' => "{$stats['en_attente']} tâche(s) en attente",
+                'texte' => 'Débloquez les tâches en attente pour relancer le flux.',
+            ];
+        }
+        if (($stats['taux_completion'] ?? 0) >= 70) {
+            $actionsIA[] = [
+                'icone' => 'bi-graph-up-arrow', 'couleur' => '#15885A',
+                'titre' => 'Taux de complétion élevé (' . $stats['taux_completion'] . '%)',
+                'texte' => 'Excellent rythme — continuez sur cette lancée.',
+            ];
+        }
+        if (empty($actionsIA)) {
+            $actionsIA[] = [
+                'icone' => 'bi-check-circle', 'couleur' => '#15885A',
+                'titre' => 'Aucune alerte', 'texte' => 'Tout est sous contrôle pour le moment.',
+            ];
+        }
+
+        return compact('critiques', 'activites', 'echeances', 'actionsIA');
     }
 
     // ── Bloc supervision agents IA ────────────────────────────────────────────
