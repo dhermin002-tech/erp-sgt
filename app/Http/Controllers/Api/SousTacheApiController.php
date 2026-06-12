@@ -33,9 +33,13 @@ class SousTacheApiController extends Controller
     {
         abort_unless(Auth::user()->canAccessTache($sousTache->tache), 403);
 
-        $request->validate(['termine' => 'required|boolean']);
+        // Vrai toggle : bascule l'état si 'termine' n'est pas fourni,
+        // sinon applique la valeur explicite (compatibilité interface web + MCP).
+        $nouvelEtat = $request->has('termine')
+            ? $request->boolean('termine')
+            : ! $sousTache->termine;
 
-        $sousTache->update(['termine' => $request->termine]);
+        $sousTache->update(['termine' => $nouvelEtat]);
         $tache = $sousTache->tache;
         $tache->recalculerProgression();
 
