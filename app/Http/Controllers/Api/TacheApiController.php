@@ -86,6 +86,11 @@ class TacheApiController extends Controller
         ]);
 
         $tache->responsables()->sync($data['responsables']);
+
+        // Notifie responsables + managers — même service que la création web,
+        // pour que la cloche se déclenche aussi quand un agent IA crée une tâche.
+        \App\Services\TacheNotifier::notifierCreation($tache, $request->user());
+
         $tache->load(['site', 'createur', 'responsables']);
 
         return response()->json([

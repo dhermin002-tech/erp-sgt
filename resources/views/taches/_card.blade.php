@@ -42,6 +42,21 @@
                     @endif
                 </span>
                 @endif
+
+                {{-- Créateur : badge 🤖 violet si agent IA, sinon mention discrète --}}
+                @if($tache->createur)
+                    @if($tache->createur->type_compte === 'agent_ia')
+                    <span class="meta-item" title="Créé par {{ $tache->createur->nom_complet }}">
+                        <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;letter-spacing:.02em;padding:.18rem .55rem;border-radius:999px;background:#1E1B4B;color:#C4B5FD;border:1px solid #4C1D95;white-space:nowrap">
+                            🤖 {{ $tache->createur->agent_code }}
+                        </span>
+                    </span>
+                    @else
+                    <span class="meta-item" style="color:var(--slate-400);font-size:.74rem" title="Créé par {{ $tache->createur->nom_complet }}">
+                        ✍ {{ $tache->createur->prenom }}
+                    </span>
+                    @endif
+                @endif
             </div>
         </a>
 

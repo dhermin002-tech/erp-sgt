@@ -280,10 +280,18 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
             @endforeach
         </select>
     </div>
+    <div class="filter-group">
+        <label class="filter-label">Créé par</label>
+        <select name="createur" class="filter-input">
+            <option value="">Tous</option>
+            <option value="agent_ia" {{ request('createur') === 'agent_ia' ? 'selected' : '' }}>🤖 Agents IA</option>
+            <option value="humain" {{ request('createur') === 'humain' ? 'selected' : '' }}>Collaborateurs</option>
+        </select>
+    </div>
     @endif
     <div class="filter-group" style="flex-direction:row;align-items:flex-end;gap:.5rem">
         <button type="submit" class="btn btn-primary">Filtrer</button>
-        @if(request()->hasAny(['q','statut','site_id','responsable_id']))
+        @if(request()->hasAny(['q','statut','site_id','responsable_id','createur']))
         <a href="{{ route('taches.index') }}" class="btn btn-ghost">Réinitialiser</a>
         @endif
     </div>

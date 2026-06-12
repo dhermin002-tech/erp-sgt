@@ -516,6 +516,26 @@ function toggleNotifDropdown() {
     document.getElementById('notifDropdown').classList.toggle('open');
 }
 
+// ── Compteur cloche en temps réel ───────────────────────────────────────────
+// Rafraîchit le badge sans recharger la page (création de tâche par agent ou collègue)
+function rafraichirCompteurNotifs() {
+    fetch('{{ route('notifications.count') }}', { headers: { 'Accept': 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+            if (!d) return;
+            const badge = document.getElementById('notifBadge');
+            if (!badge) return;
+            if (d.count > 0) {
+                badge.textContent = d.count > 9 ? '9+' : d.count;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(() => {});
+}
+setInterval(rafraichirCompteurNotifs, 45000);  // toutes les 45 s
+
 // Fermer les dropdowns au clic extérieur
 document.addEventListener('click', function(e) {
     if (! e.target.closest('.user-menu')) {

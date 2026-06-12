@@ -30,6 +30,9 @@ class TacheController extends Controller
         if ($request->filled('responsable_id')) {
             $query->whereHas('responsables', fn($q) => $q->where('users.id', $request->responsable_id));
         }
+        if (in_array($request->createur, ['agent_ia', 'humain'], true)) {
+            $query->whereHas('createur', fn($q) => $q->where('type_compte', $request->createur));
+        }
         if ($request->filled('q')) {
             $query->where(fn($q) => $q->where('titre', 'like', "%{$request->q}%")
                                       ->orWhere('description', 'like', "%{$request->q}%"));
@@ -79,13 +82,8 @@ class TacheController extends Controller
 
         $tache->responsables()->sync($request->responsables);
 
-        // Notifier chaque responsable assigné (sauf le créateur)
-        $createur = Auth::user();
-        foreach ($tache->responsables as $responsable) {
-            if ($responsable->id !== $createur->id) {
-                $responsable->notify(new TacheAssigneeNotification($tache, $createur->nom_complet));
-            }
-        }
+        // Notifie responsables + managers (service centralisé, identique à l'API)
+        \App\Services\TacheNotifier::notifierCreation($tache, Auth::user());
 
         return redirect()->route('taches.show', $tache)
                          ->with('success', 'Tâche créée avec succès.');
