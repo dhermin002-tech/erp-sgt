@@ -11,24 +11,21 @@ class MembresController extends Controller
 {
     public function index()
     {
-        $ordreGrade = ['manager'=>1, 'developpeur'=>2, 'technicien'=>3, 'agent'=>4, 'stagiaire'=>5];
-
         $humains = User::where('type_compte', 'humain')
             ->orderBy('nom')
             ->get()
-            ->sortBy(fn($u) => [$ordreGrade[$u->role] ?? 99, $u->nom])
+            ->sortBy(fn($u) => [$u->rangHierarchique(), $u->nom])
             ->values();
 
-        // Agents IA : actifs en session d'abord, puis alphabétique.
+        // Agents IA classés par rôle métier (le-doyen > expert > project > dev > qa > design > audit).
         // Eager-load des sessions en cours + rapports du jour pour éviter le N+1 dans la vue.
         $agentsIa = User::where('type_compte', 'agent_ia')
             ->with([
                 'sessionsAgents' => fn($q) => $q->where('statut', 'en_cours')->latest(),
                 'rapportsAgents' => fn($q) => $q->whereDate('created_at', today()),
             ])
-            ->orderBy('agent_code')
             ->get()
-            ->sortByDesc(fn($a) => $a->sessionsAgents->isNotEmpty())
+            ->sortBy(fn($a) => [$a->rangHierarchique(), $a->agent_code])
             ->values();
 
         return view('membres.index', compact('humains', 'agentsIa'));

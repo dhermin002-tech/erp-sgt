@@ -17,6 +17,35 @@ class User extends Authenticatable
         'type_compte', 'agent_code', 'agent_couleur',
     ];
 
+    /** Ordre hiérarchique des grades humains (du plus haut au plus bas) */
+    public const ORDRE_GRADE = [
+        'manager'     => 1,
+        'developpeur' => 2,
+        'technicien'  => 3,
+        'agent'       => 4,
+        'stagiaire'   => 5,
+    ];
+
+    /** Ordre hiérarchique des agents IA par rôle métier */
+    public const ORDRE_AGENTS = [
+        'le-doyen-kt'     => 1,
+        'expert-kt'       => 2,
+        'project-agent'   => 3,
+        'dev-agent'       => 4,
+        'qa-agent'        => 5,
+        'design-ui-agent' => 6,
+        'audit-agent'     => 7,
+    ];
+
+    /** Rang hiérarchique (humain via grade, agent IA via rôle métier) */
+    public function rangHierarchique(): int
+    {
+        if ($this->type_compte === 'agent_ia') {
+            return self::ORDRE_AGENTS[$this->agent_code] ?? 99;
+        }
+        return self::ORDRE_GRADE[$this->role] ?? 99;
+    }
+
     protected $hidden = [
         'password',
         'remember_token',

@@ -33,6 +33,8 @@ class ActionSuiviController extends Controller
 
     public function toggle(Request $request, ActionSuivi $actionSuivi)
     {
+        abort_unless(Auth::user()->canAccessTache($actionSuivi->tache), 403);
+
         $request->validate(['fait' => 'required|boolean']);
         $actionSuivi->update(['fait' => $request->fait]);
         return response()->json(['ok' => true, 'fait' => $actionSuivi->fait]);

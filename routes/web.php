@@ -13,6 +13,7 @@ use App\Http\Controllers\PreferencesPageController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RapportsAgentsController;
 use App\Http\Controllers\SessionsAgentsController;
+use App\Http\Controllers\TachesAgentsController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SousTacheController;
 use App\Http\Controllers\TacheController;
@@ -74,9 +75,10 @@ Route::middleware(['auth', 'not-agent-account'])->group(function () {
     // ── Page Préférences (redirige vers profil) ───────────────────────────────
     Route::get('/preferences', [PreferencesPageController::class, 'index'])->name('preferences.index');
 
-    // ── Agents IA — Rapports & Sessions (Manager uniquement) ─────────────────
+    // ── Agents IA — Rapports, Sessions & Tâches (Manager uniquement) ─────────
     Route::get('/agents/rapports', [RapportsAgentsController::class, 'index'])->name('agents.rapports')->middleware('role:manager');
     Route::get('/agents/sessions', [SessionsAgentsController::class, 'index'])->name('agents.sessions')->middleware('role:manager');
+    Route::get('/agents/taches', [TachesAgentsController::class, 'index'])->name('agents.taches')->middleware('role:manager');
 
     // ── Membres (Manager uniquement) ──────────────────────────────────────────
     Route::resource('membres', MembresController::class)->middleware('role:manager')->parameters(['membres' => 'membre']);

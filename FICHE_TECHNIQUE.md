@@ -25,7 +25,7 @@
 | Couche | Choix | Version |
 |---|---|---|
 | **Type** | LARAVEL_WEB | — |
-| **Backend** | Laravel | 11 |
+| **Backend** | Laravel | 13 |
 | **Langage backend** | PHP | 8.3 |
 | **Frontend** | Blade + Bootstrap | 5 |
 | **JS léger** | Alpine.js | 3.x |

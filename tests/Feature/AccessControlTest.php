@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ActionSuivi;
 use App\Models\Commentaire;
 use App\Models\Rapport;
 use App\Models\SousTache;
@@ -57,6 +58,15 @@ class AccessControlTest extends TestCase
         return $this->tache->rapports()->create([
             'user_id' => $this->assignee->id,
             'contenu' => 'Rapport de test',
+        ]);
+    }
+
+    private function actionSuivi(): ActionSuivi
+    {
+        return $this->tache->actionsSuivi()->create([
+            'user_id' => $this->assignee->id,
+            'description' => 'Action de test',
+            'fait' => false,
         ]);
     }
 
@@ -211,6 +221,47 @@ class AccessControlTest extends TestCase
         $this->actingAs($this->outsider)
              ->delete(route('rapports.destroy', $rapport))
              ->assertStatus(403);
+    }
+
+    // Actions de suivi
+
+    public function test_outsider_ne_peut_pas_creer_action_suivi(): void
+    {
+        $this->actingAs($this->outsider)
+             ->post(route('actions.store', $this->tache), ['description' => 'Intrusion'])
+             ->assertStatus(403);
+    }
+
+    public function test_assignee_peut_creer_action_suivi(): void
+    {
+        $this->actingAs($this->assignee)
+             ->post(route('actions.store', $this->tache), ['description' => 'Action legitime'])
+             ->assertStatus(200);
+
+        $this->assertDatabaseHas('actions_suivi', ['description' => 'Action legitime']);
+    }
+
+    public function test_outsider_ne_peut_pas_toggle_action_suivi(): void
+    {
+        $action = $this->actionSuivi();
+
+        $this->actingAs($this->outsider)
+             ->patch(route('actions.toggle', $action), ['fait' => true])
+             ->assertStatus(403);
+    }
+
+    public function test_assignee_peut_toggle_action_suivi(): void
+    {
+        $action = $this->actionSuivi();
+
+        $this->actingAs($this->assignee)
+             ->patch(route('actions.toggle', $action), ['fait' => true])
+             ->assertStatus(200);
+
+        $this->assertDatabaseHas('actions_suivi', [
+            'id' => $action->id,
+            'fait' => true,
+        ]);
     }
 
     // ══════════════════════════════════════════════════════════════════════════

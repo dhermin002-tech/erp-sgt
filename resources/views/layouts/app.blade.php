@@ -323,6 +323,9 @@
             <a href="{{ route('agents.sessions') }}" class="{{ request()->routeIs('agents.sessions') ? 'active' : '' }}" style="{{ request()->routeIs('agents.*') ? '' : 'opacity:.85' }}">
                 <i class="bi bi-play-circle"></i> Sessions IA
             </a>
+            <a href="{{ route('agents.taches') }}" class="{{ request()->routeIs('agents.taches') ? 'active' : '' }}" style="{{ request()->routeIs('agents.*') ? '' : 'opacity:.85' }}">
+                <i class="bi bi-list-check"></i> Tâches IA
+            </a>
             @endif
         </nav>
         <div class="sidebar-footer" style="color:rgba(255,255,255,.35);font-size:.72rem;text-align:center">

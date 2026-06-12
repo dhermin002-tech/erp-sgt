@@ -212,6 +212,28 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 }
 .section-sep.agents-ia .section-sep-count  { background: #EDE9FE; color: #6D28D9; }
 
+/* ── Chips de filtre par rubrique ── */
+.task-chips { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+.task-chip {
+    display:inline-flex; align-items:center; gap:.45rem;
+    padding:.5rem .95rem; border-radius:999px;
+    border:1.5px solid var(--slate-200); background:var(--white);
+    font-family:'Space Grotesk', sans-serif; font-size:.82rem; font-weight:700;
+    color:var(--slate-600); cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.task-chip:hover { border-color:var(--kt-navy); color:var(--kt-navy); }
+.task-chip.active { background:var(--kt-navy); color:#fff; border-color:var(--kt-navy); box-shadow:0 4px 12px rgba(0,51,102,.22); }
+.task-chip .chip-count {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:1.35rem; height:1.35rem; padding:0 .35rem; border-radius:999px;
+    font-size:.7rem; font-weight:800; background:var(--slate-100); color:var(--slate-600);
+}
+.task-chip.active .chip-count { background:rgba(255,255,255,.25); color:#fff; }
+.task-chip[data-target="agents"] { border-color:#DDD6FE; color:#6D28D9; }
+.task-chip[data-target="agents"]:hover { border-color:#6D28D9; }
+.task-chip[data-target="agents"].active { background:#6D28D9; border-color:#6D28D9; color:#fff; box-shadow:0 4px 12px rgba(109,40,217,.25); }
+.task-section.is-hidden { display:none; }
+
 .task-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
 .task-titre { font-family:'Space Grotesk', var(--font-display), sans-serif; font-weight:700; font-size:.95rem; color:var(--kt-navy); line-height:1.3; }
 .task-sub { font-size:.74rem; color:var(--slate-400); margin-top:.15rem; }
@@ -313,140 +335,161 @@ $isManager = auth()->user()->isManager();
 $myId      = auth()->id();
 
 if ($isManager) {
-    [$mesTaches, $tachesEquipe] = $taches->getCollection()->partition(
-        fn($t) => $t->responsables->contains('id', $myId)
-    );
+    $collection     = $taches->getCollection();
+    $mesTaches      = $collection->filter(fn($t) => $t->responsables->contains('id', $myId))->values();
+    $tachesEquipe   = $collection->filter(fn($t) => ! $t->responsables->contains('id', $myId))->values();
+    $tachesAgentsIA = $collection->filter(fn($t) => optional($t->createur)->type_compte === 'agent_ia')->values();
 }
 @endphp
 
 @if($isManager)
-{{-- ═══════════════ VUE MANAGER : 2 sections ═══════════════ --}}
+{{-- ═══════════════ VUE MANAGER : chips + 3 rubriques ═══════════════ --}}
 
-{{-- Section : Mes tâches --}}
-<div class="section-sep mine">
-    <div class="section-sep-line"></div>
-    <div class="section-sep-label">
-        <span>👤 Mes tâches</span>
-        <span class="section-sep-count">{{ $mesTaches->count() }}</span>
-    </div>
-    <div class="section-sep-line"></div>
+{{-- Onglets-chips de filtre par rubrique --}}
+<div class="task-chips" id="taskChips">
+    <button type="button" class="task-chip active" data-target="all">📋 Tout <span class="chip-count">{{ $collection->count() }}</span></button>
+    <button type="button" class="task-chip" data-target="mine">👤 Mes tâches <span class="chip-count">{{ $mesTaches->count() }}</span></button>
+    <button type="button" class="task-chip" data-target="equipe">👥 Équipe <span class="chip-count">{{ $tachesEquipe->count() }}</span></button>
+    <button type="button" class="task-chip" data-target="agents">🤖 Agents IA <span class="chip-count">{{ $tachesAgentsIA->count() }}</span></button>
 </div>
 
-@if($mesTaches->isEmpty())
-<div class="empty-state" style="padding:1.5rem;margin-bottom:.5rem">
-    <span style="font-size:.875rem">Aucune tâche assignée à vous sur cette page.</span>
-</div>
-@else
-<div class="task-list">
-@foreach($mesTaches as $tache)
-    @include('taches._card', ['tache' => $tache, 'isMine' => true, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
-@endforeach
-</div>
-@endif
-
-{{-- Section : Tâches équipe --}}
-<div class="section-sep equipe" style="margin-top:1.5rem">
-    <div class="section-sep-line"></div>
-    <div class="section-sep-label">
-        <span>👥 Tâches équipe</span>
-        <span class="section-sep-count">{{ $tachesEquipe->count() }}</span>
-    </div>
-    <div class="section-sep-line"></div>
-</div>
-
-@if($tachesEquipe->isEmpty())
-<div class="empty-state" style="padding:1.5rem">
-    <span style="font-size:.875rem">Toutes les tâches de cette page vous sont assignées.</span>
-</div>
-@else
-@php
-$collabColors = ['#003366','#CC5500','#8B0000','#1D4ED8','#16A34A','#7E22CE','#B45309','#0E7490'];
-$parCollaborateur = $tachesEquipe->groupBy(fn($t) => optional($t->responsables->first())->id ?? 0);
-$collabColorMap = []; $colorIdx = 0;
-foreach ($parCollaborateur->keys() as $uid) {
-    $collabColorMap[$uid] = $collabColors[$colorIdx % count($collabColors)]; $colorIdx++;
-}
-// Séparer humains et agents IA
-$groupsHumains = $parCollaborateur->filter(fn($g) => optional($g->first()->responsables->first())->type_compte !== 'agent_ia');
-$groupsAgents  = $parCollaborateur->filter(fn($g) => optional($g->first()->responsables->first())->type_compte === 'agent_ia');
-@endphp
-
-{{-- Groupes humains --}}
-@foreach($groupsHumains as $userId => $groupTaches)
-@php
-    $responsablePrincipal = $groupTaches->first()->responsables->first();
-    $collabColor     = $collabColorMap[$userId] ?? '#64748B';
-    $collabInitiales = $responsablePrincipal
-        ? strtoupper(mb_substr($responsablePrincipal->prenom,0,1).mb_substr($responsablePrincipal->nom,0,1))
-        : '?';
-    $collabNomComplet = $responsablePrincipal?->nom_complet ?? 'Non assigné';
-@endphp
-<div class="collab-group">
-    <div class="collab-group-header">
-        <div class="collab-avatar" style="background:{{ $collabColor }}">{{ $collabInitiales }}</div>
-        <span class="collab-name">{{ $collabNomComplet }}</span>
-        <span class="collab-count">{{ $groupTaches->count() }} tâche{{ $groupTaches->count() > 1 ? 's' : '' }}</span>
-    </div>
-    <div class="task-list" style="--collab-color:{{ $collabColor }}">
-        @foreach($groupTaches->take(5) as $tache)
-            @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
-        @endforeach
-        @if($groupTaches->count() > 5)
-        <div style="text-align:center;padding:.5rem">
-            <a href="{{ route('taches.index', ['responsable_id' => $userId] + request()->except('responsable_id')) }}"
-               style="font-size:.8rem;color:var(--kt-navy);font-weight:600;text-decoration:none">
-                ↓ Voir les {{ $groupTaches->count() - 5 }} tâche(s) supplémentaire(s)
-            </a>
+{{-- ══ Rubrique : Mes tâches ══ --}}
+<div class="task-section" data-section="mine">
+    <div class="section-sep mine">
+        <div class="section-sep-line"></div>
+        <div class="section-sep-label">
+            <span>👤 Mes tâches</span>
+            <span class="section-sep-count">{{ $mesTaches->count() }}</span>
         </div>
-        @endif
+        <div class="section-sep-line"></div>
     </div>
-</div>
-@endforeach
 
-{{-- Séparateur + Groupes Agents IA --}}
-@if($groupsAgents->isNotEmpty())
-<div class="section-sep agents-ia" style="margin-top:1.5rem">
-    <div class="section-sep-line"></div>
-    <div class="section-sep-label">
-        <span>🤖 Agents IA</span>
-        <span class="section-sep-count">{{ $groupsAgents->flatten()->count() }}</span>
+    @if($mesTaches->isEmpty())
+    <div class="empty-state" style="padding:1.5rem;margin-bottom:.5rem">
+        <span style="font-size:.875rem">Aucune tâche assignée à vous sur cette page.</span>
     </div>
-    <div class="section-sep-line"></div>
+    @else
+    <div class="task-list">
+    @foreach($mesTaches as $tache)
+        @include('taches._card', ['tache' => $tache, 'isMine' => true, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+    @endforeach
+    </div>
+    @endif
 </div>
 
-@foreach($groupsAgents as $userId => $groupTaches)
-@php
-    $agent = $groupTaches->first()->responsables->first();
-    $agentCouleur = $agent?->agent_couleur ?? '#6D28D9';
-    $agentCode    = $agent?->agent_code ?? 'agent';
-    $agentNom     = $agent?->nom_complet ?? 'Agent IA';
-    $agentInitiale = strtoupper(substr($agentCode, 0, 2));
-@endphp
-<div class="collab-group is-agent" style="--collab-color:{{ $agentCouleur }}">
-    <div class="collab-group-header" onclick="toggleGroupeAgent(this)" style="cursor:pointer;user-select:none">
-        <div class="collab-avatar" style="background:{{ $agentCouleur }}">🤖</div>
-        <span class="collab-name">{{ $agentNom }}</span>
-        <span class="badge-agent-ia"><span class="dot-pulse"></span>{{ $agentCode }}</span>
-        <span class="collab-count" style="margin-left:auto">{{ $groupTaches->count() }} tâche{{ $groupTaches->count() > 1 ? 's' : '' }}</span>
-        <span class="toggle-icon" style="color:#6D28D9;font-size:.75rem;margin-left:.5rem">▼</span>
-    </div>
-    <div class="task-list agent-group-body" style="--collab-color:{{ $agentCouleur }}">
-        @foreach($groupTaches->take(5) as $tache)
-            @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
-        @endforeach
-        @if($groupTaches->count() > 5)
-        <div style="text-align:center;padding:.5rem">
-            <a href="{{ route('taches.index', ['responsable_id' => $userId] + request()->except('responsable_id')) }}"
-               style="font-size:.8rem;color:#6D28D9;font-weight:600;text-decoration:none">
-                ↓ Voir les {{ $groupTaches->count() - 5 }} tâche(s) supplémentaire(s)
-            </a>
+{{-- ══ Rubrique : Tâches équipe ══ --}}
+<div class="task-section" data-section="equipe">
+    <div class="section-sep equipe" style="margin-top:1.5rem">
+        <div class="section-sep-line"></div>
+        <div class="section-sep-label">
+            <span>👥 Tâches équipe</span>
+            <span class="section-sep-count">{{ $tachesEquipe->count() }}</span>
         </div>
-        @endif
+        <div class="section-sep-line"></div>
     </div>
+
+    @if($tachesEquipe->isEmpty())
+    <div class="empty-state" style="padding:1.5rem">
+        <span style="font-size:.875rem">Toutes les tâches de cette page vous sont assignées.</span>
+    </div>
+    @else
+    @php
+    $collabColors = ['#003366','#CC5500','#8B0000','#1D4ED8','#16A34A','#7E22CE','#B45309','#0E7490'];
+    $parCollaborateur = $tachesEquipe->groupBy(fn($t) => optional($t->responsables->first())->id ?? 0);
+    $collabColorMap = []; $colorIdx = 0;
+    foreach ($parCollaborateur->keys() as $uid) {
+        $collabColorMap[$uid] = $collabColors[$colorIdx % count($collabColors)]; $colorIdx++;
+    }
+    @endphp
+
+    @foreach($parCollaborateur as $userId => $groupTaches)
+    @php
+        $responsablePrincipal = $groupTaches->first()->responsables->first();
+        $collabColor     = $collabColorMap[$userId] ?? '#64748B';
+        $collabInitiales = $responsablePrincipal
+            ? strtoupper(mb_substr($responsablePrincipal->prenom,0,1).mb_substr($responsablePrincipal->nom,0,1))
+            : '?';
+        $collabNomComplet = $responsablePrincipal?->nom_complet ?? 'Non assigné';
+    @endphp
+    <div class="collab-group">
+        <div class="collab-group-header">
+            <div class="collab-avatar" style="background:{{ $collabColor }}">{{ $collabInitiales }}</div>
+            <span class="collab-name">{{ $collabNomComplet }}</span>
+            <span class="collab-count">{{ $groupTaches->count() }} tâche{{ $groupTaches->count() > 1 ? 's' : '' }}</span>
+        </div>
+        <div class="task-list" style="--collab-color:{{ $collabColor }}">
+            @foreach($groupTaches->take(5) as $tache)
+                @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+            @endforeach
+            @if($groupTaches->count() > 5)
+            <div style="text-align:center;padding:.5rem">
+                <a href="{{ route('taches.index', ['responsable_id' => $userId] + request()->except('responsable_id')) }}"
+                   style="font-size:.8rem;color:var(--kt-navy);font-weight:600;text-decoration:none">
+                    ↓ Voir les {{ $groupTaches->count() - 5 }} tâche(s) supplémentaire(s)
+                </a>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endforeach
+    @endif
 </div>
-@endforeach
-@endif
-@endif
+
+{{-- ══ Rubrique : Tâches Agents IA (groupées par CRÉATEUR agent, ordre rôle métier) ══ --}}
+<div class="task-section" data-section="agents">
+    <div class="section-sep agents-ia" style="margin-top:1.5rem">
+        <div class="section-sep-line"></div>
+        <div class="section-sep-label">
+            <span>🤖 Tâches Agents IA</span>
+            <span class="section-sep-count">{{ $tachesAgentsIA->count() }}</span>
+        </div>
+        <div class="section-sep-line"></div>
+    </div>
+
+    @if($tachesAgentsIA->isEmpty())
+    <div class="empty-state" style="padding:1.5rem">
+        <span style="font-size:.875rem">Aucune tâche créée par un agent IA sur cette page.</span>
+    </div>
+    @else
+    @php
+        // Trier par rang hiérarchique du créateur avant de grouper (préserve l'ordre des groupes)
+        $parAgentCreateur = $tachesAgentsIA
+            ->sortBy(fn($t) => [$t->createur->rangHierarchique(), $t->createur->agent_code])
+            ->groupBy(fn($t) => $t->createur->id);
+    @endphp
+
+    @foreach($parAgentCreateur as $createurId => $groupTaches)
+    @php
+        $agent        = $groupTaches->first()->createur;
+        $agentCouleur = $agent?->agent_couleur ?? '#6D28D9';
+        $agentCode    = $agent?->agent_code ?? 'agent';
+        $agentNom     = $agent?->nom_complet ?? 'Agent IA';
+    @endphp
+    <div class="collab-group is-agent" style="--collab-color:{{ $agentCouleur }}">
+        <div class="collab-group-header" onclick="toggleGroupeAgent(this)" style="cursor:pointer;user-select:none">
+            <div class="collab-avatar" style="background:{{ $agentCouleur }}">🤖</div>
+            <span class="collab-name">{{ $agentNom }}</span>
+            <span class="badge-agent-ia"><span class="dot-pulse"></span>{{ $agentCode }}</span>
+            <span class="collab-count" style="margin-left:auto">{{ $groupTaches->count() }} tâche{{ $groupTaches->count() > 1 ? 's' : '' }}</span>
+            <span class="toggle-icon" style="color:#6D28D9;font-size:.75rem;margin-left:.5rem">▼</span>
+        </div>
+        <div class="task-list agent-group-body" style="--collab-color:{{ $agentCouleur }}">
+            @foreach($groupTaches->take(5) as $tache)
+                @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+            @endforeach
+            @if($groupTaches->count() > 5)
+            <div style="text-align:center;padding:.5rem">
+                <a href="{{ route('agents.taches', ['agent_id' => $createurId]) }}"
+                   style="font-size:.8rem;color:#6D28D9;font-weight:600;text-decoration:none">
+                    ↓ Voir toutes les tâches de {{ $agentNom }}
+                </a>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endforeach
+    @endif
+</div>
 
 @else
 {{-- ═══════════════ VUE COLLABORATEUR : liste simple ═══════════════ --}}
@@ -472,13 +515,43 @@ function toggleGroupeAgent(header) {
     body.style.display = isOpen ? 'none' : 'flex';
     icon.textContent = isOpen ? '▶' : '▼';
 }
-// Replier les groupes agents par défaut au chargement (allège la vue)
+
+// ── Chips de filtre par rubrique (Tout / Mes / Équipe / Agents IA) ──
+function appliquerFiltreRubrique(target) {
+    document.querySelectorAll('.task-section').forEach(sec => {
+        const visible = (target === 'all' || sec.dataset.section === target);
+        sec.classList.toggle('is-hidden', !visible);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Replier les groupes agents par défaut (allège la vue)
     document.querySelectorAll('.collab-group.is-agent .collab-group-header').forEach(h => {
         const body = h.nextElementSibling;
         const icon = h.querySelector('.toggle-icon');
         if (body && icon) { body.style.display = 'none'; icon.textContent = '▶'; }
     });
+
+    // Brancher les chips
+    const chips = document.querySelectorAll('.task-chip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chips.forEach(c => c.classList.toggle('active', c === chip));
+            const target = chip.dataset.target;
+            appliquerFiltreRubrique(target);
+            sessionStorage.setItem('tachesRubrique', target);
+        });
+    });
+
+    // Restaurer la dernière rubrique choisie
+    const saved = sessionStorage.getItem('tachesRubrique');
+    if (saved && saved !== 'all') {
+        const chip = document.querySelector(`.task-chip[data-target="${saved}"]`);
+        if (chip) {
+            chips.forEach(c => c.classList.toggle('active', c === chip));
+            appliquerFiltreRubrique(saved);
+        }
+    }
 });
 </script>
 @endpush

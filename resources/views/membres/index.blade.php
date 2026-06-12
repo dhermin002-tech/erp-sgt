@@ -29,6 +29,24 @@
 }
 .btn-new-agent:hover { background:#6d28d9; }
 
+/* ── Chips de filtre Membres ── */
+.membres-chips { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+.mchip {
+    display:inline-flex; align-items:center; gap:.45rem;
+    padding:.5rem .95rem; border-radius:999px;
+    border:1.5px solid var(--slate-200); background:#fff;
+    font-family:'Space Grotesk',sans-serif; font-size:.82rem; font-weight:700;
+    color:var(--slate-600); cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.mchip:hover { border-color:#003366; color:#003366; }
+.mchip.active { background:#003366; color:#fff; border-color:#003366; box-shadow:0 4px 12px rgba(0,51,102,.22); }
+.mchip-count { display:inline-flex; align-items:center; justify-content:center; min-width:1.35rem; height:1.35rem; padding:0 .35rem; border-radius:999px; font-size:.7rem; font-weight:800; background:var(--slate-100); color:var(--slate-600); }
+.mchip.active .mchip-count { background:rgba(255,255,255,.25); color:#fff; }
+.mchip-agents { border-color:#DDD6FE; color:#6D28D9; }
+.mchip-agents:hover { border-color:#6D28D9; color:#6D28D9; }
+.mchip-agents.active { background:#6D28D9; border-color:#6D28D9; color:#fff; box-shadow:0 4px 12px rgba(109,40,217,.25); }
+.membres-section.is-hidden { display:none; }
+
 /* ── Section titre ── */
 .section-sep {
     display:flex;align-items:center;gap:.75rem;margin:1.5rem 0 .9rem;
@@ -257,7 +275,15 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
 </div>
 @endif
 
+{{-- Chips de filtre Collaborateurs / Agents IA --}}
+<div class="membres-chips" id="membresChips">
+    <button type="button" class="mchip active" data-target="all">📋 Tous</button>
+    <button type="button" class="mchip" data-target="collab">👥 Collaborateurs <span class="mchip-count">{{ $humains->count() }}</span></button>
+    <button type="button" class="mchip mchip-agents" data-target="agents">🤖 Agents IA <span class="mchip-count">{{ $agentsIa->count() }}</span></button>
+</div>
+
 {{-- ═══ BLOC 1 : Collaborateurs ═══ --}}
+<div class="membres-section" data-msection="collab">
 <div class="section-sep collab">
     <div class="section-sep-line"></div>
     <span class="section-sep-label"><i class="bi bi-people-fill me-1"></i> Collaborateurs ({{ $humains->count() }})</span>
@@ -353,7 +379,10 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
     @endif
 </div>
 
+</div>{{-- /membres-section collab --}}
+
 {{-- ═══ BLOC 2 : Agents IA (accordéon) ═══ --}}
+<div class="membres-section" data-msection="agents">
 <div class="section-sep agents-ia" style="margin-top:2rem">
     <div class="section-sep-line"></div>
     <span class="section-sep-label">🤖 Agents IA ({{ $agentsIa->count() }})</span>
@@ -394,31 +423,14 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
                     </tr>
                 </thead>
                 <tbody>
-                    @php $agentGroupeActif = null; @endphp
                     @foreach($agentsIa as $agent)
                     @php
                         // Relations déjà eager-loaded dans le contrôleur (sessions en_cours + rapports du jour)
-                        $session   = $agent->sessionsAgents->first();
-                        $rapports  = $agent->rapportsAgents->count();
-                        $estActif  = $session !== null;
-                        $groupeKey = $estActif ? 'actif' : 'inactif';
+                        $session  = $agent->sessionsAgents->first();
+                        $rapports = $agent->rapportsAgents->count();
+                        $estActif = $session !== null;
+                        $rang     = $agent->rangHierarchique();
                     @endphp
-                    {{-- Séparateur de groupe actifs / inactifs --}}
-                    @if($agentGroupeActif !== $groupeKey)
-                    @php $agentGroupeActif = $groupeKey; @endphp
-                    <tr class="group-separator" style="background:linear-gradient(90deg,#faf5ff,#fff)">
-                        <td colspan="6" style="color:#7c3aed">
-                            @if($estActif)
-                                <span style="display:inline-flex;align-items:center;gap:.35rem">
-                                    <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block"></span>
-                                    En session
-                                </span>
-                            @else
-                                <i class="bi bi-moon" style="margin-right:.4rem"></i>Hors session
-                            @endif
-                        </td>
-                    </tr>
-                    @endif
                     <tr>
                         <td>
                             {{-- Indicateur d'activité --}}
@@ -434,7 +446,10 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
                                     {{ strtoupper(substr($agent->agent_code ?? 'A', 0, 2)) }}
                                 </div>
                                 <div>
-                                    <div class="membre-nom" style="color:#4c1d95">{{ $agent->nom_complet }}</div>
+                                    <div class="membre-nom" style="color:#4c1d95;display:flex;align-items:center;gap:.4rem">
+                                        <span title="Rang hiérarchique" style="font-size:.6rem;font-weight:800;background:#ede9fe;color:#6d28d9;padding:.1rem .4rem;border-radius:6px">#{{ $rang }}</span>
+                                        {{ $agent->nom_complet }}
+                                    </div>
                                     <div style="font-size:.72rem;color:#94a3b8">{{ $agent->username }}</div>
                                 </div>
                             </div>
@@ -476,6 +491,7 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
     </div>
     @endif
 </div>
+</div>{{-- /membres-section agents --}}
 
 {{-- Modal création agent IA ── --}}
 <div class="modal-overlay" id="modalAgent" onclick="fermerModalAgent(event)">
@@ -533,6 +549,27 @@ function toggleAgents() {
     toggle.classList.toggle('open', open);
     toggle.setAttribute('aria-expanded', open);
 }
+
+// ── Chips de filtre Membres (Tous / Collaborateurs / Agents IA) ──
+document.addEventListener('DOMContentLoaded', () => {
+    const chips = document.querySelectorAll('.mchip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chips.forEach(c => c.classList.toggle('active', c === chip));
+            const target = chip.dataset.target;
+            document.querySelectorAll('.membres-section').forEach(sec => {
+                const visible = (target === 'all' || sec.dataset.msection === target);
+                sec.classList.toggle('is-hidden', !visible);
+            });
+            // Si on cible les agents, déplier automatiquement l'accordéon
+            if (target === 'agents') {
+                const body = document.getElementById('agentsBody');
+                const tog  = document.getElementById('agentsToggle');
+                if (body && !body.classList.contains('open')) { body.classList.add('open'); tog.classList.add('open'); }
+            }
+        });
+    });
+});
 
 function ouvrirModalAgent() {
     document.getElementById('modalAgent').classList.add('open');
