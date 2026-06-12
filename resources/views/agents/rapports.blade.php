@@ -302,7 +302,7 @@
 
     @if($rapports->hasPages())
     <div style="padding:1rem 1.25rem;border-top:1px solid #f1f5f9">
-        {{ $rapports->links() }}
+        {{ $rapports->links('pagination::bootstrap-4') }}
     </div>
     @endif
 </div>
@@ -324,17 +324,22 @@
 </div>
 
 {{-- Données rapports en JSON pour le modal ─────────────── --}}
+@php
+    // Préparé hors de @json() : le parseur Blade de @json() gère mal les
+    // crochets [...] imbriqués dans une closure (erreur « Unclosed '[' »).
+    $rapportsJson = $rapports->keyBy('id')->map(fn($r) => [
+        'titre'   => $r->titre,
+        'contenu' => $r->contenu,
+        'type'    => $r->type,
+        'statut'  => $r->statut,
+        'projet'  => $r->projet,
+        'agent'   => $r->user?->agent_code ?? $r->user?->nom_complet ?? '—',
+        'date'    => optional($r->created_at)->format('d/m/Y H:i'),
+        'meta'    => $r->meta,
+    ]);
+@endphp
 <script>
-const rapportsData = @json($rapports->keyBy('id')->map(fn($r) => [
-    'titre'   => $r->titre,
-    'contenu' => $r->contenu,
-    'type'    => $r->type,
-    'statut'  => $r->statut,
-    'projet'  => $r->projet,
-    'agent'   => $r->user?->agent_code ?? $r->user?->nom_complet ?? '—',
-    'date'    => $r->created_at->format('d/m/Y H:i'),
-    'meta'    => $r->meta,
-]));
+const rapportsData = @json($rapportsJson);
 
 function ouvrirRapport(id) {
     const r = rapportsData[id];

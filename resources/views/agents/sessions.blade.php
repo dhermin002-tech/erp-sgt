@@ -298,7 +298,7 @@
 
     @if($sessions->hasPages())
     <div style="padding:1rem 1.25rem;border-top:1px solid #f1f5f9">
-        {{ $sessions->links() }}
+        {{ $sessions->links('pagination::bootstrap-4') }}
     </div>
     @endif
 </div>

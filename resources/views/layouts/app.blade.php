@@ -92,6 +92,14 @@
             color: rgba(255,255,255,.25); padding: .9rem 1.25rem .35rem;
             text-transform: uppercase;
         }
+        /* Groupe Agents IA — identité violette */
+        [data-direction="A"] .sidebar-nav .nav-label.nav-label-ia {
+            color: #a78bfa; display: flex; align-items: center; gap: .4rem;
+        }
+        [data-direction="A"] .sidebar-nav a.nav-ia:hover { background: rgba(124,58,237,.22); }
+        [data-direction="A"] .sidebar-nav a.nav-ia.active {
+            background: #6D28D9; box-shadow: 0 4px 14px rgba(109,40,217,.45);
+        }
         [data-direction="A"] .sidebar-footer {
             padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.07); font-size: .78rem;
         }
@@ -316,15 +324,15 @@
             <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">
                 <i class="bi bi-geo-alt"></i> Sites
             </a>
-            <div class="nav-label">Agents IA</div>
-            <a href="{{ route('agents.rapports') }}" class="{{ request()->routeIs('agents.rapports') ? 'active' : '' }}" style="{{ request()->routeIs('agents.*') ? '' : 'opacity:.85' }}">
+            <div class="nav-label nav-label-ia">🤖 Agents IA</div>
+            <a href="{{ route('agents.taches') }}" class="nav-ia {{ request()->routeIs('agents.taches') ? 'active' : '' }}">
+                <i class="bi bi-list-check"></i> Tâches IA
+            </a>
+            <a href="{{ route('agents.rapports') }}" class="nav-ia {{ request()->routeIs('agents.rapports') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i> Rapports IA
             </a>
-            <a href="{{ route('agents.sessions') }}" class="{{ request()->routeIs('agents.sessions') ? 'active' : '' }}" style="{{ request()->routeIs('agents.*') ? '' : 'opacity:.85' }}">
+            <a href="{{ route('agents.sessions') }}" class="nav-ia {{ request()->routeIs('agents.sessions') ? 'active' : '' }}">
                 <i class="bi bi-play-circle"></i> Sessions IA
-            </a>
-            <a href="{{ route('agents.taches') }}" class="{{ request()->routeIs('agents.taches') ? 'active' : '' }}" style="{{ request()->routeIs('agents.*') ? '' : 'opacity:.85' }}">
-                <i class="bi bi-list-check"></i> Tâches IA
             </a>
             @endif
         </nav>
