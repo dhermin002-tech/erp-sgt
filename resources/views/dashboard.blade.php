@@ -475,11 +475,11 @@ $avatarBgDash  = ['var(--kt-navy)','var(--kt-orange)','var(--kt-purple)','var(--
         </div>
     </div>
 
-    {{-- Actions IA recommandées --}}
+    {{-- Recommandations (règles dérivées des KPIs, pas de l'IA) --}}
     <div class="chart-card" style="background:linear-gradient(135deg,#faf9ff,#fff)">
         <div class="chart-header">
-            <span class="chart-title"><span class="chart-title-dot" style="background:#7C3FBF"></span> Actions IA recommandées</span>
-            <span class="chart-tag" style="background:#7C3FBF;color:#fff">IA</span>
+            <span class="chart-title"><span class="chart-title-dot" style="background:#7C3FBF"></span> Recommandations</span>
+            <span class="chart-tag" style="background:#7C3FBF;color:#fff">Auto</span>
         </div>
         <div style="padding:.35rem 0">
             @foreach($panneaux['actionsIA'] as $a)

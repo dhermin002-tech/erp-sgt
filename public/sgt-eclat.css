@@ -29,10 +29,12 @@
     color: #ffffff !important;
     box-shadow: 0 4px 14px color-mix(in srgb, var(--kc) 38%, transparent) !important;
 }
-/* Chiffre KPI → couleur vive (comme la maquette) */
+/* Chiffre KPI → couleur vive MAIS assombrie de 15% pour le contraste plein soleil
+   (orange #C97A0A et vert #15885A passent ainsi le seuil WCAG sur fond clair).
+   Fallback : si color-mix non supporté, le chiffre garde la couleur foncée héritée. */
 .kpi-value {
-    color: var(--kc) !important;
-    text-shadow: 0 1px 0 color-mix(in srgb, var(--kc) 12%, transparent);
+    color: color-mix(in srgb, var(--kc) 85%, #000000) !important;
+    text-shadow: none;
 }
 /* Barre de progression → dégradé brillant */
 .kpi-progress-fill {
