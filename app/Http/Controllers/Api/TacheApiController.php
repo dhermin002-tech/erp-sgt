@@ -63,6 +63,7 @@ class TacheApiController extends Controller
     {
         $data = $request->validate([
             'titre'          => 'required|string|max:255',
+            'projet'         => 'nullable|string|max:40',
             'description'    => 'nullable|string|max:5000',
             'responsables'   => 'required|array|min:1',
             'responsables.*' => 'exists:users,id',
@@ -75,6 +76,7 @@ class TacheApiController extends Controller
 
         $tache = Tache::create([
             'titre'         => $data['titre'],
+            'projet'        => $data['projet'] ?? null,
             'description'   => $data['description'] ?? null,
             'createur_id'   => $request->user()->id,
             'site_id'       => $data['site_id'] ?? null,

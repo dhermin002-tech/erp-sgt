@@ -33,6 +33,9 @@ class TacheController extends Controller
         if (in_array($request->createur, ['agent_ia', 'humain'], true)) {
             $query->whereHas('createur', fn($q) => $q->where('type_compte', $request->createur));
         }
+        if ($request->filled('projet')) {
+            $query->where('projet', $request->projet);
+        }
         if ($request->filled('q')) {
             $query->where(fn($q) => $q->where('titre', 'like', "%{$request->q}%")
                                       ->orWhere('description', 'like', "%{$request->q}%"));
@@ -48,6 +51,7 @@ class TacheController extends Controller
         $sites    = Site::where('actif', true)->orderBy('nom')->get();
         $membres  = User::where('type_compte', 'humain')->orderBy('nom')->get();
         $statuts  = ['nouveau', 'en_cours', 'en_attente', 'en_arret', 'termine'];
+        $projets  = Tache::whereNotNull('projet')->distinct()->orderBy('projet')->pluck('projet');
 
         // Mode groupé par responsable (avec collapsible)
         $grouperParUser = $request->boolean('grouper', false);
@@ -58,12 +62,12 @@ class TacheController extends Controller
                 return $resp ? $resp->id : 0;
             })->map(fn($group) => $group->sortBy('date_echeance'));
             $taches = null;
-            return view('taches.index', compact('taches', 'tachesGroupees', 'sites', 'membres', 'statuts', 'grouperParUser'));
+            return view('taches.index', compact('taches', 'tachesGroupees', 'sites', 'membres', 'statuts', 'grouperParUser', 'projets'));
         }
 
         $taches = $query->paginate(15)->withQueryString();
         $tachesGroupees = null;
-        return view('taches.index', compact('taches', 'tachesGroupees', 'sites', 'membres', 'statuts', 'grouperParUser'));
+        return view('taches.index', compact('taches', 'tachesGroupees', 'sites', 'membres', 'statuts', 'grouperParUser', 'projets'));
     }
 
     public function create()

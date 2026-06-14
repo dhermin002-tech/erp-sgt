@@ -311,9 +311,20 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
         </select>
     </div>
     @endif
+    @if(isset($projets) && $projets->isNotEmpty())
+    <div class="filter-group">
+        <label class="filter-label">Projet</label>
+        <select name="projet" class="filter-input">
+            <option value="">Tous</option>
+            @foreach($projets as $p)
+            <option value="{{ $p }}" {{ request('projet') === $p ? 'selected' : '' }}>{{ $p }}</option>
+            @endforeach
+        </select>
+    </div>
+    @endif
     <div class="filter-group" style="flex-direction:row;align-items:flex-end;gap:.5rem">
         <button type="submit" class="btn btn-primary">Filtrer</button>
-        @if(request()->hasAny(['q','statut','site_id','responsable_id','createur']))
+        @if(request()->hasAny(['q','statut','site_id','responsable_id','createur','projet']))
         <a href="{{ route('taches.index') }}" class="btn btn-ghost">Réinitialiser</a>
         @endif
     </div>

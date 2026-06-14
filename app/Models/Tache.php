@@ -11,7 +11,7 @@ class Tache extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'titre', 'description', 'createur_id', 'site_id',
+        'titre', 'projet', 'description', 'createur_id', 'site_id',
         'date_debut', 'date_echeance', 'statut', 'progression',
         'priorite', 'archived_at',
     ];

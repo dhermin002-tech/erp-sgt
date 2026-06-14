@@ -10,6 +10,10 @@
                     @endif
                 </div>
                 <div class="task-badges">
+                    @if(!empty($tache->projet))
+                    @php $pc = crc32($tache->projet); $ph = $pc % 360; @endphp
+                    <span style="display:inline-flex;align-items:center;font-size:.62rem;font-weight:800;letter-spacing:.04em;padding:.18rem .5rem;border-radius:6px;background:hsl({{ $ph }},70%,94%);color:hsl({{ $ph }},65%,32%);border:1px solid hsl({{ $ph }},60%,85%)">{{ $tache->projet }}</span>
+                    @endif
                     @if($isMine)
                     <span class="badge-mine">👤 Moi</span>
                     @endif
