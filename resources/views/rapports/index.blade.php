@@ -183,41 +183,92 @@ table.rapport-table tbody tr:hover { background:#EFF6FF; }
     @endif
 </form>
 
-<div class="section-sep navy">
-    <div class="section-sep-line"></div>
-    <div class="section-sep-label"><i class="bi bi-people"></i>&nbsp;Performance par responsable</div>
-    <div class="section-sep-line"></div>
-</div>
-
 @php
 $kpiColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0891B2','#BE185D'];
+[$kpiHumains, $kpiAgents] = $kpiResponsables->partition(fn($k) => ($k['user']->type_compte ?? 'humain') !== 'agent_ia');
 @endphp
-<div class="kpi-grid">
-    @foreach($kpiResponsables as $i => $kpi)
-    @php $color = $kpiColors[$i % count($kpiColors)]; @endphp
-    <div class="kpi-card" style="--kpi-color:{{ $color }}">
-        <div class="kpi-avatar">{{ strtoupper(mb_substr($kpi['user']->prenom,0,1).mb_substr($kpi['user']->nom,0,1)) }}</div>
-        <div class="kpi-name">{{ $kpi['user']->nom_complet }}</div>
-        <div class="kpi-role">{{ ucfirst($kpi['user']->role) }}</div>
-        <div class="kpi-stats">
-            <div class="kpi-stat">
-                <div class="kpi-stat-val">{{ $kpi['actives'] }}</div>
-                <div class="kpi-stat-lbl">Actives</div>
-            </div>
-            <div class="kpi-stat">
-                <div class="kpi-stat-val">{{ $kpi['terminees'] }}</div>
-                <div class="kpi-stat-lbl">Terminées</div>
-            </div>
-            <div class="kpi-stat">
-                <div class="kpi-stat-val">{{ $kpi['total'] }}</div>
-                <div class="kpi-stat-lbl">Total</div>
-            </div>
-        </div>
-        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{{ $kpi['taux'] }}%"></div></div>
-        <div class="kpi-taux">{{ $kpi['taux'] }}% complété</div>
-    </div>
-    @endforeach
+
+<style>
+.perf-chips { display:flex; gap:.5rem; flex-wrap:wrap; margin:1.1rem 0 .9rem; }
+.perf-chip { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem .95rem; border-radius:999px; border:1.5px solid #e2e8f0; background:#fff; font-family:'Space Grotesk',sans-serif; font-size:.82rem; font-weight:700; color:#64748b; cursor:pointer; transition:all .15s; }
+.perf-chip:hover { border-color:#003366; color:#003366; }
+.perf-chip.active { background:#003366; color:#fff; border-color:#003366; }
+.perf-chip span { background:rgba(0,0,0,.08); border-radius:999px; padding:0 .4rem; font-size:.7rem; }
+.perf-chip.active span { background:rgba(255,255,255,.25); }
+.perf-chip[data-target="agents"] { border-color:#ddd6fe; color:#6d28d9; }
+.perf-chip[data-target="agents"].active { background:#6d28d9; border-color:#6d28d9; color:#fff; }
+.perf-section.is-hidden { display:none; }
+</style>
+
+{{-- Chips de filtre Performance --}}
+<div class="perf-chips">
+    <button type="button" class="perf-chip active" data-target="all" onclick="filtrePerf('all',this)">📊 Tous</button>
+    <button type="button" class="perf-chip" data-target="collab" onclick="filtrePerf('collab',this)">👥 Collaborateurs <span>{{ $kpiHumains->count() }}</span></button>
+    <button type="button" class="perf-chip" data-target="agents" onclick="filtrePerf('agents',this)">🤖 Agents IA <span>{{ $kpiAgents->count() }}</span></button>
 </div>
+
+{{-- Catégorie Collaborateurs --}}
+<div class="perf-section" data-perf="collab">
+    <div class="section-sep navy">
+        <div class="section-sep-line"></div>
+        <div class="section-sep-label"><i class="bi bi-people"></i>&nbsp;Collaborateurs ({{ $kpiHumains->count() }})</div>
+        <div class="section-sep-line"></div>
+    </div>
+    <div class="kpi-grid">
+        @foreach($kpiHumains->values() as $i => $kpi)
+        @php $color = $kpiColors[$i % count($kpiColors)]; @endphp
+        <div class="kpi-card" style="--kpi-color:{{ $color }}">
+            <div class="kpi-avatar">{{ strtoupper(mb_substr($kpi['user']->prenom,0,1).mb_substr($kpi['user']->nom,0,1)) }}</div>
+            <div class="kpi-name">{{ $kpi['user']->nom_complet }}</div>
+            <div class="kpi-role">{{ ucfirst($kpi['user']->role) }}</div>
+            <div class="kpi-stats">
+                <div class="kpi-stat"><div class="kpi-stat-val">{{ $kpi['actives'] }}</div><div class="kpi-stat-lbl">Actives</div></div>
+                <div class="kpi-stat"><div class="kpi-stat-val">{{ $kpi['terminees'] }}</div><div class="kpi-stat-lbl">Terminées</div></div>
+                <div class="kpi-stat"><div class="kpi-stat-val">{{ $kpi['total'] }}</div><div class="kpi-stat-lbl">Total</div></div>
+            </div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{{ $kpi['taux'] }}%"></div></div>
+            <div class="kpi-taux">{{ $kpi['taux'] }}% complété</div>
+        </div>
+        @endforeach
+    </div>
+</div>
+
+{{-- Catégorie Agents IA --}}
+@if($kpiAgents->isNotEmpty())
+<div class="perf-section" data-perf="agents">
+    <div class="section-sep" style="margin-top:1.5rem">
+        <div class="section-sep-line" style="background:#ddd6fe"></div>
+        <div class="section-sep-label" style="color:#6d28d9">🤖&nbsp;Agents IA ({{ $kpiAgents->count() }})</div>
+        <div class="section-sep-line" style="background:#ddd6fe"></div>
+    </div>
+    <div class="kpi-grid">
+        @foreach($kpiAgents->values() as $kpi)
+        @php $color = $kpi['user']->agent_couleur ?? '#6d28d9'; @endphp
+        <div class="kpi-card" style="--kpi-color:{{ $color }}">
+            <div class="kpi-avatar" style="background:{{ $color }}">🤖</div>
+            <div class="kpi-name">{{ $kpi['user']->nom_complet }}</div>
+            <div class="kpi-role" style="color:#6d28d9">{{ $kpi['user']->agent_code }}</div>
+            <div class="kpi-stats">
+                <div class="kpi-stat"><div class="kpi-stat-val">{{ $kpi['actives'] }}</div><div class="kpi-stat-lbl">Actives</div></div>
+                <div class="kpi-stat"><div class="kpi-stat-val">{{ $kpi['terminees'] }}</div><div class="kpi-stat-lbl">Terminées</div></div>
+                <div class="kpi-stat"><div class="kpi-stat-val">{{ $kpi['total'] }}</div><div class="kpi-stat-lbl">Total</div></div>
+            </div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{{ $kpi['taux'] }}%"></div></div>
+            <div class="kpi-taux">{{ $kpi['taux'] }}% complété</div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+<script>
+function filtrePerf(target, btn) {
+    document.querySelectorAll('.perf-chip').forEach(c => c.classList.toggle('active', c === btn));
+    document.querySelectorAll('.perf-section').forEach(s => {
+        s.classList.toggle('is-hidden', !(target === 'all' || s.dataset.perf === target));
+    });
+}
+</script>
 
 <div class="section-sep">
     <div class="section-sep-line"></div>
