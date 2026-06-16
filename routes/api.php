@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
     Route::get   ('/taches',                     [TacheApiController::class, 'index']);
     Route::post  ('/taches',                     [TacheApiController::class, 'store']);
     Route::get   ('/taches/{tache}',             [TacheApiController::class, 'show']);
+    Route::patch ('/taches/{tache}',              [TacheApiController::class, 'update']);
     Route::patch ('/taches/{tache}/statut',      [TacheApiController::class, 'changerStatut']);
     Route::delete('/taches/{tache}',             [TacheApiController::class, 'destroy']);
 

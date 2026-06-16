@@ -101,6 +101,78 @@ class TacheApiController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, Tache $tache): JsonResponse
+    {
+        $this->authorizeAccess($request->user(), $tache);
+
+        $data = $request->validate([
+            'titre'               => 'sometimes|string|max:255',
+            'projet'              => 'sometimes|nullable|string|max:40',
+            'description'        => 'sometimes|nullable|string|max:5000',
+            'priorite'           => ['sometimes', Rule::in(['basse','normale','haute','urgente'])],
+            'statut'             => ['sometimes', Rule::in(['nouveau','en_cours','en_attente','en_arret','termine'])],
+            'date_debut'         => 'sometimes|nullable|date',
+            'date_echeance'      => 'sometimes|nullable|date',
+            'site_id'            => 'sometimes|nullable|exists:sites,id',
+            'responsables'       => 'sometimes|nullable|array',
+            'responsables.*'     => 'exists:users,id',
+            'responsables_codes' => 'sometimes|nullable|array',
+            'responsables_codes.*'=> 'string',
+        ]);
+
+        // statut "termine" réservé aux managers
+        if (isset($data['statut']) && $data['statut'] === 'termine' && ! $request->user()->isManager()) {
+            return response()->json(['message' => 'Seul un manager peut clôturer une tâche.'], 403);
+        }
+
+        // Résolution des codes agents en IDs
+        if (isset($data['responsables_codes'])) {
+            $codesInconnus = [];
+            $idsAgents     = [];
+
+            foreach ($data['responsables_codes'] as $code) {
+                $agent = User::where('agent_code', $code)->first();
+                if (! $agent) {
+                    $codesInconnus[] = $code;
+                } else {
+                    $idsAgents[] = $agent->id;
+                }
+            }
+
+            if ($codesInconnus) {
+                return response()->json([
+                    'message' => 'Code(s) agent inconnu(s) : ' . implode(', ', $codesInconnus),
+                ], 422);
+            }
+
+            // Fusionner avec les responsables humains si fournis ensemble
+            $data['responsables'] = array_merge($data['responsables'] ?? [], $idsAgents);
+            unset($data['responsables_codes']);
+        }
+
+        // Mise à jour des champs scalaires
+        $champs = ['titre','projet','description','priorite','statut','date_debut','date_echeance','site_id'];
+        $tache->update(array_intersect_key($data, array_flip($champs)));
+
+        // Gestion de archived_at si passage à "termine"
+        if (isset($data['statut']) && $data['statut'] === 'termine' && ! $tache->archived_at) {
+            $tache->update(['archived_at' => now()]);
+        }
+
+        // Sync responsables : clé présente = remplacement, absente = ne pas toucher
+        if (array_key_exists('responsables', $data)) {
+            $tache->responsables()->sync($data['responsables'] ?? []);
+        }
+
+        $tache->load(['site', 'createur', 'responsables', 'sousTaches']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tâche mise à jour avec succès.',
+            'data'    => new TacheApiResource($tache),
+        ]);
+    }
+
     public function changerStatut(Request $request, Tache $tache): JsonResponse
     {
         $this->authorizeAccess($request->user(), $tache);
