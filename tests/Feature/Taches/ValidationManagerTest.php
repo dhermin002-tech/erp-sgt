@@ -1,0 +1,73 @@
+<?php
+
+namespace Tests\Feature\Taches;
+
+use App\Models\Tache;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ValidationManagerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_manager_peut_passer_une_tache_a_termine(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $tache   = Tache::factory()->create(['statut' => 'en_cours']);
+
+        $res = $this->actingAs($manager)
+            ->patchJson("/taches/{$tache->id}/statut", ['statut' => 'termine']);
+
+        $res->assertOk()->assertJson(['ok' => true, 'statut' => 'termine']);
+        $this->assertSame('termine', $tache->fresh()->statut);
+    }
+
+    public function test_tache_validee_reste_visible_et_non_archivee(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $tache   = Tache::factory()->create(['statut' => 'en_cours', 'titre' => 'TACHE_TEMOIN_XYZ']);
+
+        // Validation
+        $this->actingAs($manager)
+            ->patchJson("/taches/{$tache->id}/statut", ['statut' => 'termine'])
+            ->assertOk();
+
+        // La tâche validée n'est PLUS archivée automatiquement…
+        $this->assertNull($tache->fresh()->archived_at, 'la validation ne doit plus archiver');
+
+        // …et reste visible dans la liste (section "Terminées").
+        $this->actingAs($manager)->get('/taches')
+            ->assertSee('TACHE_TEMOIN_XYZ')
+            ->assertSee('Terminées');
+    }
+
+    public function test_manager_peut_archiver_manuellement_une_tache(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $tache   = Tache::factory()->create(['statut' => 'termine']);
+
+        $this->actingAs($manager)
+            ->patch("/taches/{$tache->id}/archiver")
+            ->assertRedirect(route('taches.index'));
+
+        $this->assertNotNull($tache->fresh()->archived_at);
+
+        // Une fois archivée, elle quitte la liste.
+        $this->actingAs($manager)->get('/taches')
+            ->assertDontSee($tache->titre);
+    }
+
+    public function test_manager_peut_cocher_une_sous_tache(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $tache   = Tache::factory()->create(['statut' => 'en_cours']);
+        $st      = $tache->sousTaches()->create(['titre' => 'Etape 1', 'termine' => false]);
+
+        $res = $this->actingAs($manager)
+            ->patchJson("/sous-taches/{$st->id}/toggle", ['termine' => true]);
+
+        $res->assertOk()->assertJson(['ok' => true]);
+        $this->assertTrue((bool) $st->fresh()->termine);
+    }
+}

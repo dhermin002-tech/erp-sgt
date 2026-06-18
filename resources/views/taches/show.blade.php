@@ -223,6 +223,14 @@ $railColor = $railVar[$tache->priorite] ?? 'var(--slate-300)';
             <a href="{{ route('taches.edit', $tache) }}" class="btn btn-ghost btn-sm">
                 <i class="bi bi-pencil"></i><span class="d-none d-sm-inline"> Modifier</span>
             </a>
+            @if($tache->statut === 'termine' && ! $tache->archived_at)
+            <form method="POST" action="{{ route('taches.archiver', $tache) }}" onsubmit="return confirm('Archiver cette tâche terminée ?')">
+                @csrf @method('PATCH')
+                <button type="submit" class="btn btn-ghost btn-sm" title="Déplacer vers les archives">
+                    <i class="bi bi-archive"></i><span class="d-none d-sm-inline"> Archiver</span>
+                </button>
+            </form>
+            @endif
             @if(auth()->user()->isManager())
             <form method="POST" action="{{ route('taches.destroy', $tache) }}" onsubmit="return confirm('Supprimer cette tâche ?')">
                 @csrf @method('DELETE')

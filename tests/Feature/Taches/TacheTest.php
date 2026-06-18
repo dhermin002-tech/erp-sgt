@@ -124,15 +124,18 @@ class TacheTest extends TestCase
         $this->assertDatabaseHas('taches', ['id' => $tache->id, 'statut' => 'en_cours']);
     }
 
-    public function test_tache_terminee_est_archivee(): void
+    public function test_tache_terminee_n_est_plus_archivee_automatiquement(): void
     {
+        // Comportement décidé le 18/06/2026 : valider (terminé) n'archive plus.
+        // La tâche reste visible (section "Terminées"), l'archivage est manuel.
         $tache = Tache::factory()->create(['createur_id' => $this->manager->id, 'statut' => 'en_cours']);
         $tache->responsables()->attach($this->manager);
 
         $this->actingAs($this->manager)
              ->patchJson("/taches/{$tache->id}/statut", ['statut' => 'termine']);
 
-        $this->assertNotNull($tache->fresh()->archived_at);
+        $this->assertSame('termine', $tache->fresh()->statut);
+        $this->assertNull($tache->fresh()->archived_at);
     }
 
     // ── Sous-tâches + progression ─────────────────────────────────────────────

@@ -35,6 +35,7 @@ Route::middleware(['auth', 'not-agent-account'])->group(function () {
     Route::get('/taches/archives', [TacheController::class, 'archives'])->name('taches.archives');
     Route::resource('taches', TacheController::class)->parameters(['taches' => 'tache']);
     Route::patch('/taches/{tache}/restaurer', [TacheController::class, 'restaurer'])->name('taches.restaurer');
+    Route::patch('/taches/{tache}/archiver', [TacheController::class, 'archiver'])->name('taches.archiver');
     Route::patch('/taches/{tache}/statut', [TacheController::class, 'patchStatut'])->name('taches.statut');
 
     // ── Sous-tâches (AJAX) ────────────────────────────────────────────────────

@@ -154,10 +154,8 @@ class TacheApiController extends Controller
         $champs = ['titre','projet','description','priorite','statut','date_debut','date_echeance','site_id'];
         $tache->update(array_intersect_key($data, array_flip($champs)));
 
-        // Gestion de archived_at si passage à "termine"
-        if (isset($data['statut']) && $data['statut'] === 'termine' && ! $tache->archived_at) {
-            $tache->update(['archived_at' => now()]);
-        }
+        // Plus d'archivage automatique sur "terminé" (cohérence avec le web) :
+        // la tâche validée reste visible, l'archivage est une action distincte.
 
         // Sync responsables : clé présente = remplacement, absente = ne pas toucher
         if (array_key_exists('responsables', $data)) {
@@ -183,9 +181,7 @@ class TacheApiController extends Controller
 
         $tache->update(['statut' => $data['statut']]);
 
-        if ($data['statut'] === 'termine' && ! $tache->archived_at) {
-            $tache->update(['archived_at' => now()]);
-        }
+        // Plus d'archivage automatique sur "terminé" (cohérence avec le web).
 
         return response()->json([
             'ok'     => true,

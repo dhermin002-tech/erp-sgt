@@ -345,8 +345,13 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 $isManager = auth()->user()->isManager();
 $myId      = auth()->id();
 
+// Séparer les tâches validées (terminé) : elles vont dans la section "Terminées".
+$pageCollection  = $taches->getCollection();
+$tachesTerminees = $pageCollection->filter(fn($t) => $t->statut === 'termine')->values();
+$pageActives     = $pageCollection->filter(fn($t) => $t->statut !== 'termine')->values();
+
 if ($isManager) {
-    $collection     = $taches->getCollection();
+    $collection     = $pageActives;
     $mesTaches      = $collection->filter(fn($t) => $t->responsables->contains('id', $myId))->values();
     $tachesEquipe   = $collection->filter(fn($t) => ! $t->responsables->contains('id', $myId))->values();
     $tachesAgentsIA = $collection->filter(fn($t) => optional($t->createur)->type_compte === 'agent_ia')->values();
@@ -505,9 +510,31 @@ if ($isManager) {
 @else
 {{-- ═══════════════ VUE COLLABORATEUR : liste simple ═══════════════ --}}
 <div class="task-list">
-@foreach($taches as $tache)
+@forelse($pageActives as $tache)
     @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
-@endforeach
+@empty
+    <div class="empty-state" style="padding:1.5rem"><span style="font-size:.875rem">Aucune tâche en cours sur cette page.</span></div>
+@endforelse
+</div>
+@endif
+
+{{-- ══ Section : Tâches terminées (validées) — dépliable ══ --}}
+@if($tachesTerminees->isNotEmpty())
+<div style="margin-top:1.75rem">
+    <div class="section-sep" style="cursor:pointer" onclick="toggleTerminees(this)" id="termineesHeader">
+        <div class="section-sep-line"></div>
+        <div class="section-sep-label">
+            <span>✅ Terminées</span>
+            <span class="section-sep-count">{{ $tachesTerminees->count() }}</span>
+            <span class="toggle-icon" id="termineesIcon" style="margin-left:.5rem;font-size:.75rem;color:#15885A">▶</span>
+        </div>
+        <div class="section-sep-line"></div>
+    </div>
+    <div class="task-list" id="termineesBody" style="display:none">
+        @foreach($tachesTerminees as $tache)
+            @include('taches._card', ['tache' => $tache, 'isMine' => $tache->responsables->contains('id', $myId), 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+        @endforeach
+    </div>
 </div>
 @endif
 
@@ -522,6 +549,14 @@ if ($isManager) {
 function toggleGroupeAgent(header) {
     const body = header.nextElementSibling;
     const icon = header.querySelector('.toggle-icon');
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'flex';
+    icon.textContent = isOpen ? '▶' : '▼';
+}
+
+function toggleTerminees() {
+    const body = document.getElementById('termineesBody');
+    const icon = document.getElementById('termineesIcon');
     const isOpen = body.style.display !== 'none';
     body.style.display = isOpen ? 'none' : 'flex';
     icon.textContent = isOpen ? '▶' : '▼';

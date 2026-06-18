@@ -16,9 +16,12 @@ class TacheController extends Controller
     public function index(Request $request)
     {
         $user  = Auth::user();
+        // Liste = tâches non archivées (les tâches "terminé" restent visibles,
+        // regroupées dans la section "Terminées" de la vue). L'archivage est
+        // désormais une action manuelle distincte (voir archiver()).
         $query = Tache::with(['responsables', 'site', 'createur'])
                       ->visiblePar($user)
-                      ->actives();
+                      ->whereNull('archived_at');
 
         // Filtres
         if ($request->filled('statut')) {
@@ -140,10 +143,8 @@ class TacheController extends Controller
             }
         }
 
-        // Archivage automatique si statut = termine
-        if ($tache->statut === 'termine' && ! $tache->archived_at) {
-            $tache->update(['archived_at' => now()]);
-        }
+        // Note : plus d'archivage automatique sur "terminé". La tâche validée
+        // reste visible (section "Terminées"). L'archivage est manuel (archiver()).
 
         return redirect()->route('taches.show', $tache)
                          ->with('success', 'Tâche mise à jour.');
@@ -179,6 +180,17 @@ class TacheController extends Controller
                          ->with('success', 'Tâche restaurée.');
     }
 
+    // Archivage manuel (remplace l'ancien archivage automatique sur "terminé")
+    public function archiver(Tache $tache)
+    {
+        $this->authorizeAccess($tache);
+        if (! $tache->archived_at) {
+            $tache->update(['archived_at' => now()]);
+        }
+        return redirect()->route('taches.index')
+                         ->with('success', 'Tâche archivée.');
+    }
+
     // ── Patch statut (AJAX) ────────────────────────────────────────────────────
     public function patchStatut(Request $request, Tache $tache)
     {
@@ -187,9 +199,7 @@ class TacheController extends Controller
 
         $tache->update(['statut' => $request->statut]);
 
-        if ($request->statut === 'termine' && ! $tache->archived_at) {
-            $tache->update(['archived_at' => now()]);
-        }
+        // Plus d'archivage automatique : une tâche validée reste visible.
 
         // Notifier les responsables du changement de statut
         $auteur = Auth::user();
