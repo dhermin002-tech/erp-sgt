@@ -604,6 +604,33 @@ $railColor = $railVar[$tache->priorite] ?? 'var(--slate-300)';
 const tacheId = {{ $tache->id }};
 const csrfToken = document.querySelector('meta[name=csrf-token]').content;
 
+// ── Helper fetch robuste : surface les erreurs au lieu de les avaler ───────
+// Corrige le bug "rien ne se passe quand je valide" : une réponse 419/403/500
+// (HTML, pas JSON) faisait planter .json() silencieusement.
+async function sgtFetch(url, options = {}) {
+    let res;
+    try {
+        res = await fetch(url, options);
+    } catch (e) {
+        alert('Connexion impossible au serveur. Vérifiez votre réseau, puis réessayez.');
+        throw e;
+    }
+    if (res.status === 419) {
+        alert('Votre session a expiré. La page va se recharger, réessayez ensuite.');
+        location.reload();
+        throw new Error('419');
+    }
+    if (res.status === 403) {
+        alert("Action refusée : vous n'avez pas les droits sur cette tâche.");
+        throw new Error('403');
+    }
+    if (!res.ok) {
+        alert('Erreur serveur (' + res.status + '). Action non enregistrée.');
+        throw new Error(String(res.status));
+    }
+    return res.json();
+}
+
 // ── Description "Lire plus / Réduire" (JS pur) ───────────────────────────
 (function() {
     const desc = document.getElementById('descText');
@@ -633,27 +660,31 @@ function toggleDesc() {
 // ── Changement de statut (AJAX) ───────────────────────────────────────────
 function changerStatut(statut) {
     document.getElementById('statutMenu').classList.remove('open');
-    fetch(`/taches/${tacheId}/statut`, {
+    sgtFetch(`/taches/${tacheId}/statut`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
         body: JSON.stringify({ statut })
-    }).then(r => r.json()).then(d => {
+    }).then(d => {
         if (d.ok) location.reload();
-    });
+    }).catch(() => {});
 }
 
 // ── Sous-tâches (AJAX) ────────────────────────────────────────────────────
 function toggleSousTache(id, termine) {
-    fetch(`/sous-taches/${id}/toggle`, {
+    sgtFetch(`/sous-taches/${id}/toggle`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
         body: JSON.stringify({ termine })
-    }).then(r => r.json()).then(d => {
+    }).then(d => {
         const titre = document.getElementById(`st-titre-${id}`);
         if (titre) titre.className = `sous-tache-titre ${termine ? 'termine' : ''}`;
         if (d.progression !== undefined) {
             document.getElementById('progFill').style.width = d.progression + '%';
         }
+    }).catch(() => {
+        // Rétablir l'état réel de la case si l'enregistrement a échoué
+        const cb = document.querySelector(`.sous-tache-cb[data-id="${id}"]`);
+        if (cb) cb.checked = !termine;
     });
 }
 
@@ -661,11 +692,11 @@ function ajouterSousTache() {
     const input = document.getElementById('newSousTache');
     const titre = input.value.trim();
     if (! titre) return;
-    fetch(`/taches/${tacheId}/sous-taches`, {
+    sgtFetch(`/taches/${tacheId}/sous-taches`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
         body: JSON.stringify({ titre })
-    }).then(r => r.json()).then(d => {
+    }).then(d => {
         if (d.id) {
             const list = document.getElementById('sousTachesList');
             const empty = list.querySelector('p');
@@ -680,22 +711,22 @@ function ajouterSousTache() {
             `);
             input.value = '';
         }
-    });
+    }).catch(() => {});
 }
 
 function supprimerSousTache(id) {
     if (!confirm('Supprimer cette sous-tâche ?')) return;
-    fetch(`/sous-taches/${id}`, {
+    sgtFetch(`/sous-taches/${id}`, {
         method: 'DELETE',
         headers: { 'X-CSRF-TOKEN': csrfToken }
-    }).then(r => r.json()).then(d => {
+    }).then(d => {
         if (d.ok) {
             document.getElementById(`st-${id}`)?.remove();
             if (d.progression !== undefined) {
                 document.getElementById('progFill').style.width = d.progression + '%';
             }
         }
-    });
+    }).catch(() => {});
 }
 
 // Fermer dropdown statut au clic extérieur
@@ -712,13 +743,16 @@ document.getElementById('newSousTache').addEventListener('keydown', e => {
 
 // ── Actions de suivi (AJAX) ───────────────────────────────────────────────
 function toggleAction(id, fait) {
-    fetch(`/actions/${id}/toggle`, {
+    sgtFetch(`/actions/${id}/toggle`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
         body: JSON.stringify({ fait })
-    }).then(r => r.json()).then(d => {
+    }).then(d => {
         const titre = document.getElementById(`action-titre-${id}`);
         if (titre) titre.className = `sous-tache-titre ${fait ? 'termine' : ''}`;
+    }).catch(() => {
+        const cb = document.querySelector(`#action-${id} .sous-tache-cb`);
+        if (cb) cb.checked = !fait;
     });
 }
 
@@ -726,11 +760,11 @@ function ajouterAction() {
     const input = document.getElementById('newAction');
     const description = input.value.trim();
     if (! description) return;
-    fetch(`/taches/${tacheId}/actions`, {
+    sgtFetch(`/taches/${tacheId}/actions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
         body: JSON.stringify({ description })
-    }).then(r => r.json()).then(d => {
+    }).then(d => {
         if (d.id) {
             const empty = document.getElementById('actionsEmpty');
             if (empty) empty.remove();
@@ -743,17 +777,17 @@ function ajouterAction() {
             `);
             input.value = '';
         }
-    });
+    }).catch(() => {});
 }
 
 function supprimerAction(id) {
     if (!confirm('Supprimer cette action ?')) return;
-    fetch(`/actions/${id}`, {
+    sgtFetch(`/actions/${id}`, {
         method: 'DELETE',
         headers: { 'X-CSRF-TOKEN': csrfToken }
-    }).then(r => r.json()).then(d => {
+    }).then(d => {
         if (d.ok) document.getElementById(`action-${id}`)?.remove();
-    });
+    }).catch(() => {});
 }
 
 document.getElementById('newAction').addEventListener('keydown', e => {
