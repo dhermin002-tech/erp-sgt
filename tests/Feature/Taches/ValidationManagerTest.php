@@ -58,6 +58,23 @@ class ValidationManagerTest extends TestCase
             ->assertDontSee($tache->titre);
     }
 
+    public function test_page_tache_ne_redeclare_pas_csrftoken(): void
+    {
+        // Garde-fou : 'const csrfToken' doit n'apparaître qu'UNE fois (dans le layout).
+        // Une 2e déclaration au niveau global = SyntaxError qui tue tout le <script>
+        // de la page → boutons "valider" morts sans aucune alerte.
+        $manager = User::factory()->manager()->create();
+        $tache   = Tache::factory()->create();
+
+        $html = $this->actingAs($manager)->get("/taches/{$tache->id}")->getContent();
+
+        $this->assertSame(
+            1,
+            substr_count($html, 'const csrfToken'),
+            "csrfToken ne doit être déclaré qu'une seule fois (layout)."
+        );
+    }
+
     public function test_manager_peut_cocher_une_sous_tache(): void
     {
         $manager = User::factory()->manager()->create();

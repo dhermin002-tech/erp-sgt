@@ -610,7 +610,9 @@ $railColor = $railVar[$tache->priorite] ?? 'var(--slate-300)';
 @push('scripts')
 <script>
 const tacheId = {{ $tache->id }};
-const csrfToken = document.querySelector('meta[name=csrf-token]').content;
+// csrfToken est déjà déclaré globalement par le layout (app.blade.php).
+// Le redéclarer ici provoquait "SyntaxError: Identifier 'csrfToken' has already
+// been declared" → tout ce bloc <script> était rejeté → boutons valider morts.
 
 // ── Helper fetch robuste : surface les erreurs au lieu de les avaler ───────
 // Corrige le bug "rien ne se passe quand je valide" : une réponse 419/403/500
