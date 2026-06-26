@@ -80,8 +80,8 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 
 .task-row-link { text-decoration:none; color:inherit; display:block; }
 .task-row-link:hover .kt-task-row {
-    box-shadow: 0 6px 20px rgba(15,23,42,.12);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15,23,42,.14);
+    transform: translateY(-3px);
 }
 .kt-task-row {
     transition: box-shadow .18s ease, transform .18s ease;
@@ -193,24 +193,25 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
     0%, 100% { opacity: 1; transform: scale(1); }
     50%       { opacity: .4; transform: scale(.7); }
 }
-/* Groupe agent IA — fond légèrement teinté pour le distinguer */
+/* Groupe agent IA — fond blanc neutre, juste une bordure gauche violette discrète */
 .collab-group.is-agent .collab-group-header {
-    background: linear-gradient(135deg, #EDE9FE, #F5F3FF);
-    border-color: #DDD6FE;
+    background: var(--white);
+    border-color: var(--slate-200);
+    border-left: 3px solid #7C3AED;
 }
-.collab-group.is-agent .collab-name { color: #5B21B6; }
-.collab-group.is-agent .collab-count { background: #EDE9FE; color: #6D28D9; }
+.collab-group.is-agent .collab-name { color: var(--kt-navy); }
+.collab-group.is-agent .collab-count { background: var(--slate-100); color: var(--slate-600); }
 .collab-group.is-agent .collab-avatar {
     font-size: 1rem;
-    background: linear-gradient(135deg, #4C1D95, #6D28D9) !important;
+    background: #003366 !important;
     letter-spacing: 0;
 }
-/* Séparateur section Agents IA */
-.section-sep.agents-ia .section-sep-line   { background: linear-gradient(90deg, transparent, #DDD6FE, #DDD6FE, transparent); }
+/* Séparateur section Agents IA — même style que équipe, accent violet sur le label seulement */
+.section-sep.agents-ia .section-sep-line   { background: linear-gradient(90deg, transparent, var(--slate-200), var(--slate-200), transparent); }
 .section-sep.agents-ia .section-sep-label  {
-    color: #6D28D9; background: #F5F3FF; border-color: #DDD6FE;
+    color: var(--slate-600); background: var(--slate-50); border-color: var(--slate-200);
 }
-.section-sep.agents-ia .section-sep-count  { background: #EDE9FE; color: #6D28D9; }
+.section-sep.agents-ia .section-sep-count  { background: var(--slate-200); color: var(--slate-600); }
 
 /* ── Chips de filtre par rubrique ── */
 .task-chips { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }

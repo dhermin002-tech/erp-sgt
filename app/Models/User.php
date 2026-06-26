@@ -14,7 +14,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'username', 'nom', 'prenom', 'telephone', 'role', 'direction_ui', 'password',
-        'type_compte', 'agent_code', 'agent_couleur',
+        'type_compte', 'agent_code', 'agent_couleur', 'last_seen_at',
     ];
 
     /** Ordre hiérarchique des grades humains (du plus haut au plus bas) */
@@ -54,7 +54,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
+            'password'     => 'hashed',
+            'last_seen_at' => 'datetime',
         ];
     }
 

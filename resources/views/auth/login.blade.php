@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — SGT KayTechnologie</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <meta property="og:title" content="SGT — KayTechnologie">
+    <meta property="og:description" content="Système de Gestion des Tâches — KayTechnologie Gabon">
+    <meta property="og:image" content="{{ asset('images/logo-kt.jpg') }}">
+    <meta name="theme-color" content="#003366">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -370,19 +376,23 @@
                 </p>
             </div>
 
+            @php
+                $loginTotalTaches  = \App\Models\Tache::whereNull('archived_at')->count();
+                $loginNbMembres    = \App\Models\User::where('type_compte', 'humain')->count();
+            @endphp
             <div class="id-bottom">
                 <div class="id-stats">
                     <div class="id-stat">
-                        <div class="id-stat-val">5</div>
-                        <div class="id-stat-lbl">Rôles</div>
+                        <div class="id-stat-val" data-counter="{{ $loginTotalTaches }}">0</div>
+                        <div class="id-stat-lbl">Tâches gérées</div>
+                    </div>
+                    <div class="id-stat">
+                        <div class="id-stat-val" data-counter="{{ $loginNbMembres }}">0</div>
+                        <div class="id-stat-lbl">Membres actifs</div>
                     </div>
                     <div class="id-stat">
                         <div class="id-stat-val">SSL</div>
                         <div class="id-stat-lbl">Sécurisé</div>
-                    </div>
-                    <div class="id-stat">
-                        <div class="id-stat-val">v1.0</div>
-                        <div class="id-stat-lbl">Version</div>
                     </div>
                 </div>
                 <div class="badges">
@@ -473,6 +483,24 @@
             document.getElementById('btnLabel').innerHTML =
                 '<span class="btn-spinner"></span> Connexion…';
         });
+    </script>
+    <script>
+    // Counter-up animé pour les stats du panneau login
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.id-stat-val[data-counter]').forEach(function (el) {
+            var target = parseInt(el.dataset.counter, 10);
+            if (isNaN(target)) return;
+            var duration = 1200, start = null;
+            function step(ts) {
+                if (!start) start = ts;
+                var progress = Math.min((ts - start) / duration, 1);
+                var eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(eased * target);
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            setTimeout(function () { requestAnimationFrame(step); }, 400);
+        });
+    });
     </script>
 </body>
 </html>

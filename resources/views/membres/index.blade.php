@@ -88,12 +88,21 @@ table.kt-table.agents-table tbody tr:hover { background:#f5f3ff; }
 table.kt-table tbody tr:last-child td { border-bottom:none; }
 table.kt-table tbody tr.is-me { background:#FFFBEB !important; }
 
+.membre-avatar-wrap { position:relative; display:inline-flex; flex-shrink:0; }
 .membre-avatar {
     width:42px;height:42px;border-radius:12px;
     display:flex;align-items:center;justify-content:center;
     font-family:'Space Grotesk',sans-serif;font-size:.85rem;font-weight:700;
     color:#fff;flex-shrink:0;
 }
+.presence-dot {
+    position:absolute;bottom:-2px;right:-2px;
+    width:11px;height:11px;border-radius:50%;
+    border:2px solid #fff;
+}
+.presence-dot.online  { background:#16A34A; }
+.presence-dot.idle    { background:#F59E0B; }
+.presence-dot.offline { background:#94A3B8; }
 .membre-nom  { font-weight:700;color:var(--kt-navy);font-size:.9rem; }
 .membre-vous { font-size:.7rem;color:#CC5500;font-weight:700;letter-spacing:.02em; }
 
@@ -342,7 +351,19 @@ $avatarColors = ['#003366','#CC5500','#7C3AED','#059669','#DC2626','#D97706','#0
                     </td>
                     <td>
                         <div style="display:flex;align-items:center;gap:.75rem">
-                            <div class="membre-avatar" style="background:{{ $aColor }}">{{ $initiales }}</div>
+                            @php
+                                $lastSeen = $membre->last_seen_at ?? null;
+                                $presenceClass = 'offline';
+                                if ($lastSeen) {
+                                    $diffMin = now()->diffInMinutes($lastSeen);
+                                    if ($diffMin <= 5) $presenceClass = 'online';
+                                    elseif ($diffMin <= 30) $presenceClass = 'idle';
+                                }
+                            @endphp
+                            <div class="membre-avatar-wrap">
+                                <div class="membre-avatar" style="background:{{ $aColor }}">{{ $initiales }}</div>
+                                <span class="presence-dot {{ $presenceClass }}" title="{{ $presenceClass === 'online' ? 'En ligne' : ($presenceClass === 'idle' ? 'Inactif' : 'Hors ligne') }}"></span>
+                            </div>
                             <div>
                                 <div class="membre-nom">{{ $membre->nom_complet }}</div>
                                 @if($membre->id === auth()->id())

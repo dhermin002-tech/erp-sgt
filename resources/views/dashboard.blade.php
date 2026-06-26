@@ -5,16 +5,16 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 <style>
-/* ── Page hero header ── */
+/* ── Page hero header — bandeau compact ── */
 .dash-hero {
     background: linear-gradient(135deg, #001f3f 0%, #003366 60%, #002244 100%);
-    border-radius: 16px;
-    padding: 1.4rem 1.75rem;
-    margin-bottom: 1.35rem;
+    border-radius: 12px;
+    padding: .85rem 1.4rem;
+    margin-bottom: 1.2rem;
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: .75rem;
     position: relative; overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,.18);
+    box-shadow: 0 4px 20px rgba(0,0,0,.15);
 }
 .dash-hero::before {
     content: '';
@@ -58,13 +58,16 @@
     box-shadow: 0 6px 20px rgba(204,85,0,.45);
 }
 
-/* ── KPI Grid — Bento style ── */
+/* ── KPI Grid — Bento style responsive ── */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: .875rem;
     margin-bottom: 1.35rem;
 }
+@media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 540px)  { .kpi-grid { grid-template-columns: 1fr; } }
 .kpi-card {
     background: var(--white);
     border-radius: 14px;
@@ -100,9 +103,10 @@
 }
 .kpi-value {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 2.4rem; font-weight: 800;
+    font-size: 2.8rem; font-weight: 800;
     line-height: 1; color: var(--kc, var(--kt-navy));
     letter-spacing: -.04em;
+    margin-top: .15rem;
 }
 .kpi-sub {
     font-size: .76rem; color: var(--slate-400); margin-top: .3rem;

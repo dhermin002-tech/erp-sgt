@@ -7,9 +7,15 @@
     <title>@yield('title', 'SGT') — KayTechnologie</title>
 
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="alternate icon" href="{{ asset('favicon.svg') }}">
-    <link rel="apple-touch-icon" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/logo-kt.jpg') }}">
     <meta name="theme-color" content="#003366">
+    {{-- Open Graph — partage WhatsApp / Slack --}}
+    <meta property="og:title" content="SGT — KayTechnologie">
+    <meta property="og:description" content="Système de Gestion des Tâches — KayTechnologie Gabon">
+    <meta property="og:image" content="{{ asset('images/logo-kt.jpg') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_FR">
 
     <link rel="stylesheet" href="{{ asset('charte-graphique.css') }}">
     <link rel="stylesheet" href="{{ asset('sgt-premium.css') }}">
@@ -21,11 +27,27 @@
         /* ── Overrides layout ─────────────────────────────── */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ── Flash messages ─────────────────────────────── */
-        .flash { padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .875rem; }
-        .flash-success { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
-        .flash-error   { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
-        .flash-info    { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
+        /* ── Toast system ────────────────────────────────── */
+        .kt-toast {
+            pointer-events: all;
+            display: flex; align-items: flex-start; gap: .75rem;
+            padding: .85rem 1rem; border-radius: 10px;
+            font-size: .875rem; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(15,23,42,.18);
+            border: 1px solid transparent;
+            opacity: 0; transform: translateY(12px);
+            transition: opacity .22s ease, transform .22s ease;
+            max-width: 340px; width: 100%;
+        }
+        .kt-toast.show { opacity: 1; transform: translateY(0); }
+        .kt-toast.hide { opacity: 0; transform: translateY(8px); }
+        .kt-toast-success { background: #D1FAE5; color: #065F46; border-color: #A7F3D0; }
+        .kt-toast-error   { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+        .kt-toast-info    { background: #DBEAFE; color: #1E40AF; border-color: #BFDBFE; }
+        .kt-toast-icon    { font-size: 1.1rem; flex-shrink: 0; line-height: 1.2; }
+        .kt-toast-body    { flex: 1; line-height: 1.45; }
+        .kt-toast-close   { background: none; border: none; cursor: pointer; opacity: .5; padding: 0; font-size: .9rem; flex-shrink: 0; }
+        .kt-toast-close:hover { opacity: 1; }
 
         /* ── Badge retard ─────────────────────────────────── */
         .badge-retard { background: #B0202E; color: #fff; font-size: .7rem; padding: .2rem .5rem; border-radius: 999px; }
@@ -93,13 +115,16 @@
             color: rgba(255,255,255,.25); padding: .9rem 1.25rem .35rem;
             text-transform: uppercase;
         }
-        /* Groupe Agents IA — identité violette */
+        /* Groupe Agents IA — même style que les autres nav-labels, accent via icône seulement */
         [data-direction="A"] .sidebar-nav .nav-label.nav-label-ia {
-            color: #a78bfa; display: flex; align-items: center; gap: .4rem;
+            color: rgba(255,255,255,.25); display: flex; align-items: center; gap: .4rem;
         }
-        [data-direction="A"] .sidebar-nav a.nav-ia:hover { background: rgba(124,58,237,.22); }
+        [data-direction="A"] .sidebar-nav .nav-label.nav-label-ia i {
+            color: #a78bfa; font-size: .8rem;
+        }
+        [data-direction="A"] .sidebar-nav a.nav-ia:hover { background: rgba(255,255,255,.1); }
         [data-direction="A"] .sidebar-nav a.nav-ia.active {
-            background: #6D28D9; box-shadow: 0 4px 14px rgba(109,40,217,.45);
+            background: #CC5500; box-shadow: 0 4px 14px rgba(204,85,0,.4);
         }
         [data-direction="A"] .sidebar-footer {
             padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.07); font-size: .78rem;
@@ -325,7 +350,7 @@
             <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">
                 <i class="bi bi-geo-alt"></i> Sites
             </a>
-            <div class="nav-label nav-label-ia">🤖 Agents IA</div>
+            <div class="nav-label nav-label-ia"><i class="bi bi-robot"></i> Agents IA</div>
             <a href="{{ route('agents.taches') }}" class="nav-ia {{ request()->routeIs('agents.taches') ? 'active' : '' }}">
                 <i class="bi bi-list-check"></i> Tâches IA
             </a>
@@ -337,8 +362,34 @@
             </a>
             @endif
         </nav>
-        <div class="sidebar-footer" style="color:rgba(255,255,255,.35);font-size:.72rem;text-align:center">
-            SGT v1.0 &mdash; KayTechnologie Gabon
+        {{-- Progress bar sprint ── ──────────────────────────────────── --}}
+        @php
+            use App\Models\Tache;
+            $sprintTotal     = Tache::whereNull('archived_at')->count();
+            $sprintTerminees = Tache::whereNull('archived_at')->where('statut', 'termine')->count();
+            $sprintPct       = $sprintTotal > 0 ? round(($sprintTerminees / $sprintTotal) * 100) : 0;
+        @endphp
+        <div style="padding:.65rem 1.1rem .5rem;border-top:1px solid rgba(255,255,255,.07)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+                <span style="font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.3)">Sprint en cours</span>
+                <span style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.55)">{{ $sprintPct }}%</span>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden">
+                <div style="height:100%;width:{{ $sprintPct }}%;background:linear-gradient(90deg,#CC5500,#E06010);border-radius:999px;transition:width .6s ease"></div>
+            </div>
+            <div style="font-size:.65rem;color:rgba(255,255,255,.25);margin-top:.25rem">{{ $sprintTerminees }} / {{ $sprintTotal }} tâches terminées</div>
+        </div>
+
+        <div class="sidebar-footer" style="color:rgba(255,255,255,.35);font-size:.72rem;text-align:center;line-height:1.6">
+            <div style="display:flex;align-items:center;justify-content:center;gap:.4rem;margin-bottom:.2rem">
+                SGT v1.0
+                @if(app()->environment('production'))
+                    <span style="background:#15885A;color:#fff;font-size:.6rem;font-weight:700;padding:.05rem .35rem;border-radius:3px;letter-spacing:.04em">PROD</span>
+                @else
+                    <span style="background:#CC5500;color:#fff;font-size:.6rem;font-weight:700;padding:.05rem .35rem;border-radius:3px;letter-spacing:.04em">DEV</span>
+                @endif
+            </div>
+            <div style="opacity:.55">sgt.kaytechnologie.online</div>
         </div>
     </aside>
 
@@ -381,27 +432,6 @@
 
             {{-- Droite : notifs + user --}}
             <div style="display:flex;align-items:center;gap:.75rem">
-                {{-- Bascule lang FR/EN --}}
-                @php $locale = app()->getLocale(); @endphp
-                <div class="lang-switch" style="display:flex;align-items:center;gap:.2rem;font-size:.78rem;font-weight:700">
-                    <form method="POST" action="{{ route('preferences.locale') }}" style="display:inline">
-                        @csrf
-                        <input type="hidden" name="locale" value="fr">
-                        <button type="submit" style="background:none;border:none;cursor:pointer;padding:.2rem .35rem;border-radius:4px;font-weight:700;font-size:.78rem;{{ $locale==='fr' ? 'color:var(--kt-navy);text-decoration:underline' : 'color:var(--slate-400)' }}">FR</button>
-                    </form>
-                    <span style="color:var(--slate-300)">|</span>
-                    <form method="POST" action="{{ route('preferences.locale') }}" style="display:inline">
-                        @csrf
-                        <input type="hidden" name="locale" value="en">
-                        <button type="submit" style="background:none;border:none;cursor:pointer;padding:.2rem .35rem;border-radius:4px;font-weight:700;font-size:.78rem;{{ $locale==='en' ? 'color:var(--kt-navy);text-decoration:underline' : 'color:var(--slate-400)' }}">EN</button>
-                    </form>
-                </div>
-
-                {{-- Bascule thème A/B --}}
-                <button class="direction-toggle" onclick="toggleDirectionAjax()" style="background:none;border:none;cursor:pointer;font-size:.82rem;color:var(--slate-500);padding:.2rem .4rem;border-radius:5px;border:1px solid var(--slate-200)" title="Direction A/B">
-                    🎨 <span id="dirLabel">Dir. {{ auth()->user()->direction_ui }}</span>
-                </button>
-
                 {{-- Notifications --}}
                 <div class="user-menu" id="notifMenu">
                     <button class="notif-btn" onclick="toggleNotifDropdown()" title="Notifications" id="notifBell">
@@ -443,11 +473,30 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="user-dropdown">
-                        <a href="{{ route('profil.index') }}">👤 Mon profil</a>
-                        <a href="{{ route('preferences.index') }}">⚙️ Préférences</a>
+                        <a href="{{ route('profil.index') }}"><i class="bi bi-person"></i> Mon profil</a>
+                        <a href="{{ route('preferences.index') }}"><i class="bi bi-gear"></i> Préférences</a>
+                        <hr class="divider">
+                        {{-- Lang switch dans le dropdown --}}
+                        @php $locale = app()->getLocale(); @endphp
+                        <div style="padding:.4rem 1rem;display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--slate-500)">
+                            <i class="bi bi-translate"></i>
+                            <form method="POST" action="{{ route('preferences.locale') }}" style="display:inline">
+                                @csrf <input type="hidden" name="locale" value="fr">
+                                <button type="submit" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:.78rem;{{ $locale==='fr' ? 'color:var(--kt-navy);text-decoration:underline' : 'color:var(--slate-400)' }}">FR</button>
+                            </form>
+                            <span style="color:var(--slate-200)">|</span>
+                            <form method="POST" action="{{ route('preferences.locale') }}" style="display:inline">
+                                @csrf <input type="hidden" name="locale" value="en">
+                                <button type="submit" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:.78rem;{{ $locale==='en' ? 'color:var(--kt-navy);text-decoration:underline' : 'color:var(--slate-400)' }}">EN</button>
+                            </form>
+                            <span style="flex:1"></span>
+                            <button onclick="toggleDirectionAjax()" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--slate-500);padding:.1rem .3rem;border-radius:4px;border:1px solid var(--slate-200)" title="Changer la mise en page">
+                                <i class="bi bi-layout-sidebar"></i> <span id="dirLabel">Dir. {{ auth()->user()->direction_ui }}</span>
+                            </button>
+                        </div>
                         <hr class="divider">
                         {{-- ERR-PHP-002 : logout via fetch() + finally pour éviter erreur CSRF 419 --}}
-                        <button onclick="logoutSafe()">🚪 Se déconnecter</button>
+                        <button onclick="logoutSafe()"><i class="bi bi-box-arrow-right"></i> Se déconnecter</button>
                     </div>
                 </div>
             </div>
@@ -455,18 +504,11 @@
 
         {{-- Corps de la page --}}
         <main class="page-body">
-            @if (session('success'))
-                <div class="flash flash-success">{{ session('success') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="flash flash-error">{{ session('error') }}</div>
-            @endif
-            @if (session('info'))
-                <div class="flash flash-info">{{ session('info') }}</div>
-            @endif
-
             @yield('content')
         </main>
+
+        {{-- Toasts bottom-right auto-dismiss --}}
+        <div id="toast-container" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.6rem;pointer-events:none;max-width:340px"></div>
 
     </div>{{-- /main-content --}}
 
@@ -556,6 +598,34 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', syncDirectionUI);
+</script>
+
+<script>
+// ── Système Toast KT ────────────────────────────────────────────────────────
+function ktToast(message, type = 'info', duration = 4000) {
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `kt-toast kt-toast-${type}`;
+    toast.innerHTML = `
+        <span class="kt-toast-icon">${icons[type] ?? 'ℹ️'}</span>
+        <span class="kt-toast-body">${message}</span>
+        <button class="kt-toast-close" onclick="this.closest('.kt-toast').remove()" title="Fermer">✕</button>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => { requestAnimationFrame(() => toast.classList.add('show')); });
+    setTimeout(() => {
+        toast.classList.add('hide');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    }, duration);
+}
+
+// Auto-lancement depuis les sessions Laravel
+document.addEventListener('DOMContentLoaded', function () {
+    @if(session('success')) ktToast(@json(session('success')), 'success'); @endif
+    @if(session('error'))   ktToast(@json(session('error')),   'error'); @endif
+    @if(session('info'))    ktToast(@json(session('info')),    'info'); @endif
+});
 </script>
 
 {{-- SGT Premium JS — animations + compteurs ─────────────────────────── --}}
