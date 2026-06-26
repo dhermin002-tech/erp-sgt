@@ -58,69 +58,74 @@
     box-shadow: 0 6px 20px rgba(204,85,0,.45);
 }
 
-/* ── KPI Grid — Bento style responsive ── */
+/* ── KPI Grid ── */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: .875rem;
+    gap: .75rem;
     margin-bottom: 1.35rem;
 }
 @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 900px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 540px)  { .kpi-grid { grid-template-columns: 1fr; } }
+
 .kpi-card {
-    background: var(--white);
-    border-radius: 14px;
-    padding: 1.2rem 1.25rem 1rem;
-    border: 1px solid var(--slate-200);
-    box-shadow: 0 2px 8px rgba(15,23,42,.06);
+    background: #fff !important;           /* forcer blanc — override sgt-premium */
+    border-radius: 12px;
+    padding: 1.1rem 1.15rem .9rem;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 4px rgba(15,23,42,.06);
     position: relative; overflow: hidden;
     transition: transform .18s ease, box-shadow .18s ease;
-    display: flex; flex-direction: column; gap: .1rem;
+    display: flex; flex-direction: column;
 }
-.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(15,23,42,.11); }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(15,23,42,.09); }
 
-/* Barre supérieure colorée */
+/* Trait coloré en haut */
 .kpi-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0;
     height: 3px; background: var(--kc, #94a3b8);
-    border-radius: 14px 14px 0 0;
+    border-radius: 12px 12px 0 0;
 }
-/* Pastille icône en haut à droite */
+
+/* En-tête : icône inline + label sur la même ligne */
+.kpi-header {
+    display: flex; align-items: center; gap: .45rem;
+    margin-bottom: .55rem;
+}
 .kpi-icon {
-    position: absolute; top: 1rem; right: 1rem;
-    width: 38px; height: 38px; border-radius: 10px;
+    width: 22px; height: 22px; border-radius: 6px;
     background: var(--kc-soft, #f1f5f9);
     color: var(--kc, #64748b);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.15rem;
+    font-size: .72rem; flex-shrink: 0;
 }
 .kpi-label {
-    font-size: .69rem; font-weight: 700;
-    color: var(--slate-500);
+    font-size: .67rem; font-weight: 700;
+    color: #64748B;
     text-transform: uppercase; letter-spacing: .07em;
-    margin-bottom: .3rem; padding-right: 2.8rem;
+    line-height: 1;
 }
 .kpi-value {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 2.8rem; font-weight: 800;
-    line-height: 1; color: var(--kc, var(--kt-navy));
-    letter-spacing: -.04em;
-    margin-top: .15rem;
+    font-size: 2.25rem; font-weight: 800;
+    line-height: 1; color: #0F172A;
+    letter-spacing: -.03em;
+    margin-bottom: .3rem;
 }
 .kpi-sub {
-    font-size: .76rem; color: var(--slate-400); margin-top: .3rem;
+    font-size: .74rem; color: #94A3B8; line-height: 1.3;
 }
 
-/* Variants KPI */
-.kpi-card--actives   { --kc: #173A7A;  --kc-soft: #EAF0FB; }
-.kpi-card--cours     { --kc: #2563EB;  --kc-soft: #EBF1FE; }
-.kpi-card--attente   { --kc: #C97A0A;  --kc-soft: #FEF3C7; }
-.kpi-card--terminees { --kc: #15885A;  --kc-soft: #D1FAE5; }
-.kpi-card--completion{ --kc: #15885A;  --kc-soft: #D1FAE5; }
-.kpi-card--retard    { --kc: #B0202E;  --kc-soft: #FEE2E2; }
-.kpi-card--retard.is-zero { --kc: #94a3b8; --kc-soft: #f1f5f9; }
-.kpi-card--archives  { --kc: #64748B;  --kc-soft: #F1F5F9; }
+/* Variants — couleurs uniquement sur l'icône et le trait, jamais sur le fond */
+.kpi-card--actives   { --kc: #1E3A8A;  --kc-soft: #DBEAFE; }
+.kpi-card--cours     { --kc: #2563EB;  --kc-soft: #EFF6FF; }
+.kpi-card--attente   { --kc: #B45309;  --kc-soft: #FEF3C7; }
+.kpi-card--terminees { --kc: #15803D;  --kc-soft: #DCFCE7; }
+.kpi-card--completion{ --kc: #15803D;  --kc-soft: #DCFCE7; }
+.kpi-card--retard    { --kc: #B91C1C;  --kc-soft: #FEE2E2; }
+.kpi-card--retard.is-zero { --kc: #94A3B8; --kc-soft: #F1F5F9; }
+.kpi-card--archives  { --kc: #475569;  --kc-soft: #F1F5F9; }
 
 /* Barre de progression complétion */
 .kpi-progress-track {
@@ -289,36 +294,46 @@
 <div class="kpi-grid">
 
     <div class="kpi-card kpi-card--actives">
-        <div class="kpi-icon"><i class="bi bi-list-task"></i></div>
-        <div class="kpi-label">Tâches actives</div>
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="bi bi-list-task"></i></div>
+            <div class="kpi-label">Tâches actives</div>
+        </div>
         <div class="kpi-value" data-target="{{ $stats['total_actives'] }}">{{ $stats['total_actives'] }}</div>
         <div class="kpi-sub">en cours de traitement</div>
     </div>
 
     <div class="kpi-card kpi-card--cours">
-        <div class="kpi-icon"><i class="bi bi-activity"></i></div>
-        <div class="kpi-label">En cours</div>
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="bi bi-arrow-repeat"></i></div>
+            <div class="kpi-label">En cours</div>
+        </div>
         <div class="kpi-value" data-target="{{ $stats['en_cours'] }}">{{ $stats['en_cours'] }}</div>
         <div class="kpi-sub">travail actif</div>
     </div>
 
     <div class="kpi-card kpi-card--attente">
-        <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
-        <div class="kpi-label">En attente</div>
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="bi bi-pause-circle"></i></div>
+            <div class="kpi-label">En attente</div>
+        </div>
         <div class="kpi-value" data-target="{{ $stats['en_attente'] }}">{{ $stats['en_attente'] }}</div>
         <div class="kpi-sub">en pause / blocage</div>
     </div>
 
     <div class="kpi-card kpi-card--terminees">
-        <div class="kpi-icon"><i class="bi bi-check2-all"></i></div>
-        <div class="kpi-label">Terminées</div>
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="bi bi-check2"></i></div>
+            <div class="kpi-label">Terminées</div>
+        </div>
         <div class="kpi-value" data-target="{{ $stats['terminees'] }}">{{ $stats['terminees'] }}</div>
         <div class="kpi-sub">sur la période</div>
     </div>
 
     <div class="kpi-card kpi-card--completion">
-        <div class="kpi-icon"><i class="bi bi-pie-chart-fill"></i></div>
-        <div class="kpi-label">Taux de complétion</div>
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="bi bi-bar-chart"></i></div>
+            <div class="kpi-label">Taux de complétion</div>
+        </div>
         <div class="kpi-value" data-target="{{ $stats['taux_completion'] }}">{{ $stats['taux_completion'] }}%</div>
         <div class="kpi-progress-track">
             <div class="kpi-progress-fill" style="width:{{ $stats['taux_completion'] }}%"></div>
@@ -327,21 +342,25 @@
     </div>
 
     <div class="kpi-card kpi-card--retard {{ $stats['en_retard'] == 0 ? 'is-zero' : '' }}">
-        <div class="kpi-icon"><i class="bi bi-exclamation-triangle{{ $stats['en_retard'] > 0 ? '-fill' : '' }}"></i></div>
-        <div class="kpi-label">En retard</div>
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="kpi-label">En retard</div>
+        </div>
         <div class="kpi-value" data-target="{{ $stats['en_retard'] }}">{{ $stats['en_retard'] }}</div>
-        <div class="kpi-sub" style="{{ $stats['en_retard'] > 0 ? 'color:#991B1B;font-weight:600' : '' }}">
+        <div class="kpi-sub" @if($stats['en_retard'] > 0) style="color:#B91C1C;font-weight:600" @endif>
             {{ $stats['en_retard'] > 0 ? 'Action requise' : 'Aucun retard' }}
         </div>
     </div>
 
     <div class="kpi-card kpi-card--archives">
-        <div class="kpi-icon"><i class="bi bi-archive"></i></div>
-        <div class="kpi-label">Archivées ce mois</div>
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="bi bi-archive"></i></div>
+            <div class="kpi-label">Archivées ce mois</div>
+        </div>
         <div class="kpi-value" data-target="{{ $stats['archivees_mois'] }}">{{ $stats['archivees_mois'] }}</div>
         <div class="kpi-sub">
-            <a href="{{ route('taches.archives') }}" style="color:var(--kt-navy);text-decoration:none;font-weight:600">
-                Voir les archives →
+            <a href="{{ route('taches.archives') }}" style="color:#1E3A8A;text-decoration:none;font-weight:600;font-size:.74rem">
+                Voir l'historique →
             </a>
         </div>
     </div>
