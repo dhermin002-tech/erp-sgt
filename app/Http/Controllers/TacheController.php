@@ -21,7 +21,8 @@ class TacheController extends Controller
         // désormais une action manuelle distincte (voir archiver()).
         $query = Tache::with(['responsables', 'site', 'createur'])
                       ->visiblePar($user)
-                      ->whereNull('archived_at');
+                      ->whereNull('archived_at')
+                      ->whereNotIn('statut', Tache::STATUTS_TERMINAUX);
 
         // Filtres
         if ($request->filled('statut')) {
@@ -160,16 +161,51 @@ class TacheController extends Controller
                          ->with('success', 'Tâche supprimée.');
     }
 
-    public function archives()
+    public function archives(Request $request)
     {
-        $user   = Auth::user();
-        $taches = Tache::with(['responsables', 'site'])
-                       ->visiblePar($user)
-                       ->whereNotNull('archived_at')
-                       ->orderByDesc('archived_at')
-                       ->paginate(20);
+        $user  = Auth::user();
+        $query = Tache::with(['responsables', 'site', 'createur', 'actionsSuivi.user'])
+                      ->visiblePar($user)
+                      ->historique();
 
-        return view('taches.archives', compact('taches'));
+        if ($request->filled('projet')) {
+            $query->where('projet', $request->projet);
+        }
+        if ($request->filled('periode')) {
+            [$debut, $fin] = $this->plageDate($request->periode);
+            $query->whereBetween('updated_at', [$debut, $fin]);
+        }
+        if ($request->filled('responsable_id')) {
+            $query->whereHas('responsables', fn($q) => $q->where('users.id', $request->responsable_id));
+        }
+        if ($request->filled('q')) {
+            $query->where(fn($q) => $q->where('titre', 'like', "%{$request->q}%")
+                                      ->orWhere('description', 'like', "%{$request->q}%"));
+        }
+
+        $taches   = $query->orderByDesc('updated_at')->get();
+        $vue      = in_array($request->get('vue'), ['projet', 'periode', 'actions']) ? $request->get('vue') : 'projet';
+        $projets  = Tache::historique()->visiblePar($user)->whereNotNull('projet')->distinct()->orderBy('projet')->pluck('projet');
+        $membres  = User::where('type_compte', 'humain')->orderBy('nom')->get();
+
+        // Stats header
+        $total        = $taches->count();
+        $ceMois       = $taches->filter(fn($t) => $t->updated_at && $t->updated_at->isCurrentMonth())->count();
+        $topProjet    = $taches->whereNotNull('projet')->groupBy('projet')->sortByDesc(fn($g) => $g->count())->keys()->first();
+        $topProjetNb  = $topProjet ? $taches->where('projet', $topProjet)->count() : 0;
+
+        return view('taches.archives', compact('taches', 'vue', 'projets', 'membres', 'total', 'ceMois', 'topProjet', 'topProjetNb'));
+    }
+
+    private function plageDate(string $periode): array
+    {
+        return match($periode) {
+            'semaine'   => [now()->startOfWeek(), now()->endOfWeek()],
+            'mois'      => [now()->startOfMonth(), now()->endOfMonth()],
+            'trimestre' => [now()->startOfQuarter(), now()->endOfQuarter()],
+            'annee'     => [now()->startOfYear(), now()->endOfYear()],
+            default     => [now()->subYear(), now()],
+        };
     }
 
     public function restaurer(Tache $tache)

@@ -29,11 +29,29 @@ class Tache extends Model
         ];
     }
 
+    // Statuts considérés comme "terminaux" — extensible sans toucher aux scopes
+    const STATUTS_TERMINAUX = ['termine'];
+
+    // Palette de 8 couleurs pour identifier les projets visuellement (crc32 % 8)
+    const PROJET_COULEURS = [
+        '#003366', '#CC5500', '#8B0000', '#1D4ED8',
+        '#16A34A', '#7E22CE', '#B45309', '#0E7490',
+    ];
+
     // ── Scopes ────────────────────────────────────────────────────────────────
 
     public function scopeActives($query)
     {
-        return $query->whereNull('archived_at')->where('statut', '!=', 'termine');
+        return $query->whereNull('archived_at')
+                     ->whereNotIn('statut', self::STATUTS_TERMINAUX);
+    }
+
+    public function scopeHistorique($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNotNull('archived_at')
+              ->orWhereIn('statut', self::STATUTS_TERMINAUX);
+        });
     }
 
     public function scopeEnRetard($query)
@@ -130,5 +148,11 @@ class Tache extends Model
             'termine'    => 'Terminé',
             default      => $statut,
         };
+    }
+
+    public static function couleurProjet(?string $projet): string
+    {
+        if (! $projet) return '#64748B';
+        return self::PROJET_COULEURS[abs(crc32($projet)) % count(self::PROJET_COULEURS)];
     }
 }

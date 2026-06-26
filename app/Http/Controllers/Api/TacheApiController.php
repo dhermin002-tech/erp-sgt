@@ -18,6 +18,7 @@ class TacheApiController extends Controller
         $query = Tache::query()
             ->visiblePar($user)
             ->whereNull('archived_at')
+            ->whereNotIn('statut', Tache::STATUTS_TERMINAUX)
             ->with(['site', 'createur', 'responsables', 'sousTaches']);
 
         if ($request->statut) {

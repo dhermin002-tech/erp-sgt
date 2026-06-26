@@ -23,7 +23,7 @@ class ValidationManagerTest extends TestCase
         $this->assertSame('termine', $tache->fresh()->statut);
     }
 
-    public function test_tache_validee_reste_visible_et_non_archivee(): void
+    public function test_tache_terminee_absente_de_index_et_presente_dans_historique(): void
     {
         $manager = User::factory()->manager()->create();
         $tache   = Tache::factory()->create(['statut' => 'en_cours', 'titre' => 'TACHE_TEMOIN_XYZ']);
@@ -33,13 +33,34 @@ class ValidationManagerTest extends TestCase
             ->patchJson("/taches/{$tache->id}/statut", ['statut' => 'termine'])
             ->assertOk();
 
-        // La tâche validée n'est PLUS archivée automatiquement…
-        $this->assertNull($tache->fresh()->archived_at, 'la validation ne doit plus archiver');
+        // Pas d'archivage automatique
+        $this->assertNull($tache->fresh()->archived_at, 'la validation ne doit pas archiver');
 
-        // …et reste visible dans la liste (section "Terminées").
+        // La tâche terminée N'apparaît PLUS dans /taches (vue actives)
         $this->actingAs($manager)->get('/taches')
-            ->assertSee('TACHE_TEMOIN_XYZ')
-            ->assertSee('Terminées');
+            ->assertDontSee('TACHE_TEMOIN_XYZ');
+
+        // Elle est bien présente dans /taches/archives (historique)
+        $this->actingAs($manager)->get('/taches/archives')
+            ->assertSee('TACHE_TEMOIN_XYZ');
+    }
+
+    public function test_tache_archivee_presente_dans_historique(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $tache   = Tache::factory()->create(['statut' => 'termine', 'titre' => 'TACHE_ARCHIVEE_ABC']);
+
+        // Archivage manuel
+        $this->actingAs($manager)->patch("/taches/{$tache->id}/archiver")->assertRedirect();
+        $this->assertNotNull($tache->fresh()->archived_at);
+
+        // Présente dans l'historique
+        $this->actingAs($manager)->get('/taches/archives')
+            ->assertSee('TACHE_ARCHIVEE_ABC');
+
+        // Absente de l'index actif
+        $this->actingAs($manager)->get('/taches')
+            ->assertDontSee('TACHE_ARCHIVEE_ABC');
     }
 
     public function test_manager_peut_archiver_manuellement_une_tache(): void

@@ -262,7 +262,7 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 <div class="page-header">
     <div>
         <h1 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--kt-navy)">Tâches actives</h1>
-        <p style="color:var(--slate-500);font-size:.85rem;margin-top:.15rem">{{ $taches ? $taches->total() : $tachesGroupees?->flatten()->count() ?? 0 }} tâche(s) trouvée(s)</p>
+        <p style="color:var(--slate-500);font-size:.85rem;margin-top:.15rem">{{ $taches ? $taches->total() : $tachesGroupees?->flatten()->count() ?? 0 }} tâche(s) en cours — <a href="{{ route('taches.archives') }}" style="color:var(--slate-400);font-size:.8rem">📁 Historique</a></p>
     </div>
     <a href="{{ route('taches.create') }}" class="btn btn-primary">+ Nouvelle tâche</a>
 </div>
@@ -346,13 +346,11 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 $isManager = auth()->user()->isManager();
 $myId      = auth()->id();
 
-// Séparer les tâches validées (terminé) : elles vont dans la section "Terminées".
-$pageCollection  = $taches->getCollection();
-$tachesTerminees = $pageCollection->filter(fn($t) => $t->statut === 'termine')->values();
-$pageActives     = $pageCollection->filter(fn($t) => $t->statut !== 'termine')->values();
+// Les tâches terminées ne sont plus affichées ici — elles sont dans Historique & Archives.
+$pageCollection = $taches ? $taches->getCollection() : collect();
 
 if ($isManager) {
-    $collection     = $pageActives;
+    $collection     = $pageCollection;
     $mesTaches      = $collection->filter(fn($t) => $t->responsables->contains('id', $myId))->values();
     $tachesEquipe   = $collection->filter(fn($t) => ! $t->responsables->contains('id', $myId))->values();
     $tachesAgentsIA = $collection->filter(fn($t) => optional($t->createur)->type_compte === 'agent_ia')->values();
@@ -511,33 +509,20 @@ if ($isManager) {
 @else
 {{-- ═══════════════ VUE COLLABORATEUR : liste simple ═══════════════ --}}
 <div class="task-list">
-@forelse($pageActives as $tache)
+@forelse($pageCollection as $tache)
     @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
 @empty
-    <div class="empty-state" style="padding:1.5rem"><span style="font-size:.875rem">Aucune tâche en cours sur cette page.</span></div>
+    <div class="empty-state" style="padding:1.5rem"><span style="font-size:.875rem">Aucune tâche active.</span></div>
 @endforelse
 </div>
 @endif
 
-{{-- ══ Section : Tâches terminées (validées) — dépliable ══ --}}
-@if($tachesTerminees->isNotEmpty())
-<div style="margin-top:1.75rem">
-    <div class="section-sep" style="cursor:pointer" onclick="toggleTerminees(this)" id="termineesHeader">
-        <div class="section-sep-line"></div>
-        <div class="section-sep-label">
-            <span>✅ Terminées</span>
-            <span class="section-sep-count">{{ $tachesTerminees->count() }}</span>
-            <span class="toggle-icon" id="termineesIcon" style="margin-left:.5rem;font-size:.75rem;color:#15885A">▶</span>
-        </div>
-        <div class="section-sep-line"></div>
-    </div>
-    <div class="task-list" id="termineesBody" style="display:none">
-        @foreach($tachesTerminees as $tache)
-            @include('taches._card', ['tache' => $tache, 'isMine' => $tache->responsables->contains('id', $myId), 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
-        @endforeach
-    </div>
+{{-- Lien vers l'historique --}}
+<div style="margin-top:1.5rem;text-align:center">
+    <a href="{{ route('taches.archives') }}" style="display:inline-flex;align-items:center;gap:.45rem;font-size:.82rem;color:var(--slate-500);text-decoration:none;font-weight:600;padding:.4rem .85rem;border:1.5px solid var(--slate-200);border-radius:8px;background:#fff;transition:all .15s" onmouseover="this.style.color='var(--kt-navy)';this.style.borderColor='var(--kt-navy)'" onmouseout="this.style.color='var(--slate-500)';this.style.borderColor='var(--slate-200)'">
+        📁 Historique &amp; Archives
+    </a>
 </div>
-@endif
 
 @endif
 
@@ -550,14 +535,6 @@ if ($isManager) {
 function toggleGroupeAgent(header) {
     const body = header.nextElementSibling;
     const icon = header.querySelector('.toggle-icon');
-    const isOpen = body.style.display !== 'none';
-    body.style.display = isOpen ? 'none' : 'flex';
-    icon.textContent = isOpen ? '▶' : '▼';
-}
-
-function toggleTerminees() {
-    const body = document.getElementById('termineesBody');
-    const icon = document.getElementById('termineesIcon');
     const isOpen = body.style.display !== 'none';
     body.style.display = isOpen ? 'none' : 'flex';
     icon.textContent = isOpen ? '▶' : '▼';
