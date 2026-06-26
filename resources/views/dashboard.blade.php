@@ -58,63 +58,55 @@
     box-shadow: 0 6px 20px rgba(204,85,0,.45);
 }
 
-/* ── KPI Grid ── */
+/* ── KPI Grid — compact ── */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: .75rem;
-    margin-bottom: 1.35rem;
+    gap: .5rem;
+    margin-bottom: 1rem;
 }
-@media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 900px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 540px)  { .kpi-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px)  { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .kpi-card {
-    background: #fff !important;           /* forcer blanc — override sgt-premium */
-    border-radius: 12px;
-    padding: 1.1rem 1.15rem .9rem;
+    background: #fff !important;
+    border-radius: 10px;
+    padding: .65rem .85rem .6rem;
     border: 1px solid #E2E8F0;
-    box-shadow: 0 1px 4px rgba(15,23,42,.06);
-    position: relative; overflow: hidden;
-    transition: transform .18s ease, box-shadow .18s ease;
-    display: flex; flex-direction: column;
+    border-top: 3px solid var(--kc, #94a3b8);
+    box-shadow: 0 1px 3px rgba(15,23,42,.05);
+    display: flex; flex-direction: column; gap: .15rem;
+    transition: box-shadow .15s ease;
 }
-.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(15,23,42,.09); }
+.kpi-card:hover { box-shadow: 0 4px 14px rgba(15,23,42,.09); }
 
-/* Trait coloré en haut */
-.kpi-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0;
-    height: 3px; background: var(--kc, #94a3b8);
-    border-radius: 12px 12px 0 0;
-}
-
-/* En-tête : icône inline + label sur la même ligne */
+/* En-tête : icône inline + label */
 .kpi-header {
-    display: flex; align-items: center; gap: .45rem;
-    margin-bottom: .55rem;
+    display: flex; align-items: center; gap: .35rem;
+    margin-bottom: .25rem;
 }
 .kpi-icon {
-    width: 22px; height: 22px; border-radius: 6px;
+    width: 18px; height: 18px; border-radius: 4px;
     background: var(--kc-soft, #f1f5f9);
     color: var(--kc, #64748b);
     display: flex; align-items: center; justify-content: center;
-    font-size: .72rem; flex-shrink: 0;
+    font-size: .62rem; flex-shrink: 0;
 }
 .kpi-label {
-    font-size: .67rem; font-weight: 700;
+    font-size: .63rem; font-weight: 700;
     color: #64748B;
-    text-transform: uppercase; letter-spacing: .07em;
+    text-transform: uppercase; letter-spacing: .06em;
     line-height: 1;
 }
 .kpi-value {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 2.25rem; font-weight: 800;
+    font-size: 1.75rem; font-weight: 800;
     line-height: 1; color: #0F172A;
     letter-spacing: -.03em;
-    margin-bottom: .3rem;
 }
 .kpi-sub {
-    font-size: .74rem; color: #94A3B8; line-height: 1.3;
+    font-size: .68rem; color: #94A3B8; line-height: 1.2;
+    margin-top: .1rem;
 }
 
 /* Variants — couleurs uniquement sur l'icône et le trait, jamais sur le fond */

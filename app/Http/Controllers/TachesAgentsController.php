@@ -17,13 +17,17 @@ class TachesAgentsController extends Controller
         $query = Tache::query()
             ->whereNull('archived_at')
             ->whereHas('responsables', fn($q) => $q->where('type_compte', 'agent_ia'))
-            ->with(['createur', 'responsables', 'site']);
+            ->with(['createur', 'responsables', 'site', 'sousTaches']);
 
         if ($request->filled('agent_id')) {
             $query->whereHas('responsables', fn($q) => $q->where('users.id', $request->agent_id));
         }
+
         if ($request->filled('statut')) {
             $query->where('statut', $request->statut);
+        } else {
+            // Par défaut : exclure les terminées (elles vont dans /taches/archives)
+            $query->whereNotIn('statut', Tache::STATUTS_TERMINAUX);
         }
 
         $taches = $query->get();

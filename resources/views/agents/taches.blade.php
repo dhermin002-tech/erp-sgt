@@ -62,28 +62,38 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 .agent-block-code { display:inline-flex; align-items:center; gap:.3rem; background:#1E1B4B; color:#C4B5FD; font-size:.68rem; font-weight:700; padding:.18rem .55rem; border-radius:999px; border:1px solid #4C1D95; }
 .agent-block-count { margin-left:auto; font-size:.74rem; font-weight:700; background:#ede9fe; color:#6d28d9; padding:.25rem .65rem; border-radius:999px; }
 
-.empty-state { text-align:center; padding:3rem; color:#94a3b8; background:#fff; border-radius:14px; border:1px solid #e2e8f0; }
-.task-list { display:flex; flex-direction:column; gap:.6rem; }
-.task-row-link { text-decoration:none; color:inherit; display:block; }
-.task-row-link:hover .kt-task-row { box-shadow:0 6px 20px rgba(15,23,42,.12); transform:translateY(-2px); }
-.kt-task-row { transition:box-shadow .18s ease, transform .18s ease; box-shadow:0 1px 4px rgba(15,23,42,.06); border-left:3px solid var(--collab-color,#6D28D9) !important; }
-.task-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
-.task-titre { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:.95rem; color:var(--kt-navy); line-height:1.3; }
-.task-sub { font-size:.74rem; color:var(--slate-400); margin-top:.15rem; }
-.task-badges { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
-.badge-retard { background:var(--st-stop); color:#fff; font-size:.65rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; white-space:nowrap; }
-.badge-mine { display:inline-flex; align-items:center; gap:.25rem; background:#1E40AF; color:#fff; font-size:.65rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; }
-.task-meta { display:flex; align-items:center; gap:1.1rem; flex-wrap:wrap; margin-top:.65rem; font-size:.8rem; color:var(--slate-500); }
-.task-meta .meta-item { display:flex; align-items:center; gap:.35rem; }
-.task-meta .echeance.late { color:var(--st-stop); font-weight:700; }
-.avatar-stack { display:flex; }
-.avatar-stack .kt-avatar { margin-left:-8px; }
-.avatar-stack .kt-avatar:first-child { margin-left:0; }
-.task-actions { display:flex; gap:.3rem; align-items:center; }
-.btn { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; border-radius:7px; font-size:.875rem; font-weight:600; border:none; cursor:pointer; text-decoration:none; }
-.btn-ghost { background:none; color:var(--slate-600); border:1px solid var(--slate-200); }
-.btn-danger { background:#FEE2E2; color:#991B1B; border:1px solid #FCA5A5; }
-.btn-sm { padding:.3rem .65rem; font-size:.8rem; }
+.empty-state { text-align:center; padding:2.5rem; color:#94a3b8; background:#fff; border-radius:12px; border:1px solid #e2e8f0; }
+
+/* Lignes compactes — remplace le _card lourd */
+.task-list { display:flex; flex-direction:column; gap:0; }
+.task-compact {
+    display:flex; align-items:center; gap:.75rem;
+    padding:.55rem .85rem;
+    background:#fff;
+    border-bottom:1px solid #F1F5F9;
+    text-decoration:none; color:inherit;
+    transition:background .12s;
+}
+.task-compact:first-child { border-radius:10px 10px 0 0; }
+.task-compact:last-child  { border-bottom:none; border-radius:0 0 10px 10px; }
+.task-compact:hover { background:#F8FAFC; }
+
+.tc-rail { width:3px; height:32px; border-radius:999px; flex-shrink:0; background:var(--collab-color,#6D28D9); }
+.tc-body { flex:1; min-width:0; }
+.tc-titre { font-size:.85rem; font-weight:600; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tc-meta  { font-size:.71rem; color:#94A3B8; margin-top:.1rem; }
+.tc-badges { display:flex; align-items:center; gap:.35rem; flex-shrink:0; }
+
+/* Badges statut compacts */
+.bst { font-size:.65rem; font-weight:700; padding:.12rem .45rem; border-radius:999px; white-space:nowrap; }
+.bst-nouveau  { background:#EFF6FF; color:#1E40AF; }
+.bst-cours    { background:#FEF9C3; color:#92400E; }
+.bst-attente  { background:#FEF3C7; color:#B45309; }
+.bst-arret    { background:#FEE2E2; color:#B91C1C; }
+.bst-urgente  { background:#FEE2E2; color:#B91C1C; }
+.bst-haute    { background:#FEF3C7; color:#92400E; }
+.bst-normale  { background:#EFF6FF; color:#1E40AF; }
+.bst-basse    { background:#F1F5F9; color:#475569; }
 </style>
 @endpush
 
@@ -91,7 +101,7 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
 <div class="agents-hero">
     <div>
         <div class="agents-hero-title">🤖 Tâches des agents IA</div>
-        <div class="agents-hero-sub">Travail attribué à chaque agent (exécutant) — {{ $kpis['total'] }} tâche(s) active(s)</div>
+        <div class="agents-hero-sub">Tâches actives par agent — {{ $kpis['total'] }} en cours · terminées dans <a href="{{ route('taches.archives') }}" style="color:rgba(255,255,255,.7);text-underline-offset:3px">l'historique</a></div>
     </div>
     <a href="{{ route('taches.index', ['createur' => 'agent_ia']) }}" class="btn-filter" style="text-decoration:none">Voir dans les tâches →</a>
 </div>
@@ -157,8 +167,46 @@ $avatarBg = ['var(--kt-navy)', 'var(--kt-orange)', 'var(--kt-purple)', 'var(--kt
         <span class="agent-block-count">{{ $groupe->count() }} tâche{{ $groupe->count() > 1 ? 's' : '' }} à exécuter</span>
     </div>
     <div class="task-list" style="--collab-color:{{ $couleur }}">
-        @foreach($groupe as $tache)
-            @include('taches._card', ['tache' => $tache, 'isMine' => false, 'railVar' => $railVar, 'avatarBg' => $avatarBg, 'initiales' => $initiales])
+        @foreach($groupe->sortBy('statut') as $tache)
+        @php
+            $stClass = match($tache->statut) {
+                'en_cours'  => 'bst-cours',
+                'en_attente'=> 'bst-attente',
+                'en_arret'  => 'bst-arret',
+                default     => 'bst-nouveau',
+            };
+            $prioClass = match($tache->priorite) {
+                'urgente' => 'bst-urgente',
+                'haute'   => 'bst-haute',
+                'basse'   => 'bst-basse',
+                default   => 'bst-normale',
+            };
+            $stLib = match($tache->statut) {
+                'nouveau'   => 'Nouveau',
+                'en_cours'  => 'En cours',
+                'en_attente'=> 'En attente',
+                'en_arret'  => 'En arrêt',
+                default     => ucfirst($tache->statut),
+            };
+            $stDone = $tache->sousTaches->where('termine', true)->count();
+            $stTotal = $tache->sousTaches->count();
+        @endphp
+        <a href="{{ route('taches.show', $tache) }}" class="task-compact">
+            <div class="tc-rail"></div>
+            <div class="tc-body">
+                <div class="tc-titre">{{ $tache->titre }}</div>
+                <div class="tc-meta">
+                    {{ $tache->site?->nom ?? '—' }}
+                    @if($tache->projet) · {{ $tache->projet }} @endif
+                    @if($stTotal > 0) · {{ $stDone }}/{{ $stTotal }} sous-tâches @endif
+                    @if($tache->date_echeance) · {{ $tache->date_echeance->format('d/m/Y') }} @endif
+                </div>
+            </div>
+            <div class="tc-badges">
+                <span class="bst {{ $stClass }}">{{ $stLib }}</span>
+                <span class="bst {{ $prioClass }}">{{ ucfirst($tache->priorite) }}</span>
+            </div>
+        </a>
         @endforeach
     </div>
 </div>
