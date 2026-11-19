@@ -25,6 +25,7 @@ class Tache extends Model
             'date_debut'    => 'date',
             'date_echeance' => 'date',
             'archived_at'   => 'datetime',
+            'terminee_at'   => 'datetime',
             'progression'   => 'integer',
         ];
     }

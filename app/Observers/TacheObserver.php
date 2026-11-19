@@ -7,6 +7,13 @@ use App\Models\Tache;
 
 class TacheObserver
 {
+    public function saving(Tache $tache): void
+    {
+        if ($tache->isDirty('statut')) {
+            $tache->terminee_at = $tache->statut === 'termine' ? now() : null;
+        }
+    }
+
     /**
      * Quand une tâche passe à "terminé", publie automatiquement un rapport
      * au nom de chaque agent IA responsable (rend le menu Rapports IA vivant).

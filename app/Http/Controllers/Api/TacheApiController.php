@@ -17,9 +17,9 @@ class TacheApiController extends Controller
         $user  = $request->user();
         $query = Tache::query()
             ->visiblePar($user)
-            ->whereNull('archived_at')
-            ->whereNotIn('statut', Tache::STATUTS_TERMINAUX)
-            ->with(['site', 'createur', 'responsables', 'sousTaches']);
+            ->actives()
+            ->with(['site:id,nom', 'createur:id,prenom,nom', 'responsables:id,prenom,nom,role'])
+            ->withCount(['sousTaches', 'sousTaches as sous_taches_terminees_count' => fn ($query) => $query->where('termine', true)]);
 
         if ($request->statut) {
             $query->where('statut', $request->statut);
@@ -35,17 +35,18 @@ class TacheApiController extends Controller
         }
 
         $taches = $query->orderByDesc('created_at')->get();
+        $parStatut = $taches->countBy('statut');
 
         return response()->json([
             'data' => TacheApiResource::collection($taches),
             'meta' => [
                 'total'      => $taches->count(),
                 'par_statut' => [
-                    'nouveau'    => $taches->where('statut', 'nouveau')->count(),
-                    'en_cours'   => $taches->where('statut', 'en_cours')->count(),
-                    'en_attente' => $taches->where('statut', 'en_attente')->count(),
-                    'en_arret'   => $taches->where('statut', 'en_arret')->count(),
-                    'termine'    => $taches->where('statut', 'termine')->count(),
+                    'nouveau'    => $parStatut->get('nouveau', 0),
+                    'en_cours'   => $parStatut->get('en_cours', 0),
+                    'en_attente' => $parStatut->get('en_attente', 0),
+                    'en_arret'   => $parStatut->get('en_arret', 0),
+                    'termine'    => $parStatut->get('termine', 0),
                 ],
             ],
         ]);
@@ -74,6 +75,8 @@ class TacheApiController extends Controller
             'statut'         => 'in:nouveau,en_cours,en_attente,en_arret,termine',
             'priorite'       => 'in:basse,normale,haute,urgente',
         ]);
+
+        abort_if(($data['statut'] ?? null) === 'termine' && ! $request->user()->isManager(), 403, 'Seul le manager peut clôturer une tâche.');
 
         $tache = Tache::create([
             'titre'         => $data['titre'],
@@ -160,7 +163,8 @@ class TacheApiController extends Controller
 
         // Sync responsables : clé présente = remplacement, absente = ne pas toucher
         if (array_key_exists('responsables', $data)) {
-            $tache->responsables()->sync($data['responsables'] ?? []);
+            $affectations = $tache->responsables()->sync($data['responsables'] ?? []);
+            app(\App\Services\NotificationPush::class)->assignation($tache, $affectations['attached']);
         }
 
         $tache->load(['site', 'createur', 'responsables', 'sousTaches']);
@@ -180,6 +184,7 @@ class TacheApiController extends Controller
             'statut' => ['required', Rule::in(['nouveau','en_cours','en_attente','en_arret','termine'])],
         ]);
 
+        abort_if($data['statut'] === 'termine' && ! $request->user()->isManager(), 403, 'Seul le manager peut clôturer une tâche.');
         $tache->update(['statut' => $data['statut']]);
 
         // Plus d'archivage automatique sur "terminé" (cohérence avec le web).
@@ -210,9 +215,6 @@ class TacheApiController extends Controller
     public function majProgression(Request $request, Tache $tache): JsonResponse
     {
         $this->authorizeAccess($request->user(), $tache);
-
-        $request->user()->tokenCan('taches:update')
-            || abort(403, 'Token sans permission taches:update.');
 
         $data = $request->validate([
             'progression' => 'required|integer|min:0|max:100',

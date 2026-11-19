@@ -84,6 +84,15 @@ class AgentAccountsSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ 7 comptes agents IA créés.');
+        User::firstOrCreate(['username' => 'agent.codex'], [
+            'nom' => 'Codex',
+            'prenom' => '',
+            'role' => 'agent',
+            'agent_code' => 'codex',
+            'type_compte' => 'agent_ia',
+            'password' => Hash::make(bin2hex(random_bytes(32))),
+        ]);
+
+        $this->command?->info('Comptes agents IA vérifiés.');
     }
 }

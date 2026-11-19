@@ -124,7 +124,8 @@ class TacheController extends Controller
 
         // Détecter les nouveaux responsables pour notifier
         $ancienIds = $tache->responsables->pluck('id')->toArray();
-        $tache->responsables()->sync($request->responsables);
+        $affectations = $tache->responsables()->sync($request->responsables);
+        app(\App\Services\NotificationPush::class)->assignation($tache, $affectations['attached']);
         $tache->load('responsables');
         $nouveauxIds = array_diff($request->responsables, $ancienIds);
 

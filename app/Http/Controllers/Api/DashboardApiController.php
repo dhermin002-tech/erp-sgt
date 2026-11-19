@@ -11,23 +11,28 @@ class DashboardApiController extends Controller
 {
     public function kpis(Request $request): JsonResponse
     {
-        $user  = $request->user();
-        $query = Tache::query()->visiblePar($user)->whereNull('archived_at');
+        $maintenant = now();
+        $debut = $maintenant->copy()->startOfMonth();
+        $fin = $debut->copy()->addMonth();
 
-        $total    = (clone $query)->count();
-        $termines = (clone $query)->where('statut', 'termine')->count();
+        $kpis = Tache::query()->visiblePar($request->user())->toBase()->selectRaw(
+            'SUM(CASE WHEN archived_at IS NULL THEN 1 ELSE 0 END) AS total,
+             SUM(CASE WHEN archived_at IS NULL AND statut = ? THEN 1 ELSE 0 END) AS terminees,
+             SUM(CASE WHEN archived_at IS NULL AND statut = ? THEN 1 ELSE 0 END) AS en_cours,
+             SUM(CASE WHEN archived_at IS NULL AND statut <> ? AND date_echeance < ? THEN 1 ELSE 0 END) AS en_retard,
+             SUM(CASE WHEN archived_at >= ? AND archived_at < ? THEN 1 ELSE 0 END) AS archivees',
+            ['termine', 'en_cours', 'termine', $maintenant->toDateString(), $debut, $fin],
+        )->first();
 
-        return response()->json([
-            'data' => [
-                'taches_actives'   => (clone $query)->actives()->count(),
-                'en_cours'         => (clone $query)->where('statut', 'en_cours')->count(),
-                'en_retard'        => (clone $query)->enRetard()->count(),
-                'taux_completion'  => $total > 0 ? (int) round(($termines / $total) * 100) : 0,
-                'archivees_ce_mois'=> Tache::query()->visiblePar($user)
-                    ->whereNotNull('archived_at')
-                    ->whereMonth('archived_at', now()->month)
-                    ->count(),
-            ],
-        ]);
+        $total = (int) $kpis->total;
+        $terminees = (int) $kpis->terminees;
+
+        return response()->json(['data' => [
+            'taches_actives' => $total - $terminees,
+            'en_cours' => (int) $kpis->en_cours,
+            'en_retard' => (int) $kpis->en_retard,
+            'taux_completion' => $total ? (int) round(100 * $terminees / $total) : 0,
+            'archivees_ce_mois' => (int) $kpis->archivees,
+        ]]);
     }
 }

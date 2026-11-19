@@ -18,6 +18,7 @@ class SgtAgentToken extends Command
 
     /** Scopes accordés par agent_code */
     private array $scopesParAgent = [
+        'codex' => ['taches:create', 'taches:update', 'taches:read', 'rapports:create', 'sessions:manage', 'mcp:read', 'mcp:write'],
         'dev-agent'      => ['taches:create', 'taches:update', 'taches:read', 'rapports:create', 'sessions:manage'],
         'qa-agent'       => ['taches:update', 'taches:read', 'rapports:create', 'sessions:manage'],
         'project-agent'  => ['taches:create', 'taches:update', 'taches:read', 'rapports:create', 'sessions:manage'],

@@ -26,6 +26,9 @@ class TacheNotifier
             }
         }
 
+        app(NotificationPush::class)->assignation($tache, $tache->responsables
+            ->where('type_compte', 'humain')->where('id', '!=', $createur->id)->modelKeys());
+
         // 2. Notifier les managers (supervision) — pour qu'ils voient toute création,
         //    en particulier celles des agents IA. On évite le créateur lui-même et
         //    les managers déjà notifiés comme responsables (pas de doublon).

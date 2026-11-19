@@ -37,8 +37,8 @@ class TacheApiResource extends JsonResource
                     'role'       => $r->role,
                 ])
             ),
-            'sous_taches_total'    => $this->whenLoaded('sousTaches', fn() => $this->sousTaches->count()),
-            'sous_taches_terminees'=> $this->whenLoaded('sousTaches', fn() => $this->sousTaches->where('termine', true)->count()),
+            'sous_taches_total'    => $this->whenCounted('sousTaches', default: $this->whenLoaded('sousTaches', fn () => $this->sousTaches->count())),
+            'sous_taches_terminees'=> $this->whenCounted('sousTachesTerminees', default: $this->whenLoaded('sousTaches', fn () => $this->sousTaches->where('termine', true)->count())),
         ];
     }
 }

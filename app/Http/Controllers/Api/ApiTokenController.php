@@ -8,25 +8,31 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class ApiTokenController extends Controller
 {
     public function issue(Request $request): JsonResponse
     {
         $request->validate([
-            'username' => 'required|string',
+            'username' => 'required|string|max:255',
+            'client' => 'sometimes|in:mcp,mobile',
             'password' => 'required|string',
         ]);
 
         $user = User::where('username', $request->username)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (! $user || $user->isAgentIa() || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'username' => ['Identifiants incorrects.'],
             ]);
         }
 
-        $token = $user->createToken('mcp-sgt')->plainTextToken;
+        $mobile = $request->input('client') === 'mobile';
+        $token = $user->createToken(
+            $mobile ? 'mobile-sgt' : 'mcp-sgt',
+            $mobile ? ['mobile'] : ['mcp:read', 'mcp:write'],
+        )->plainTextToken;
 
         return response()->json([
             'token' => $token,
@@ -40,7 +46,9 @@ class ApiTokenController extends Controller
 
     public function revoke(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $jeton = $request->user()->currentAccessToken();
+        abort_unless($jeton instanceof PersonalAccessToken, 403, 'Un jeton personnel est requis.');
+        $jeton->delete();
 
         return response()->json(['message' => 'Token révoqué.'], 200);
     }

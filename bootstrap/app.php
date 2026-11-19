@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'role'              => \App\Http\Middleware\RoleMiddleware::class,
             'not-agent-account' => \App\Http\Middleware\EnsureNotAgentAccount::class,
         ]);
