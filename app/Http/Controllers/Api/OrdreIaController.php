@@ -20,6 +20,7 @@ class OrdreIaController extends Controller
             'statut' => ['sometimes', Rule::in(OrdreIa::STATUTS)],
             'cible' => ['sometimes', Rule::in(OrdreIa::CIBLES)],
             'projet' => ['sometimes', 'string', 'max:100'],
+            'tri' => ['sometimes', Rule::in(['recent'])],
         ]);
 
         $ordres = OrdreIa::query()->whereHas('tache', fn ($query) => $query->visiblePar($user));
@@ -29,7 +30,8 @@ class OrdreIaController extends Controller
         }
 
         return response()->json($ordres->filtrer($filtres)
-            ->with(['tache:id,titre', 'emetteur:id,prenom,nom'])->orderBy('id')->paginate(25));
+            ->with(['tache:id,titre', 'emetteur:id,prenom,nom'])
+            ->orderBy('id', ($filtres['tri'] ?? null) === 'recent' ? 'desc' : 'asc')->paginate(25));
     }
 
     public function store(Request $request, OrdresIa $ordres): JsonResponse
