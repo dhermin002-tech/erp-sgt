@@ -17,13 +17,19 @@ class TacheApiController extends Controller
         $pagination = $request->validate([
             'page' => ['sometimes', 'integer', 'min:1', 'max:1000000'],
             'par_page' => ['sometimes', 'integer', 'between:1,100'],
+            'projet' => ['sometimes', 'nullable', 'string', 'max:40'],
         ]);
         $page = (int) ($pagination['page'] ?? 1);
         $parPage = (int) ($pagination['par_page'] ?? 50);
         $user  = $request->user();
         $query = Tache::query()
             ->visiblePar($user)
-            ->actives();
+            ->when($request->input('statut') === 'termine', fn ($q) => $q->whereNull('archived_at'),
+                fn ($q) => $q->actives());
+
+        if (isset($pagination['projet'])) {
+            $query->where('projet', $pagination['projet']);
+        }
 
         if ($request->statut) {
             $query->where('statut', $request->statut);
@@ -206,6 +212,20 @@ class TacheApiController extends Controller
             'statut' => $tache->statut,
             'libelle'=> Tache::libelleStatut($tache->statut),
         ]);
+    }
+
+    public function historique(Request $request, Tache $tache): JsonResponse
+    {
+        $this->authorizeAccess($request->user(), $tache);
+
+        return response()->json($tache->historiqueStatuts()->with('acteur:id,prenom,nom')->latest('id')
+            ->paginate(20)->through(fn ($changement) => [
+                'id' => $changement->id,
+                'ancien' => $changement->ancien,
+                'nouveau' => $changement->nouveau,
+                'acteur' => $changement->acteur?->nom_complet,
+                'created_at' => $changement->created_at->toISOString(),
+            ]));
     }
 
     public function sousTaches(Request $request, Tache $tache): JsonResponse

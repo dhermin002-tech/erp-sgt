@@ -13,6 +13,7 @@ class TacheApiResource extends JsonResource
             'id'            => $this->id,
             'titre'         => $this->titre,
             'description'   => $this->description,
+            'projet'        => $this->projet,
             'statut'        => $this->statut,
             'statut_libelle'=> \App\Models\Tache::libelleStatut($this->statut),
             'priorite'      => $this->priorite,

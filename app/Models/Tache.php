@@ -95,6 +95,11 @@ class Tache extends Model
         return $this->hasMany(SousTache::class)->orderBy('ordre');
     }
 
+    public function historiqueStatuts()
+    {
+        return $this->hasMany(TacheStatut::class);
+    }
+
     public function commentaires()
     {
         return $this->hasMany(Commentaire::class)->orderBy('created_at');

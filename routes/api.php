@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TacheApiController;
 use App\Http\Controllers\Api\SousTacheApiController;
 use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Api\RapportAgentApiController;
+use App\Http\Controllers\RapportController;
 use App\Http\Controllers\Api\SessionAgentApiController;
 use App\Models\Site;
 use App\Models\User;
@@ -45,6 +46,13 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
         ->middleware('ability:mcp:write,mobile,taches:update');
     Route::delete('/commentaires/{commentaire}', [CommentaireApiController::class, 'destroy'])
         ->middleware('ability:mcp:write,mobile,taches:update');
+
+    Route::get('/taches/{tache}/historique', [TacheApiController::class, 'historique'])
+        ->middleware('ability:mobile,mcp:read,mcp:write,taches:read');
+    Route::get('/taches/{tache}/rapports', [RapportController::class, 'listeApi'])
+        ->middleware('ability:mobile,mcp:read,mcp:write,taches:read');
+    Route::post('/taches/{tache}/rapports', [RapportController::class, 'store'])
+        ->middleware('ability:mobile,mcp:write,taches:update');
 
     // Sous-tâches
     Route::get   ('/taches/{tache}/sous-taches',          [TacheApiController::class, 'sousTaches'])->middleware('ability:mcp:read,mcp:write,mobile,taches:read');

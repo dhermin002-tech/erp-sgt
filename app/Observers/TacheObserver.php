@@ -20,7 +20,17 @@ class TacheObserver
      */
     public function updated(Tache $tache): void
     {
-        if (! $tache->wasChanged('statut') || $tache->statut !== 'termine') {
+        if (! $tache->wasChanged('statut')) {
+            return;
+        }
+
+        $tache->historiqueStatuts()->create([
+            'acteur_id' => auth()->id(),
+            'ancien' => $tache->getOriginal('statut'),
+            'nouveau' => $tache->statut,
+        ]);
+
+        if ($tache->statut !== 'termine') {
             return;
         }
 

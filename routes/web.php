@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActionSuiviController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\SessionMobileController;
 use App\Http\Controllers\MembresController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\CommentaireController;
@@ -25,6 +26,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
 Route::post('/login', [LoginController::class, 'login'])->middleware(['guest', 'throttle:5,1']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+Route::post('/mobile/session', [SessionMobileController::class, 'store'])->middleware('throttle:emission-jeton');
+Route::delete('/mobile/session', [SessionMobileController::class, 'destroy'])->middleware('auth:web');
 
 Route::get('/.well-known/oauth-authorization-server', [OAuthSgtController::class, 'metadata']);
 Route::get('/.well-known/oauth-protected-resource', [OAuthSgtController::class, 'resource']);
