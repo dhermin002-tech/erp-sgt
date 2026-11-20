@@ -68,4 +68,44 @@ class MobileSgtApiTest extends TestCase
         $this->postJson($base.'/rapports', ['contenu' => 'Contrôle du dossier'])->assertCreated();
         $this->getJson($base.'/rapports')->assertOk()->assertJsonPath('data.0.contenu', 'Contrôle du dossier');
     }
+
+    public function test_synchronisation_mobile_preserve_le_serveur_en_cas_de_conflit(): void
+    {
+        $tache = Tache::factory()->create(['progression' => 10]);
+        $user = User::factory()->create(['role' => 'technicien']);
+        Sanctum::actingAs($user, ['mobile']);
+        $url = '/api/v1/taches/'.$tache->id.'/synchroniser';
+        $action = ['type' => 'progression', 'avant' => 10, 'progression' => 40];
+        $this->postJson($url, $action)->assertForbidden();
+        $tache->responsables()->attach($user);
+        $this->postJson($url, $action)->assertNoContent();
+        $this->postJson($url, $action)->assertNoContent();
+        $tache->update(['progression' => 70]);
+        $this->postJson($url, $action)->assertConflict();
+        $this->assertSame(70, $tache->fresh()->progression);
+    }
+
+    public function test_profil_et_catalogue_mobile_respectent_le_role(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'technicien']), ['mobile']);
+        $this->getJson('/api/v1/ordres-ia/projets')->assertForbidden();
+        $this->getJson('/api/v1/profil/connexions')->assertOk()
+            ->assertExactJson(['data' => ['appareils' => [], 'applications' => []]]);
+        Sanctum::actingAs(User::factory()->create(['role' => 'manager']), ['mobile']);
+        $this->getJson('/api/v1/ordres-ia/projets')->assertOk()->assertJsonPath('data.sgt_mobile', 'SGT Mobile');
+    }
+
+    public function test_rejeu_mobile_d_une_contribution_ne_cree_pas_de_doublon(): void
+    {
+        $tache = Tache::factory()->create();
+        Sanctum::actingAs(User::factory()->create(['role' => 'manager']), ['mobile']);
+        $url = '/api/v1/taches/'.$tache->id.'/synchroniser';
+        foreach (['commentaire', 'rapport'] as $type) {
+            $action = ['type' => $type, 'operation' => $type.'recette1', 'contenu' => 'Pièces à vérifier.'];
+            $this->postJson($url, $action)->assertNoContent();
+            $this->postJson($url, $action)->assertNoContent();
+        }
+        $this->assertSame(1, $tache->commentaires()->count());
+        $this->assertSame(1, $tache->rapports()->count());
+    }
 }

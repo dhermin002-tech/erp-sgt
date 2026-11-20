@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\ApiTokenController;
 use App\Http\Controllers\Api\CommentaireApiController;
 use App\Http\Controllers\Api\OrdreIaController;
 use App\Http\Controllers\Api\AppareilPushController;
+use App\Http\Controllers\Api\ProfilMobileController;
+use App\Http\Controllers\Api\SynchronisationMobileController;
 use App\Http\Controllers\Api\TacheApiController;
 use App\Http\Controllers\Api\SousTacheApiController;
 use App\Http\Controllers\Api\DashboardApiController;
@@ -63,6 +65,12 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
     Route::get('/analyse/synthese', [AnalyseApiController::class, 'index'])
         ->middleware('ability:mcp:read,mcp:write,mobile,taches:read');
 
+    Route::get('/ordres-ia/projets', function (Request $request) {
+        abort_unless($request->user()->isManager(), 403);
+
+        return response()->json(['data' => config('ordres_ia.projets')]);
+    })->middleware('ability:mobile,mcp:read,mcp:write');
+
     Route::get('/ordres-ia', [OrdreIaController::class, 'index'])
         ->middleware('ability:mcp:read,mcp:write,mobile,taches:read');
     Route::middleware('ability:mcp:write,mobile')->group(function () {
@@ -73,6 +81,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
     });
 
     Route::middleware('ability:mobile')->group(function () {
+        Route::post('/taches/{tache}/synchroniser', SynchronisationMobileController::class);
+        Route::get('/profil/connexions', [ProfilMobileController::class, 'index']);
+        Route::delete('/profil/applications/{autorisation}', [ProfilMobileController::class, 'revoquer'])->whereNumber('autorisation');
         Route::post('/push/appareils', [AppareilPushController::class, 'store']);
         Route::delete('/push/appareils', [AppareilPushController::class, 'retirer']);
         Route::delete('/push/appareils/{appareil}', [AppareilPushController::class, 'destroy']);
