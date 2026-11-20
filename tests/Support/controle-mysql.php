@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Resources\TacheApiResource;
 use App\Models\OrdreIa;
 use App\Models\Site;
 use App\Models\Tache;
@@ -9,7 +10,6 @@ use App\Models\User;
 use Illuminate\Contracts\Console\Kernel as Console;
 use Illuminate\Contracts\Http\Kernel as Http;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use Symfony\Component\Process\Process;
@@ -17,6 +17,10 @@ use Symfony\Component\Process\Process;
 require dirname(__DIR__, 2).'/vendor/autoload.php';
 
 $app = require dirname(__DIR__, 2).'/bootstrap/app.php';
+if ($app->configurationIsCached()) {
+    fwrite(STDERR, "La recette exige une configuration locale non mise en cache.\n");
+    exit(1);
+}
 $app->loadEnvironmentFrom('.env.recette-sgt-inexistant');
 foreach (['APP_ENV' => 'testing', 'CACHE_STORE' => 'array', 'SESSION_DRIVER' => 'array',
     'DB_CONNECTION' => 'mysql', 'DB_HOST' => '127.0.0.1', 'DB_PORT' => '33384',
@@ -41,10 +45,6 @@ $config->set([
         'prefix' => '', 'strict' => true,
     ],
 ]);
-if ($app->configurationIsCached()) {
-    throw new RuntimeException('La recette exige une configuration locale non mise en cache.');
-}
-
 $http = $app->make(Http::class);
 if (($argv[1] ?? '') === 'prise') {
     [, , $agent, $ordre, $barriere, $index] = $argv;
@@ -70,7 +70,10 @@ if (($argv[1] ?? '') === 'prise') {
 if (! in_array($argv[1] ?? '', ['concurrence', 'profil'], true)) {
     throw new RuntimeException('Choisir concurrence ou profil.');
 }
-$app->make(Console::class)->call('migrate', ['--force' => true]);
+if ($app->make(Console::class)->call('migrate', ['--force' => true]) !== 0) {
+    fwrite(STDERR, "Migration de recette en échec.\n");
+    exit(1);
+}
 
 if ($argv[1] === 'concurrence') {
     $manager = User::factory()->create(['role' => 'manager']);
@@ -88,6 +91,7 @@ if ($argv[1] === 'concurrence') {
         [PHP_BINARY, __FILE__, 'prise', (string) $agent->id, (string) $ordre->id, $barriere, (string) $i],
         timeout: 120,
     ));
+    $echec = null;
     try {
         $processus->each(fn (Process $processus) => $processus->start());
         $limite = microtime(true) + 60;
@@ -111,6 +115,8 @@ if ($argv[1] === 'concurrence') {
             throw new RuntimeException('Concurrence invalide : '.implode(', ', $codes));
         }
         echo "MySQL : deux processus synchronisés, HTTP 200 et 409.\n";
+    } catch (Throwable $erreur) {
+        $echec = $erreur;
     } finally {
         $processus->each(fn (Process $processus) => $processus->stop());
         foreach ([$barriere, $barriere.'.0', $barriere.'.1'] as $fichier) {
@@ -118,6 +124,10 @@ if ($argv[1] === 'concurrence') {
                 unlink($fichier);
             }
         }
+    }
+    if ($echec) {
+        fwrite(STDERR, $echec->getMessage().PHP_EOL);
+        exit(1);
     }
     exit(0);
 }
@@ -131,17 +141,19 @@ Tache::factory()->count(101)->create(['site_id' => $site->id, 'createur_id' => $
         $tache->sousTaches()->create(['titre' => 'Recette', 'termine' => true]);
     });
 
+$chemin = '/api/v1/taches?site_id='.$site->id;
 $mesures = $sql = $horsSql = [];
 foreach (range(0, 34) as $i) {
     DB::enableQueryLog();
     DB::flushQueryLog();
-    $requete = Request::create('/api/v1/taches', 'GET', server: ['HTTP_ACCEPT' => 'application/json']);
+    $requete = Request::create($chemin, 'GET', server: ['HTTP_ACCEPT' => 'application/json']);
     $debut = hrtime(true);
     $response = $http->handle($requete);
     $total = (hrtime(true) - $debut) / 1000000;
     $http->terminate($requete, $response);
     if ($response->getStatusCode() !== 200) {
-        throw new RuntimeException('HTTP '.$response->getStatusCode());
+        fwrite(STDERR, 'HTTP '.$response->getStatusCode().PHP_EOL);
+        exit(1);
     }
     if ($i >= 5) {
         $dureeSql = array_sum(array_column(DB::getQueryLog(), 'time'));
@@ -154,3 +166,35 @@ foreach (['HTTP' => $mesures, 'SQL' => $sql, 'hors SQL' => $horsSql] as $nom => 
     sort($serie);
     printf("%s p50=%.2f ms p95=%.2f ms\n", $nom, $serie[14], $serie[28]);
 }
+
+$requete = Request::create($chemin, 'GET', server: ['HTTP_ACCEPT' => 'application/json']);
+$taches = Tache::where('site_id', $site->id)->with(['site', 'createur', 'responsables'])
+    ->withCount(['sousTaches', 'sousTaches as sous_taches_terminees_count' => fn ($q) => $q->where('termine', true)])
+    ->limit(50)->get();
+$mesures = ['ressource JSON' => [], 'estEnRetard (50 tâches)' => [], 'HTTP sans middleware' => []];
+$app->instance('middleware.disable', true);
+foreach (range(1, 30) as $i) {
+    $debut = hrtime(true);
+    response()->json(['data' => TacheApiResource::collection($taches)]);
+    $mesures['ressource JSON'][] = (hrtime(true) - $debut) / 1000000;
+
+    $debut = hrtime(true);
+    foreach ($taches as $tache) {
+        $tache->estEnRetard();
+    }
+    $mesures['estEnRetard (50 tâches)'][] = (hrtime(true) - $debut) / 1000000;
+
+    $debut = hrtime(true);
+    $response = $http->handle($requete);
+    $mesures['HTTP sans middleware'][] = (hrtime(true) - $debut) / 1000000;
+    $http->terminate($requete, $response);
+    if ($response->getStatusCode() !== 200) {
+        fwrite(STDERR, "La requête instrumentée a échoué.\n");
+        exit(1);
+    }
+}
+foreach ($mesures as $nom => $serie) {
+    sort($serie);
+    printf("%s p50=%.2f ms p95=%.2f ms\n", $nom, $serie[14], $serie[28]);
+}
+printf("Charge utile JSON : %d octets.\n", strlen($response->getContent()));

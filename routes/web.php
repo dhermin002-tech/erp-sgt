@@ -7,6 +7,7 @@ use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OAuthSgtController;
 use App\Http\Controllers\PageRapportController;
 use App\Http\Controllers\RapportController;
 use App\Http\Controllers\PreferencesPageController;
@@ -23,6 +24,19 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
 Route::post('/login', [LoginController::class, 'login'])->middleware(['guest', 'throttle:5,1']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
+Route::get('/.well-known/oauth-authorization-server', [OAuthSgtController::class, 'metadata']);
+Route::get('/.well-known/oauth-protected-resource', [OAuthSgtController::class, 'resource']);
+
+Route::prefix('oauth')->middleware('throttle:oauth-sgt')->group(function () {
+    Route::post('/register', [OAuthSgtController::class, 'register']);
+    Route::post('/token', [OAuthSgtController::class, 'token']);
+    Route::post('/revoke', [OAuthSgtController::class, 'revoke']);
+    Route::middleware(['auth', 'not-agent-account'])->group(function () {
+        Route::get('/authorize', [OAuthSgtController::class, 'consentement'])->name('oauth.consentement');
+        Route::post('/authorize', [OAuthSgtController::class, 'autoriser'])->name('oauth.autoriser');
+    });
+});
 
 // ── App (auth requise — agents IA bloqués du web) ────────────────────────────
 Route::middleware(['auth', 'not-agent-account'])->group(function () {
@@ -68,6 +82,7 @@ Route::middleware(['auth', 'not-agent-account'])->group(function () {
     Route::patch('/preferences/direction', [PreferenceController::class, 'setDirection'])->name('preferences.direction');
 
     // ── Profil utilisateur ────────────────────────────────────────────────────
+    Route::delete('/profil/applications/{autorisation}', [OAuthSgtController::class, 'profil'])->name('profil.applications.revoquer');
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
     Route::patch('/profil/infos', [ProfilController::class, 'updateInfos'])->name('profil.updateInfos');
     Route::patch('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.updatePassword');

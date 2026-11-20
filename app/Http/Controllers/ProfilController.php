@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AutorisationOAuthSgt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -10,7 +11,11 @@ class ProfilController extends Controller
 {
     public function index()
     {
-        return view('profil.index', ['user' => auth()->user()]);
+        $user = auth()->user();
+        $applicationsConnectees = AutorisationOAuthSgt::query()->where('user_id', $user->id)
+            ->whereNotNull('jeton_id')->where('expire_le', '>', now())->with('client')->latest()->get();
+
+        return view('profil.index', compact('user', 'applicationsConnectees'));
     }
 
     public function updateInfos(Request $request)

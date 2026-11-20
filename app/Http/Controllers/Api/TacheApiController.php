@@ -34,7 +34,7 @@ class TacheApiController extends Controller
         if ($request->site_id) {
             $query->where('site_id', $request->site_id);
         }
-        if ($request->en_retard) {
+        if ($request->boolean('en_retard')) {
             $query->enRetard();
         }
 

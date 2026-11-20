@@ -20,6 +20,9 @@ class CommentaireApiTest extends TestCase
         Sanctum::actingAs($responsable, ['taches:update', 'taches:read']);
 
         $url = "/api/v1/taches/{$tache->id}/commentaires";
+        Sanctum::actingAs($responsable, ['taches:read']);
+        $this->postJson($url, ['contenu' => 'Lecture seule'])->assertForbidden();
+        Sanctum::actingAs($responsable, ['taches:update', 'taches:read']);
         $this->postJson($url, ['contenu' => '<b>Point vérifié</b>'])
             ->assertCreated()->assertJsonPath('data.contenu', 'Point vérifié')
             ->assertJsonPath('data.auteur.id', $responsable->id);

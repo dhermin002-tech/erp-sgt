@@ -27,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('oauth-sgt', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
         RateLimiter::for('emission-jeton', function (Request $request) {
             $username = $request->input('username');
             $identifiant = is_string($username) ? Str::lower(trim($username)) : '';

@@ -356,6 +356,23 @@
     </div>
 </div>
 
+<section class="card mt-4 mb-4">
+    <div class="card-body">
+        <h2 class="h5">Applications connectées</h2>
+        @forelse($applicationsConnectees as $autorisation)
+            <form class="d-flex flex-wrap gap-2 align-items-center mb-2" method="post"
+                  action="{{ route('profil.applications.revoquer', $autorisation) }}">
+                @csrf
+                @method('DELETE')
+                <span>{{ $autorisation->client->nom }} · expire le {{ $autorisation->expire_le->format('d/m/Y') }}</span>
+                <button class="btn btn-sm btn-outline-danger" type="submit">Révoquer</button>
+            </form>
+        @empty
+            <p class="mb-0">Aucune application connectée.</p>
+        @endforelse
+    </div>
+</section>
+
 @push('scripts')
 <script>
 // Gestion onglets
