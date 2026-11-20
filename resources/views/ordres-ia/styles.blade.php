@@ -3,6 +3,8 @@
 <style>
 .ordres-ia { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; width: 100%; max-width: 70rem; }
 .ordres-ia h1 { color: var(--kt-navy); }
+.ordres-ia a { color: var(--kt-navy); text-decoration: none; }
+.ordres-ia a:hover, .ordres-ia a:focus-visible { text-decoration: underline; }
 .ordres-ia h2 { color: var(--kt-navy); font-size: 1.05rem; margin: 0 0 .4rem; }
 .ordres-carte { background: var(--white); border: 1px solid var(--slate-200); border-radius: 12px; padding: 1rem; min-width: 0; }
 .ordres-carte p { margin: .35rem 0; overflow-wrap: anywhere; }

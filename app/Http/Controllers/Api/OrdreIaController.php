@@ -38,7 +38,7 @@ class OrdreIaController extends Controller
         $donnees = $request->validate([
             'tache_id' => ['required', 'integer', Rule::exists('taches', 'id')->whereNull('deleted_at')],
             'cible' => ['required', Rule::in(OrdreIa::CIBLES)],
-            'projet_dossier' => ['required', 'string', 'max:100', 'regex:/\A[A-Za-z0-9_-][A-Za-z0-9._-]*\z/', 'not_regex:/\.\z/'],
+            'projet_dossier' => ['required', 'string', Rule::in(array_keys(config('ordres_ia.projets')))],
             'consigne' => ['required', 'string', 'max:10000'],
         ]);
 

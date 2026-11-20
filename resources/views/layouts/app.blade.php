@@ -176,9 +176,9 @@
                 width: min(86vw, 280px);
                 transform: translateX(-100%);
                 transition: transform .3s cubic-bezier(0.16,1,0.3,1);
-                box-shadow: 12px 0 40px rgba(0,0,0,.25);
+                box-shadow: none; visibility: hidden;
             }
-            [data-direction="A"] .sidebar.open { transform: translateX(0); }
+            [data-direction="A"] .sidebar.open { transform: translateX(0); visibility: visible; box-shadow: 12px 0 40px rgba(0,0,0,.25); }
             .hamburger { display: flex; }
 
             /* Header compact : on masque le superflu, on garde burger + notif + avatar */

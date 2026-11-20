@@ -27,6 +27,8 @@ class OrdreIaApiTest extends TestCase
         $this->postJson($base, $donnees)->assertForbidden();
         Sanctum::actingAs($manager, ['mcp:write']);
         $this->postJson($base, array_replace($donnees, ['projet_dossier' => '../erp.sgt']))->assertUnprocessable();
+        $this->postJson($base, array_replace($donnees, ['projet_dossier' => 'inconnu-legitime']))
+            ->assertUnprocessable()->assertJsonValidationErrors('projet_dossier');
         $id = $this->postJson($base, $donnees)->assertCreated()->json('data.id');
         $url = $base.'/'.$id;
         $rapport = ['session_id' => 'session-a', 'statut' => 'fait', 'compte_rendu' => 'Rapport prêt.'];
