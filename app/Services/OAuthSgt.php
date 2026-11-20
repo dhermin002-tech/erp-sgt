@@ -113,10 +113,11 @@ class OAuthSgt
     private function emettre(AutorisationOAuthSgt $autorisation): array
     {
         $ancien = $autorisation->jeton()->first();
+        $expiration = now()->addHour()->min($autorisation->expire_le);
         $jeton = $autorisation->utilisateur->createToken(
             'OAuth SGT : '.$autorisation->client->nom,
             $autorisation->abilities,
-            $autorisation->expire_le,
+            $expiration,
         );
         $autorisation->update(['jeton_id' => $jeton->accessToken->id]);
         $ancien?->delete();
@@ -129,7 +130,7 @@ class OAuthSgt
         return [
             'access_token' => explode('|', $jeton->plainTextToken, 2)[1],
             'token_type' => 'Bearer',
-            'expires_in' => max(0, $autorisation->expire_le->getTimestamp() - now()->getTimestamp()),
+            'expires_in' => max(0, $expiration->getTimestamp() - now()->getTimestamp()),
             'refresh_token' => $refresh,
             'scope' => implode(' ', $autorisation->abilities),
         ];

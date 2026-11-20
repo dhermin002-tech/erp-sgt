@@ -81,7 +81,7 @@ class OAuthSgtController extends Controller
             'code_challenge' => ['required', 'regex:/\A[A-Za-z0-9_-]{43}\z/'],
             'state' => ['sometimes', 'string', 'max:1024'],
             'scope' => ['sometimes', 'string', 'max:100'],
-            'resource' => ['sometimes', Rule::in([config('oauth_sgt.resource')])],
+            'resource' => ['sometimes', Rule::in([rtrim(config('oauth_sgt.resource'), '/'), rtrim(config('oauth_sgt.resource'), '/').'/'])],
         ]);
         abort_if($validation->fails(), 400, 'Demande OAuth invalide.');
         $demande = $validation->validated();
@@ -141,7 +141,7 @@ class OAuthSgtController extends Controller
             'code_verifier' => [$type === 'authorization_code' ? 'required' : 'exclude', 'regex:/\A[A-Za-z0-9._~-]{43,128}\z/'],
             'redirect_uri' => [$type === 'authorization_code' ? 'required' : 'exclude', 'string', 'max:500'],
             'refresh_token' => [$type === 'refresh_token' ? 'required' : 'exclude', 'string', 'size:64'],
-            'resource' => ['sometimes', Rule::in([config('oauth_sgt.resource')])],
+            'resource' => ['sometimes', Rule::in([rtrim(config('oauth_sgt.resource'), '/'), rtrim(config('oauth_sgt.resource'), '/').'/'])],
         ]);
         if ($validation->fails()) {
             return $this->json(['error' => 'invalid_request'], 400);

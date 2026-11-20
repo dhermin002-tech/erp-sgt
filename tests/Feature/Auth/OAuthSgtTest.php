@@ -105,6 +105,63 @@ class OAuthSgtTest extends TestCase
         $this->assertNull(PersonalAccessToken::findToken($resultat['access_token']));
     }
 
+    public function test_acces_limite_a_une_heure_et_renouvellement_a_trente_jours(): void
+    {
+        $client = $this->client();
+        $this->actingAs(User::factory()->create());
+        $initial = $this->echanger($client, $this->code($client))->assertOk()
+            ->assertJsonPath('expires_in', 3600)->json();
+        $limite = AutorisationOAuthSgt::sole()->expire_le->timestamp;
+
+        $this->travel(61)->minutes();
+        Auth::forgetGuards();
+        $this->withToken($initial['access_token'])->getJson('/api/v1/me')->assertUnauthorized();
+
+        $demande = ['grant_type' => 'refresh_token', 'client_id' => $client, 'refresh_token' => $initial['refresh_token']];
+        $renouvele = $this->postJson('/oauth/token', $demande)->assertOk()->assertJsonPath('expires_in', 3600)->json();
+        $this->assertSame($limite, AutorisationOAuthSgt::sole()->expire_le->timestamp);
+
+        $this->travelTo(now()->setTimestamp($limite - 60));
+        $dernier = $this->postJson('/oauth/token', array_replace($demande, ['refresh_token' => $renouvele['refresh_token']]))
+            ->assertOk()->assertJsonPath('expires_in', 60)->json();
+        $this->travel(61)->seconds();
+        $this->postJson('/oauth/token', array_replace($demande, ['refresh_token' => $dernier['refresh_token']]))
+            ->assertStatus(400)->assertJsonPath('error', 'invalid_grant');
+    }
+
+    public function test_resource_avec_ou_sans_barre_et_csp_du_consentement(): void
+    {
+        $client = $this->client();
+        $this->actingAs(User::factory()->create());
+        $resource = config('oauth_sgt.resource');
+        $this->demander($client, ['resource' => $resource])->assertOk();
+        $consentement = $this->demander($client, ['resource' => $resource.'/'])->assertOk()
+            ->assertHeader('Referrer-Policy', 'no-referrer');
+        $this->assertStringContainsString("form-action 'self' https://claude.ai https://claude.com",
+            $consentement->headers->get('Content-Security-Policy-Report-Only'));
+        $this->demander($client, ['resource' => $resource.'/autre'])->assertStatus(400);
+        $this->echanger($client, $this->code($client), ['resource' => $resource.'/'])->assertOk();
+        $this->echanger($client, $this->code($client), ['resource' => $resource])->assertOk();
+    }
+
+    public function test_purge_seulement_les_codes_non_echanges_et_expires(): void
+    {
+        $client = $this->client();
+        $this->actingAs(User::factory()->create());
+        $this->echanger($client, $this->code($client))->assertOk();
+        $expire = hash('sha256', $this->code($client));
+        $this->travel(61)->seconds();
+        $actif = hash('sha256', $this->code($client));
+        $evenement = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->firstWhere('description', 'sgt-purger-codes-oauth');
+        $this->assertNotNull($evenement);
+        $evenement->run(app());
+
+        $this->assertDatabaseMissing('oauth_sgt_autorisations', ['code_hash' => $expire]);
+        $this->assertDatabaseHas('oauth_sgt_autorisations', ['code_hash' => $actif]);
+        $this->assertDatabaseHas('oauth_sgt_autorisations', ['code_hash' => null]);
+    }
+
     private function client(): string
     {
         return $this->postJson('/oauth/register', ['client_name' => 'Claude', 'redirect_uris' => [self::CALLBACK]])
