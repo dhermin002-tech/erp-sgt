@@ -42,9 +42,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
     Route::get('/taches/{tache}/commentaires', [CommentaireApiController::class, 'index'])
         ->middleware('ability:mcp:read,mcp:write,mobile,taches:read');
     Route::post('/taches/{tache}/commentaires', [CommentaireApiController::class, 'store'])
-        ->middleware('ability:mcp:write,mobile');
+        ->middleware('ability:mcp:write,mobile,taches:update');
     Route::delete('/commentaires/{commentaire}', [CommentaireApiController::class, 'destroy'])
-        ->middleware('ability:mcp:write,mobile');
+        ->middleware('ability:mcp:write,mobile,taches:update');
 
     // Sous-tâches
     Route::get   ('/taches/{tache}/sous-taches',          [TacheApiController::class, 'sousTaches'])->middleware('ability:mcp:read,mcp:write,mobile,taches:read');

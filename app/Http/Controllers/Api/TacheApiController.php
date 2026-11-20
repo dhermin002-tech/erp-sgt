@@ -14,12 +14,16 @@ class TacheApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $pagination = $request->validate([
+            'page' => ['sometimes', 'integer', 'min:1', 'max:1000000'],
+            'par_page' => ['sometimes', 'integer', 'between:1,100'],
+        ]);
+        $page = (int) ($pagination['page'] ?? 1);
+        $parPage = (int) ($pagination['par_page'] ?? 50);
         $user  = $request->user();
         $query = Tache::query()
             ->visiblePar($user)
-            ->actives()
-            ->with(['site:id,nom', 'createur:id,prenom,nom', 'responsables:id,prenom,nom,role'])
-            ->withCount(['sousTaches', 'sousTaches as sous_taches_terminees_count' => fn ($query) => $query->where('termine', true)]);
+            ->actives();
 
         if ($request->statut) {
             $query->where('statut', $request->statut);
@@ -34,13 +38,21 @@ class TacheApiController extends Controller
             $query->enRetard();
         }
 
-        $taches = $query->orderByDesc('created_at')->get();
-        $parStatut = $taches->countBy('statut');
+        $parStatut = (clone $query)->toBase()
+            ->select('statut')->selectRaw('COUNT(*) AS nombre')->groupBy('statut')
+            ->pluck('nombre', 'statut')->map(fn ($nombre) => (int) $nombre);
+        $total = $parStatut->sum();
+        $taches = $query->with(['site:id,nom', 'createur:id,prenom,nom', 'responsables:id,prenom,nom,role'])
+            ->withCount(['sousTaches', 'sousTaches as sous_taches_terminees_count' => fn ($query) => $query->where('termine', true)])
+            ->orderByDesc('created_at')->orderByDesc('id')->forPage($page, $parPage)->get();
 
         return response()->json([
             'data' => TacheApiResource::collection($taches),
             'meta' => [
-                'total'      => $taches->count(),
+                'total'      => $total,
+                'page'       => $page,
+                'par_page'   => $parPage,
+                'derniere_page' => max(1, (int) ceil($total / $parPage)),
                 'par_statut' => [
                     'nouveau'    => $parStatut->get('nouveau', 0),
                     'en_cours'   => $parStatut->get('en_cours', 0),

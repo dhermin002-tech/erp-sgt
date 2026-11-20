@@ -39,9 +39,16 @@ class PerformanceApiTest extends TestCase
         DB::enableQueryLog();
         $this->getJson('/api/v1/taches')->assertOk()->assertJsonCount(31, 'data');
         $this->assertSame($initial, count(DB::getQueryLog()));
-        $this->assertLessThanOrEqual(4, $initial);
+        $this->assertLessThanOrEqual(5, $initial);
         DB::disableQueryLog();
         DB::flushQueryLog();
+
+        $this->getJson('/api/v1/taches?par_page=10&page=2')->assertOk()
+            ->assertJsonCount(10, 'data')->assertJsonPath('meta.total', 31)
+            ->assertJsonPath('meta.par_statut.en_cours', 1)
+            ->assertJsonPath('meta.par_statut.nouveau', 30)
+            ->assertJsonPath('meta.derniere_page', 4);
+        $this->getJson('/api/v1/taches?par_page=101')->assertUnprocessable();
 
         if (getenv('SGT_MESURE_LOCALE') === '1') {
             foreach (['/me', '/taches', '/dashboard/kpis', '/agents'] as $route) {

@@ -17,7 +17,7 @@ class CommentaireApiTest extends TestCase
         $tache = Tache::factory()->create();
         $responsable = User::factory()->create();
         $tache->responsables()->attach($responsable);
-        Sanctum::actingAs($responsable, ['mcp:write']);
+        Sanctum::actingAs($responsable, ['taches:update', 'taches:read']);
 
         $url = "/api/v1/taches/{$tache->id}/commentaires";
         $this->postJson($url, ['contenu' => '<b>Point vérifié</b>'])
@@ -43,7 +43,9 @@ class CommentaireApiTest extends TestCase
         $this->postJson($url, ['contenu' => 'Suivi'])->assertForbidden();
         $this->deleteJson($suppression)->assertForbidden();
 
-        Sanctum::actingAs($auteur, ['mcp:write']);
+        Sanctum::actingAs($auteur, ['taches:read']);
+        $this->deleteJson($suppression)->assertForbidden();
+        Sanctum::actingAs($auteur, ['taches:update']);
         $this->deleteJson($suppression)->assertNoContent();
         $this->assertSoftDeleted($commentaire);
     }
