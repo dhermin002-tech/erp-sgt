@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\OrdreIa;
 use App\Services\TransportPush;
 use App\Services\TransportPushHttp;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -27,6 +29,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('layouts.app', function (\Illuminate\View\View $vue): void {
+            if (auth()->user()?->isManager()) {
+                $vue->with('ordresEnAttente', OrdreIa::query()->where('statut', 'a_executer')->whereHas('tache')->count());
+            }
+        });
+
         RateLimiter::for('oauth-sgt', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
 
         RateLimiter::for('emission-jeton', function (Request $request) {

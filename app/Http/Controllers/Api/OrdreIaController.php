@@ -28,16 +28,11 @@ class OrdreIaController extends Controller
                 ->where(fn ($query) => $query->whereNull('pris_par_user_id')->orWhere('pris_par_user_id', $user->id));
         }
 
-        foreach (['statut' => 'statut', 'cible' => 'cible', 'projet' => 'projet_dossier'] as $filtre => $colonne) {
-            if (isset($filtres[$filtre])) {
-                $ordres->where($colonne, $filtres[$filtre]);
-            }
-        }
-
-        return response()->json($ordres->orderBy('id')->paginate(25));
+        return response()->json($ordres->filtrer($filtres)
+            ->with(['tache:id,titre', 'emetteur:id,prenom,nom'])->orderBy('id')->paginate(25));
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, OrdresIa $ordres): JsonResponse
     {
         abort_unless($request->user()->isManager(), 403, 'Seul le manager peut émettre un ordre.');
         $donnees = $request->validate([
@@ -47,7 +42,7 @@ class OrdreIaController extends Controller
             'consigne' => ['required', 'string', 'max:10000'],
         ]);
 
-        return response()->json(['data' => OrdreIa::create($donnees + ['emis_par' => $request->user()->id])], 201);
+        return response()->json(['data' => $ordres->emettre($donnees, $request->user())], 201);
     }
 
     public function prendre(Request $request, OrdreIa $ordre, OrdresIa $ordres): JsonResponse

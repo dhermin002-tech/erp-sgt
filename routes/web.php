@@ -8,6 +8,7 @@ use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OAuthSgtController;
+use App\Http\Controllers\OrdresIaWebController;
 use App\Http\Controllers\PageRapportController;
 use App\Http\Controllers\RapportController;
 use App\Http\Controllers\PreferencesPageController;
@@ -51,6 +52,12 @@ Route::middleware(['auth', 'not-agent-account'])->group(function () {
     Route::patch('/taches/{tache}/restaurer', [TacheController::class, 'restaurer'])->name('taches.restaurer');
     Route::patch('/taches/{tache}/archiver', [TacheController::class, 'archiver'])->name('taches.archiver');
     Route::patch('/taches/{tache}/statut', [TacheController::class, 'patchStatut'])->name('taches.statut');
+
+    Route::middleware('role:manager')->group(function () {
+        Route::get('/ordres-ia', [OrdresIaWebController::class, 'index'])->name('ordres-ia.index');
+        Route::get('/ordres-ia/{ordre}', [OrdresIaWebController::class, 'show'])->name('ordres-ia.show');
+        Route::post('/taches/{tache}/ordres-ia', [OrdresIaWebController::class, 'store'])->name('ordres-ia.store');
+    });
 
     // ── Sous-tâches (AJAX) ────────────────────────────────────────────────────
     Route::post('/taches/{tache}/sous-taches', [SousTacheController::class, 'store'])->name('sous-taches.store');

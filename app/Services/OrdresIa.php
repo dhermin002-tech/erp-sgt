@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\DB;
 
 class OrdresIa
 {
+    public function emettre(array $donnees, User $manager): OrdreIa
+    {
+        abort_unless($manager->isManager(), 403, 'Seul le manager peut émettre un ordre.');
+
+        return OrdreIa::create(['emis_par' => $manager->id] + $donnees);
+    }
+
     public function prendre(OrdreIa $ordre, User $agent, string $session): OrdreIa
     {
         return DB::transaction(function () use ($ordre, $agent, $session) {

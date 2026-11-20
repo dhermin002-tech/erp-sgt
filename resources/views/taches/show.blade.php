@@ -285,6 +285,10 @@ $railColor = $railVar[$tache->priorite] ?? 'var(--slate-300)';
 
 </div>
 
+@if(auth()->user()->isManager())
+    @include('ordres-ia.formulaire')
+@endif
+
 <div class="tache-body">
 
     {{-- Colonne principale --}}

@@ -101,6 +101,10 @@
         [data-direction="A"] .sidebar-nav a.nav-ia.active {
             background: #6D28D9; box-shadow: 0 4px 14px rgba(109,40,217,.45);
         }
+        .nav-ordre-compteur {
+            margin-inline-start: auto; border-radius: 100px; padding: .12rem .45rem;
+            background: #FFE4C7; color: #743300; font-size: .75rem; font-weight: 700;
+        }
         [data-direction="A"] .sidebar-footer {
             padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.07); font-size: .78rem;
         }
@@ -326,6 +330,10 @@
                 <i class="bi bi-geo-alt"></i> Sites
             </a>
             <div class="nav-label nav-label-ia">🤖 Agents IA</div>
+            <a href="{{ route('ordres-ia.index') }}" class="nav-ia {{ request()->routeIs('ordres-ia.*') ? 'active' : '' }}">
+                <i class="bi bi-inboxes"></i> Ordres IA
+                <span class="nav-ordre-compteur" aria-label="{{ $ordresEnAttente }} {{ $ordresEnAttente === 1 ? 'ordre' : 'ordres' }} en attente">{{ $ordresEnAttente }}</span>
+            </a>
             <a href="{{ route('agents.taches') }}" class="nav-ia {{ request()->routeIs('agents.taches') ? 'active' : '' }}">
                 <i class="bi bi-list-check"></i> Tâches IA
             </a>
@@ -373,6 +381,9 @@
                         <i class="bi bi-file-earmark-bar-graph"></i> Rapport
                     </a>
                     @if(auth()->user()->isManager())
+                    <a href="{{ route('ordres-ia.index') }}" class="{{ request()->routeIs('ordres-ia.*') ? 'active' : '' }}">
+                        Ordres IA <span class="nav-ordre-compteur">{{ $ordresEnAttente }}</span>
+                    </a>
                     <a href="#">Membres</a>
                     <a href="{{ route('sites.index') }}" class="{{ request()->routeIs('sites.*') ? 'active' : '' }}">Sites</a>
                     @endif
