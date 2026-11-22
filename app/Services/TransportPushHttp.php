@@ -8,6 +8,7 @@ use Google\Auth\Credentials\ServiceAccountCredentials;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 use RuntimeException;
@@ -21,7 +22,18 @@ class TransportPushHttp implements TransportPush
             return $appareil->plateforme === 'android'
                 ? $this->envoyerAndroid($appareil->destination['jeton'], $message)
                 : $this->envoyerWeb($appareil->destination, $message);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            $diagnostic = match ($exception->getMessage()) {
+                'Projet FCM invalide.', 'Accès FCM indisponible.', 'Rejet FCM.', 'Rejet Web Push.',
+                'Unable to create the local key.', 'Unable to get the local key details.',
+                'Unable to compute the agreement key.' => $exception->getMessage(),
+                default => 'Message masqué.',
+            };
+            Log::warning('Échec du transport de notification.', [
+                'exception_classe' => $exception::class,
+                'exception_message' => $diagnostic,
+            ]);
+
             throw new RuntimeException('Échec du transport de notification '.$appareil->plateforme.'.');
         }
     }

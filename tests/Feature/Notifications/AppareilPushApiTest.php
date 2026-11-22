@@ -9,15 +9,46 @@ use App\Models\Tache;
 use App\Models\User;
 use App\Services\NotificationPush;
 use App\Services\TransportPush;
+use App\Services\TransportPushHttp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
+use RuntimeException;
 use Tests\TestCase;
 
 class AppareilPushApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_le_transport_journalise_uniquement_les_diagnostics_sans_donnees_sensibles(): void
+    {
+        $transport = new TransportPushHttp;
+
+        foreach ([
+            'Unable to create the local key.' => 'Unable to create the local key.',
+            'jeton-factice https://exemple.test/abonnement-factice contenu-factice' => 'Message masqué.',
+        ] as $message => $diagnostic) {
+            $appareil = $this->mock(AppareilPush::class);
+            $appareil->shouldReceive('getAttribute')->with('plateforme')->andReturn('web');
+            $appareil->shouldReceive('getAttribute')->with('destination')->once()
+                ->andThrow(new RuntimeException($message));
+
+            Log::shouldReceive('warning')->once()->with('Échec du transport de notification.', [
+                'exception_classe' => RuntimeException::class,
+                'exception_message' => $diagnostic,
+            ]);
+
+            try {
+                $transport->envoyer($appareil, []);
+                $this->fail('Le transport devait signaler un échec.');
+            } catch (RuntimeException $exception) {
+                $this->assertSame('Échec du transport de notification web.', $exception->getMessage());
+                $this->assertNull($exception->getPrevious());
+            }
+        }
+    }
 
     public function test_destination_chiffree_et_protegee_par_compte(): void
     {
