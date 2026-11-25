@@ -9,8 +9,13 @@ use Illuminate\Support\Str;
 
 class MembresController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->json(User::where('type_compte', 'humain')->orderBy('nom')->orderBy('id')
+                ->paginate(20, ['id', 'username', 'nom', 'prenom', 'role']));
+        }
+
         $humains = User::where('type_compte', 'humain')
             ->orderBy('nom')
             ->get()
@@ -50,7 +55,7 @@ class MembresController extends Controller
             'password.confirmed'=> 'Les mots de passe ne correspondent pas.',
         ]);
 
-        User::create([
+        $membre = User::create([
             'username' => $request->username,
             'nom'      => $request->nom,
             'prenom'   => $request->prenom,
@@ -58,7 +63,23 @@ class MembresController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->json(['data' => $this->donnees($membre)], 201);
+        }
+
         return redirect()->route('membres.index')->with('success', 'Membre ajouté avec succès.');
+    }
+
+    public function showApi(User $membre)
+    {
+        abort_unless($membre->isHumain(), 404);
+
+        return response()->json(['data' => $this->donnees($membre)]);
+    }
+
+    private function donnees(User $membre): array
+    {
+        return $membre->only(['id', 'username', 'nom', 'prenom', 'role']);
     }
 
     public function edit(User $membre)
@@ -68,6 +89,7 @@ class MembresController extends Controller
 
     public function update(Request $request, User $membre)
     {
+        abort_if($request->routeIs('api.gestion.*') && ! $membre->isHumain(), 404);
         $request->validate([
             'nom'    => 'required|string|max:100',
             'prenom' => 'nullable|string|max:100',
@@ -81,6 +103,10 @@ class MembresController extends Controller
         }
 
         $membre->update($data);
+
+        if ($request->routeIs('api.gestion.*')) {
+            return $this->showApi($membre);
+        }
 
         return redirect()->route('membres.index')->with('success', 'Membre mis à jour.');
     }
@@ -112,8 +138,9 @@ class MembresController extends Controller
         return redirect()->route('membres.index')->with('success', "Agent IA « {$request->agent_code} » créé. Générez son token via : php artisan sgt:agent-token --agent={$request->agent_code}");
     }
 
-    public function destroy(User $membre)
+    public function destroy(Request $request, User $membre)
     {
+        abort_if($request->routeIs('api.gestion.*') && ! $membre->isHumain(), 404);
         abort_if($membre->id === auth()->id(), 403, 'Vous ne pouvez pas vous supprimer vous-même.');
 
         // Un agent IA avec une session en cours laisserait une session orpheline en base.
@@ -124,6 +151,10 @@ class MembresController extends Controller
         }
 
         $membre->delete();
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->noContent();
+        }
+
         return redirect()->route('membres.index')->with('success', 'Membre supprimé.');
     }
 }

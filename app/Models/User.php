@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'username', 'nom', 'prenom', 'telephone', 'role', 'direction_ui', 'password',
+        'username', 'nom', 'prenom', 'telephone', 'role', 'direction_ui', 'locale', 'password',
         'type_compte', 'agent_code', 'agent_couleur', 'last_seen_at',
     ];
 

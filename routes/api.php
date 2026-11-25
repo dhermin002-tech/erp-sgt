@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\ArchivesApiController;
+use App\Http\Controllers\Api\CompteApiController;
+use App\Http\Controllers\Api\NotificationsApiController;
+use App\Http\Controllers\Api\SupervisionApiController;
+use App\Http\Controllers\MembresController;
+use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Api\AnalyseApiController;
 use App\Http\Controllers\Api\ApiTokenController;
 use App\Http\Controllers\Api\CommentaireApiController;
@@ -33,6 +39,39 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
         'role'       => $r->user()->role,
     ]));
     Route::delete('/auth/token', [ApiTokenController::class, 'revoke']);
+
+    // Les routes statiques précèdent le binding de /taches/{tache}.
+    Route::get('/taches/archives', [ArchivesApiController::class, 'index'])
+        ->middleware('ability:mobile,mcp:read,mcp:write,taches:read');
+    Route::middleware('ability:mobile,mcp:write,taches:update')->group(function () {
+        Route::patch('/taches/{tache}/archiver', [ArchivesApiController::class, 'archiver']);
+        Route::patch('/taches/{tache}/restaurer', [ArchivesApiController::class, 'restaurer']);
+    });
+
+    Route::middleware('ability:mobile')->group(function () {
+        Route::get('/notifications', [NotificationsApiController::class, 'index']);
+        Route::get('/notifications/count', [NotificationsApiController::class, 'compteur']);
+        Route::patch('/notifications/tout-lire', [NotificationsApiController::class, 'toutLire']);
+        Route::patch('/notifications/{notification}/lue', [NotificationsApiController::class, 'lire'])->whereUuid('notification');
+        Route::get('/profil', [CompteApiController::class, 'profil']);
+        Route::patch('/profil/infos', [CompteApiController::class, 'modifierProfil']);
+        Route::patch('/profil/password', [CompteApiController::class, 'modifierMotDePasse'])->middleware('throttle:mot-de-passe-mobile');
+        Route::get('/preferences', [CompteApiController::class, 'preferences']);
+        Route::patch('/preferences', [CompteApiController::class, 'modifierPreferences']);
+
+        Route::middleware('role:manager')->group(function () {
+            Route::prefix('gestion')->name('api.gestion.')->group(function () {
+                Route::apiResource('membres', MembresController::class)->parameters(['membres' => 'membre'])->except('show');
+                Route::get('/membres/{membre}', [MembresController::class, 'showApi'])->name('membres.show');
+                Route::apiResource('sites', SiteController::class);
+            });
+            Route::get('/agents/taches', [SupervisionApiController::class, 'taches']);
+            Route::get('/agents/rapports', [SupervisionApiController::class, 'rapports']);
+            Route::get('/agents/sessions', [SupervisionApiController::class, 'sessions']);
+        });
+    });
+    Route::get('/rapports', [SupervisionApiController::class, 'rapportGlobal'])
+        ->middleware('ability:mobile,mcp:read,mcp:write,taches:read');
 
     // Tâches
     Route::get   ('/taches',                     [TacheApiController::class, 'index'])->middleware('ability:mcp:read,mcp:write,mobile,taches:read');

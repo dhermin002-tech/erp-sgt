@@ -69,7 +69,7 @@ class ProfilController extends Controller
             'locale'       => 'required|in:fr,en',
         ]);
 
-        $user->update(['direction_ui' => $request->direction_ui]);
+        $user->update(['direction_ui' => $request->direction_ui, 'locale' => $request->locale]);
 
         // Locale via session (même logique que PreferenceController)
         session(['locale' => $request->locale]);

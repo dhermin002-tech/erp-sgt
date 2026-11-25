@@ -19,6 +19,7 @@ class TacheApiController extends Controller
             'par_page' => ['sometimes', 'integer', 'between:1,100'],
             'projet' => ['sometimes', 'nullable', 'string', 'max:40'],
             'mes_taches_du' => ['sometimes', 'date_format:Y-m-d'],
+            'echeances_a_venir' => ['sometimes', 'boolean'],
         ]);
         $page = (int) ($pagination['page'] ?? 1);
         $parPage = (int) ($pagination['par_page'] ?? 50);
@@ -35,6 +36,11 @@ class TacheApiController extends Controller
         if (isset($pagination['mes_taches_du'])) {
             $query->whereDate('date_echeance', $pagination['mes_taches_du'])
                 ->whereHas('responsables', fn ($responsables) => $responsables->where('users.id', $user->id));
+        }
+
+        $echeances = $request->boolean('echeances_a_venir');
+        if ($echeances) {
+            $query->where('date_echeance', '>=', today()->toDateString())->where('date_echeance', '<', today()->addDays(15)->toDateString());
         }
 
         if ($request->statut) {
@@ -56,6 +62,7 @@ class TacheApiController extends Controller
         $total = $parStatut->sum();
         $taches = $query->with(['site:id,nom', 'createur:id,prenom,nom', 'responsables:id,prenom,nom,role'])
             ->withCount(['sousTaches', 'sousTaches as sous_taches_terminees_count' => fn ($query) => $query->where('termine', true)])
+            ->when($echeances, fn ($taches) => $taches->orderBy('date_echeance'))
             ->orderByDesc('created_at')->orderByDesc('id')->forPage($page, $parPage)->get();
 
         return response()->json([

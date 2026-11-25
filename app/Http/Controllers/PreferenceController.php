@@ -15,7 +15,7 @@ class PreferenceController extends Controller
         abort_unless(in_array($locale, ['fr', 'en']), 400);
 
         Session::put('locale', $locale);
-        Auth::user()?->update(['direction_ui' => Auth::user()->direction_ui]); // touch session
+        Auth::user()?->update(['locale' => $locale]);
 
         return back();
     }

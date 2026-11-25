@@ -7,9 +7,13 @@ use Illuminate\Http\Request;
 
 class SiteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $sites = Site::withCount('taches')->orderBy('nom')->paginate(20);
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->json($sites);
+        }
+
         return view('sites.index', compact('sites'));
     }
 
@@ -26,13 +30,22 @@ class SiteController extends Controller
             'description' => 'nullable|string|max:500',
         ]);
 
-        Site::create($request->only('nom', 'ville', 'description'));
+        $site = Site::create($request->only('nom', 'ville', 'description'));
+
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->json(['data' => $site], 201);
+        }
 
         return redirect()->route('sites.index')->with('success', 'Site créé.');
     }
 
-    public function show(Site $site)
+    public function show(Request $request, Site $site)
     {
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->json(['data' => $site->loadCount('taches')]);
+        }
+
+
         $site->load('taches');
         return view('sites.show', compact('site'));
     }
@@ -53,12 +66,20 @@ class SiteController extends Controller
 
         $site->update($request->only('nom', 'ville', 'description', 'actif'));
 
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->json(['data' => $site]);
+        }
+
         return redirect()->route('sites.index')->with('success', 'Site mis à jour.');
     }
 
-    public function destroy(Site $site)
+    public function destroy(Request $request, Site $site)
     {
         $site->delete();
+        if ($request->routeIs('api.gestion.*')) {
+            return response()->noContent();
+        }
+
         return redirect()->route('sites.index')->with('success', 'Site supprimé.');
     }
 }
