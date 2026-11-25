@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\AutorisationOAuthSgt;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use App\Rules\MotDePasseSgt;
 
 class ProfilController extends Controller
 {
@@ -39,23 +41,29 @@ class ProfilController extends Controller
 
         $request->validate([
             'password_actuel'   => 'required|string',
-            'password'          => ['bail', 'required', 'string', 'confirmed', 'different:password_actuel', 'max:72', Password::min(8),
-                function (string $champ, string $valeur, \Closure $refuser): void {
-                    if (strlen($valeur) > 72) {
-                        $refuser('Le mot de passe ne doit pas dépasser 72 octets.');
-                    }
-                },],
+            'password'          => ['bail', 'required', 'string', 'confirmed', 'different:password_actuel', new MotDePasseSgt],
         ], [
             'password_actuel.required' => 'Le mot de passe actuel est obligatoire.',
             'password.confirmed'       => 'Les nouveaux mots de passe ne correspondent pas.',
             'password.min'             => 'Le nouveau mot de passe doit faire au moins 8 caractères.',
         ]);
 
-        if (! Hash::check($request->password_actuel, $user->password)) {
+        $modifie = DB::transaction(function () use ($request, $user): bool {
+            $compte = User::query()->lockForUpdate()->findOrFail($user->id);
+            if (! Hash::check($request->password_actuel, $compte->password)) {
+                return false;
+            }
+
+            $compte->update(['password' => Hash::make($request->password)]);
+            $compte->tokens()->delete();
+
+            return true;
+        });
+        if (! $modifie) {
             return back()->withErrors(['password_actuel' => 'Mot de passe actuel incorrect.'])->with('tab', 'password');
         }
 
-        $user->update(['password' => Hash::make($request->password)]);
+        $user->refresh();
 
         // Invalide toutes les autres sessions de cet utilisateur (sécurité : si le compte
         // était compromis, l'attaquant est déconnecté immédiatement). Requiert le middleware

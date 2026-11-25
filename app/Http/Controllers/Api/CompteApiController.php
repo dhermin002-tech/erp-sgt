@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use App\Rules\MotDePasseSgt;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -36,12 +36,7 @@ class CompteApiController extends Controller
     {
         $donnees = $request->validate([
             'password_actuel' => 'required|string',
-            'password' => ['bail', 'required', 'string', 'confirmed', 'different:password_actuel', 'max:72', Password::min(8),
-                function (string $champ, string $valeur, \Closure $refuser): void {
-                    if (strlen($valeur) > 72) {
-                        $refuser('Le mot de passe ne doit pas dépasser 72 octets.');
-                    }
-                },],
+            'password' => ['bail', 'required', 'string', 'confirmed', 'different:password_actuel', new MotDePasseSgt],
         ]);
         $jeton = $request->user()->currentAccessToken();
 

@@ -95,7 +95,7 @@ Route::middleware(['auth', 'not-agent-account'])->group(function () {
     Route::delete('/profil/applications/{autorisation}', [OAuthSgtController::class, 'profil'])->name('profil.applications.revoquer');
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
     Route::patch('/profil/infos', [ProfilController::class, 'updateInfos'])->name('profil.updateInfos');
-    Route::patch('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.updatePassword');
+    Route::patch('/profil/password', [ProfilController::class, 'updatePassword'])->middleware('throttle:mot-de-passe-web')->name('profil.updatePassword');
     Route::patch('/profil/preferences', [ProfilController::class, 'updatePreferences'])->name('profil.updatePreferences');
 
     // ── Page Préférences (redirige vers profil) ───────────────────────────────

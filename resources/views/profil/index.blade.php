@@ -272,7 +272,7 @@
                         <label class="form-label">Nouveau mot de passe <span style="color:#dc2626">*</span></label>
                         <input type="password" name="password"
                                class="form-input {{ $errors->has('password') ? 'is-invalid' : '' }}"
-                               placeholder="Minimum 8 caractères" autocomplete="new-password">
+                               placeholder="Nouveau mot de passe" autocomplete="new-password">
                         @error('password') <span class="invalid-msg">{{ $message }}</span> @enderror
                     </div>
                 </div>

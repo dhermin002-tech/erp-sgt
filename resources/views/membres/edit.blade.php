@@ -40,6 +40,9 @@
             </select>
         </div>
 
+        @if(auth()->user()->is($membre))
+            <p>Pour changer votre mot de passe, ouvrez <a href="{{ route('profil.index') }}#tab-password">votre profil</a>.</p>
+        @else
         <div style="margin-bottom:1rem">
             <label style="display:block;font-size:.85rem;font-weight:600;color:var(--slate-700);margin-bottom:.35rem">Nouveau mot de passe <span style="color:var(--slate-400);font-weight:400">(laisser vide = inchangé)</span></label>
             <input type="password" name="password" autocomplete="new-password"
@@ -52,6 +55,7 @@
             <input type="password" name="password_confirmation"
                 style="width:100%;padding:.55rem .875rem;border:1.5px solid var(--slate-200);border-radius:8px;font-size:.875rem;box-sizing:border-box;outline:none">
         </div>
+        @endif
 
         <div style="display:flex;gap:.75rem">
             <button type="submit" style="background:var(--kt-navy);color:#fff;padding:.55rem 1.1rem;border-radius:7px;border:none;font-size:.875rem;font-weight:600;cursor:pointer">Enregistrer</button>

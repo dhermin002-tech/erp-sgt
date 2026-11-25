@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Rules\MotDePasseSgt;
 use App\Http\Resources\PageParite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -49,7 +50,7 @@ class MembresController extends Controller
             'nom'      => 'required|string|max:100',
             'prenom'   => 'nullable|string|max:100',
             'role'     => 'required|in:manager,technicien,agent,developpeur,stagiaire',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['bail', 'required', 'string', 'confirmed', new MotDePasseSgt],
         ], [
             'username.unique'   => 'Cet identifiant est déjà utilisé.',
             'password.min'      => 'Le mot de passe doit faire au moins 8 caractères.',
@@ -92,7 +93,7 @@ class MembresController extends Controller
     {
         if ($request->routeIs('api.gestion.*') && $request->has('password')) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'password' => 'Modifiez le mot de passe via /profil/password.',
+                'password' => "La modification du mot de passe d’un membre n’est pas autorisée depuis cette page.",
             ]);
         }
 
@@ -101,8 +102,14 @@ class MembresController extends Controller
             'nom'    => 'required|string|max:100',
             'prenom' => 'nullable|string|max:100',
             'role'   => 'required|in:manager,technicien,agent,developpeur,stagiaire',
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => ['bail', 'nullable', 'string', 'confirmed', new MotDePasseSgt],
         ]);
+
+        if ($request->user()->is($membre) && $request->filled('password')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'password' => 'Modifiez votre mot de passe depuis votre profil.',
+            ]);
+        }
 
         $data = $request->only('nom', 'prenom', 'role');
         if ($request->filled('password')) {

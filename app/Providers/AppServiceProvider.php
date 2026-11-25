@@ -49,6 +49,11 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour(20)->by('heure:'.$request->user()->id),
         ]);
 
+        RateLimiter::for('mot-de-passe-web', fn (Request $request) => [
+            Limit::perMinute(5)->by('minute:'.$request->user()->id),
+            Limit::perHour(20)->by('heure:'.$request->user()->id),
+        ]);
+
         PersonalAccessToken::created(fn (PersonalAccessToken $jeton) => Log::info(
             'Jeton Sanctum émis.',
             ['jeton_id' => $jeton->getKey(), 'compte_id' => $jeton->tokenable_id],
