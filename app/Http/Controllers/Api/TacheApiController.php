@@ -18,6 +18,7 @@ class TacheApiController extends Controller
             'page' => ['sometimes', 'integer', 'min:1', 'max:1000000'],
             'par_page' => ['sometimes', 'integer', 'between:1,100'],
             'projet' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'mes_taches_du' => ['sometimes', 'date_format:Y-m-d'],
         ]);
         $page = (int) ($pagination['page'] ?? 1);
         $parPage = (int) ($pagination['par_page'] ?? 50);
@@ -29,6 +30,11 @@ class TacheApiController extends Controller
 
         if (isset($pagination['projet'])) {
             $query->where('projet', $pagination['projet']);
+        }
+
+        if (isset($pagination['mes_taches_du'])) {
+            $query->whereDate('date_echeance', $pagination['mes_taches_du'])
+                ->whereHas('responsables', fn ($responsables) => $responsables->where('users.id', $user->id));
         }
 
         if ($request->statut) {

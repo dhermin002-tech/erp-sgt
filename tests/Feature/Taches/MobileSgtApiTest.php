@@ -51,6 +51,25 @@ class MobileSgtApiTest extends TestCase
             ->assertJsonPath('data.0.projet', 'SGT')->assertJsonPath('meta.par_statut.termine', 1);
     }
 
+    public function test_dashboard_mobile_filtre_mes_taches_actives_du_jour(): void
+    {
+        $manager = User::factory()->create(['role' => 'manager']);
+        Sanctum::actingAs($manager, ['mobile']);
+        $jour = '2026-11-25';
+        $attendue = Tache::factory()->create(['date_echeance' => $jour, 'statut' => 'en_cours']);
+        $attendue->responsables()->attach($manager);
+        Tache::factory()->create(['date_echeance' => $jour, 'statut' => 'en_cours']);
+        Tache::factory()->create(['date_echeance' => $jour, 'statut' => 'termine'])
+            ->responsables()->attach($manager);
+        Tache::factory()->create(['date_echeance' => '2026-11-26', 'statut' => 'en_cours'])
+            ->responsables()->attach($manager);
+
+        $this->getJson('/api/v1/taches?mes_taches_du='.$jour)->assertOk()
+            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $attendue->id);
+        $this->getJson('/api/v1/taches?mes_taches_du=25-11-2026')
+            ->assertUnprocessable()->assertJsonValidationErrors('mes_taches_du');
+    }
+
     public function test_historique_des_statuts_et_rapports_respectent_la_visibilite(): void
     {
         $tache = Tache::factory()->create(['statut' => 'nouveau']);
