@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TacheApiResource;
 use App\Models\Tache;
+use App\Http\Resources\PageParite;
 use Illuminate\Http\Request;
 
 class ArchivesApiController extends Controller
@@ -17,7 +18,7 @@ class ArchivesApiController extends Controller
             'q' => 'sometimes|string|max:255',
         ]);
 
-        return TacheApiResource::collection(Tache::historique()->visiblePar($request->user())
+        $page = Tache::historique()->visiblePar($request->user())
             ->with(['responsables', 'site', 'createur'])
             ->when($filtres['projet'] ?? null, fn ($query, $projet) => $query->where('projet', $projet))
             ->when($filtres['responsable_id'] ?? null, fn ($query, $id) => $query
@@ -25,7 +26,9 @@ class ArchivesApiController extends Controller
             ->when(isset($filtres['q']), fn ($query) => $query->where(fn ($recherche) => $recherche
                 ->where('titre', 'like', '%'.$filtres['q'].'%')
                 ->orWhere('description', 'like', '%'.$filtres['q'].'%')))
-            ->latest('updated_at')->orderByDesc('id')->paginate(20)->withQueryString());
+            ->latest('updated_at')->orderByDesc('id')->paginate(20);
+
+        return PageParite::ressources($page, TacheApiResource::class, $request);
     }
 
     public function archiver(Request $request, Tache $tache)
@@ -40,7 +43,12 @@ class ArchivesApiController extends Controller
     public function restaurer(Request $request, Tache $tache)
     {
         abort_unless($request->user()->canAccessTache($tache), 403);
-        $tache->update(['statut' => 'nouveau', 'archived_at' => null]);
+        abort_if($request->user()->isAgentIa(), 403);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($tache): void {
+            $historique = Tache::query()->lockForUpdate()->findOrFail($tache->id);
+            abort_unless($historique->archived_at || in_array($historique->statut, Tache::STATUTS_TERMINAUX, true), 409);
+            $historique->update(['statut' => 'nouveau', 'archived_at' => null]);
+        });
 
         return response()->noContent();
     }

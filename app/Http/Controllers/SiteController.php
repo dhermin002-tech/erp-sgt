@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Site;
+use App\Http\Resources\PageParite;
 use Illuminate\Http\Request;
 
 class SiteController extends Controller
@@ -11,7 +12,7 @@ class SiteController extends Controller
     {
         $sites = Site::withCount('taches')->orderBy('nom')->paginate(20);
         if ($request->routeIs('api.gestion.*')) {
-            return response()->json($sites);
+            return PageParite::reponse($sites, fn (Site $site) => $this->donneesApi($site));
         }
 
         return view('sites.index', compact('sites'));
@@ -33,7 +34,7 @@ class SiteController extends Controller
         $site = Site::create($request->only('nom', 'ville', 'description'));
 
         if ($request->routeIs('api.gestion.*')) {
-            return response()->json(['data' => $site], 201);
+            return response()->json(['data' => $this->donneesApi($site)], 201);
         }
 
         return redirect()->route('sites.index')->with('success', 'Site créé.');
@@ -42,7 +43,7 @@ class SiteController extends Controller
     public function show(Request $request, Site $site)
     {
         if ($request->routeIs('api.gestion.*')) {
-            return response()->json(['data' => $site->loadCount('taches')]);
+            return response()->json(['data' => $this->donneesApi($site->loadCount('taches'))]);
         }
 
 
@@ -67,7 +68,7 @@ class SiteController extends Controller
         $site->update($request->only('nom', 'ville', 'description', 'actif'));
 
         if ($request->routeIs('api.gestion.*')) {
-            return response()->json(['data' => $site]);
+            return response()->json(['data' => $this->donneesApi($site)]);
         }
 
         return redirect()->route('sites.index')->with('success', 'Site mis à jour.');
@@ -81,5 +82,9 @@ class SiteController extends Controller
         }
 
         return redirect()->route('sites.index')->with('success', 'Site supprimé.');
+    }
+    private function donneesApi(Site $site): array
+    {
+        return $site->only(['id', 'nom', 'ville', 'description', 'actif', 'taches_count']);
     }
 }

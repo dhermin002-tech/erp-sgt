@@ -121,4 +121,24 @@ class PreferenceTest extends TestCase
              ->get('/taches?sort=date_echeance&dir=asc')
              ->assertStatus(200);
     }
+
+    public function test_locale_permanente_prime_sur_session_avec_repli_pour_ancien_compte(): void
+    {
+        $this->actingAs($this->user)->withSession(['locale' => 'en'])->get('/dashboard')->assertOk();
+        $this->assertSame('en', app()->getLocale());
+
+        $this->post(route('preferences.locale'), ['locale' => 'fr'])->assertRedirect();
+        $this->assertSame('fr', $this->user->fresh()->locale);
+        $this->actingAs($this->user->fresh())->withSession(['locale' => 'en'])->get('/dashboard')->assertOk();
+        $this->assertSame('fr', app()->getLocale());
+    }
+
+    public function test_mot_de_passe_actuel_absent_des_donnees_flash_web(): void
+    {
+        $this->actingAs($this->user)->from('/profil')->patch(route('profil.updatePassword'), [
+            'password_actuel' => 'secret-de-recette', 'password' => '',
+        ])->assertRedirect('/profil')->assertSessionHasErrors('password')
+            ->assertSessionMissing('_old_input.password_actuel');
+    }
+
 }

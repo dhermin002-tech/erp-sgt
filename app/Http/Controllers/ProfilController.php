@@ -39,7 +39,12 @@ class ProfilController extends Controller
 
         $request->validate([
             'password_actuel'   => 'required|string',
-            'password'          => ['required', 'confirmed', Password::min(8)],
+            'password'          => ['bail', 'required', 'string', 'confirmed', 'different:password_actuel', 'max:72', Password::min(8),
+                function (string $champ, string $valeur, \Closure $refuser): void {
+                    if (strlen($valeur) > 72) {
+                        $refuser('Le mot de passe ne doit pas dépasser 72 octets.');
+                    }
+                },],
         ], [
             'password_actuel.required' => 'Le mot de passe actuel est obligatoire.',
             'password.confirmed'       => 'Les nouveaux mots de passe ne correspondent pas.',

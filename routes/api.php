@@ -50,7 +50,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
 
     Route::middleware('ability:mobile')->group(function () {
         Route::get('/notifications', [NotificationsApiController::class, 'index']);
-        Route::get('/notifications/count', [NotificationsApiController::class, 'compteur']);
+        Route::get('/notifications/compteur', [NotificationsApiController::class, 'compteur']);
         Route::patch('/notifications/tout-lire', [NotificationsApiController::class, 'toutLire']);
         Route::patch('/notifications/{notification}/lue', [NotificationsApiController::class, 'lire'])->whereUuid('notification');
         Route::get('/profil', [CompteApiController::class, 'profil']);
@@ -65,9 +65,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
                 Route::get('/membres/{membre}', [MembresController::class, 'showApi'])->name('membres.show');
                 Route::apiResource('sites', SiteController::class);
             });
-            Route::get('/agents/taches', [SupervisionApiController::class, 'taches']);
-            Route::get('/agents/rapports', [SupervisionApiController::class, 'rapports']);
-            Route::get('/agents/sessions', [SupervisionApiController::class, 'sessions']);
+            Route::get('/gestion/agents/taches', [SupervisionApiController::class, 'taches']);
+            Route::get('/gestion/agents/rapports', [SupervisionApiController::class, 'rapports']);
+            Route::get('/gestion/agents/sessions', [SupervisionApiController::class, 'sessions']);
         });
     });
     Route::get('/rapports', [SupervisionApiController::class, 'rapportGlobal'])

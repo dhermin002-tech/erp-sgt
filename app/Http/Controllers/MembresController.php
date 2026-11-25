@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Resources\PageParite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -12,7 +13,7 @@ class MembresController extends Controller
     public function index(Request $request)
     {
         if ($request->routeIs('api.gestion.*')) {
-            return response()->json(User::where('type_compte', 'humain')->orderBy('nom')->orderBy('id')
+            return PageParite::reponse(User::where('type_compte', 'humain')->orderBy('nom')->orderBy('id')
                 ->paginate(20, ['id', 'username', 'nom', 'prenom', 'role']));
         }
 
@@ -89,6 +90,12 @@ class MembresController extends Controller
 
     public function update(Request $request, User $membre)
     {
+        if ($request->routeIs('api.gestion.*') && $request->has('password')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'password' => 'Modifiez le mot de passe via /profil/password.',
+            ]);
+        }
+
         abort_if($request->routeIs('api.gestion.*') && ! $membre->isHumain(), 404);
         $request->validate([
             'nom'    => 'required|string|max:100',
@@ -99,10 +106,13 @@ class MembresController extends Controller
 
         $data = $request->only('nom', 'prenom', 'role');
         if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+            \Illuminate\Support\Facades\DB::transaction(function () use ($request, $membre, $data): void {
+                $membre->update($data + ['password' => Hash::make($request->password)]);
+                $membre->tokens()->delete();
+            });
+        } else {
+            $membre->update($data);
         }
-
-        $membre->update($data);
 
         if ($request->routeIs('api.gestion.*')) {
             return $this->showApi($membre);

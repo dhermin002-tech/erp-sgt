@@ -8,6 +8,7 @@ use App\Models\RapportAgent;
 use App\Models\SessionAgent;
 use App\Models\Tache;
 use App\Models\User;
+use App\Http\Resources\PageParite;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -30,7 +31,7 @@ class SupervisionApiController extends Controller
             ->with(['responsables', 'createur', 'site'])
             ->latest()->orderByDesc('id')->paginate(20)->withQueryString();
 
-        return TacheApiResource::collection($taches)->additional(['agents' => $agents]);
+        return PageParite::ressources($taches, TacheApiResource::class, $request, ['agents' => $agents]);
     }
 
     public function rapports(Request $request)
@@ -42,7 +43,7 @@ class SupervisionApiController extends Controller
             'statut' => 'sometimes|string|max:40',
         ]);
 
-        return response()->json(RapportAgent::select(['id', 'user_id', 'projet', 'type', 'titre', 'contenu', 'statut', 'created_at'])
+        return PageParite::reponse(RapportAgent::select(['id', 'user_id', 'projet', 'type', 'titre', 'contenu', 'statut', 'created_at'])
             ->with('user:id,nom,prenom,agent_code')
             ->when(isset($filtres['agent_id']), fn ($query) => $query->where('user_id', $filtres['agent_id']))
             ->when(isset($filtres['projet']), fn ($query) => $query->where('projet', $filtres['projet']))
@@ -59,12 +60,12 @@ class SupervisionApiController extends Controller
             'statut' => 'sometimes|string|max:40',
         ]);
 
-        return response()->json(SessionAgent::select(['id', 'user_id', 'projet', 'contexte', 'demarree_a', 'terminee_a', 'statut', 'resume'])
+        return PageParite::reponse(SessionAgent::select(['id', 'user_id', 'projet', 'contexte', 'demarree_a', 'terminee_a', 'statut', 'resume'])
             ->with('user:id,nom,prenom,agent_code')
             ->when(isset($filtres['agent_id']), fn ($query) => $query->where('user_id', $filtres['agent_id']))
             ->when(isset($filtres['projet']), fn ($query) => $query->where('projet', 'like', '%'.$filtres['projet'].'%'))
             ->when(isset($filtres['statut']), fn ($query) => $query->where('statut', $filtres['statut']))
-            ->latest('demarree_a')->orderByDesc('id')->paginate(25));
+            ->latest('demarree_a')->orderByDesc('id')->paginate(20));
     }
 
     public function rapportGlobal(Request $request)
@@ -88,6 +89,20 @@ class SupervisionApiController extends Controller
                         fn ($responsables) => $responsables->whereKey($filtres['responsable_id'])));
         }
 
-        return TacheApiResource::collection($base->orderByDesc('id')->paginate(20)->withQueryString());
+        $utilisateur = $request->user();
+        $indicateurs = User::query()->when(! $utilisateur->isManager(), fn ($query) => $query->whereKey($utilisateur->id))
+            ->withCount([
+                'taches as actives' => fn ($query) => $query->actives(),
+                'taches as terminees' => fn ($query) => $query->where('statut', 'termine'),
+            ])->orderBy('nom')->get(['id', 'nom', 'prenom'])->map(function (User $membre): array {
+                $total = $membre->actives + $membre->terminees;
+
+                return ['id' => $membre->id, 'nom_complet' => $membre->nom_complet,
+                    'actives' => $membre->actives, 'terminees' => $membre->terminees, 'total' => $total,
+                    'taux' => $total ? round($membre->terminees / $total * 100) : 0];
+            });
+
+        return PageParite::ressources($base->orderByDesc('id')->paginate(20), TacheApiResource::class, $request,
+            ['indicateurs' => $indicateurs]);
     }
 }
