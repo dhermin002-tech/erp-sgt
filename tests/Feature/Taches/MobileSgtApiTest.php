@@ -104,6 +104,23 @@ class MobileSgtApiTest extends TestCase
         $this->assertSame(70, $tache->fresh()->progression);
     }
 
+    public function test_rejeu_acquitte_une_operation_deja_appliquee_sans_ecraser_une_modification_ulterieure(): void
+    {
+        $tache = Tache::factory()->create(['progression' => 10]);
+        Sanctum::actingAs(User::factory()->manager()->create(), ['mobile']);
+        $url = '/api/v1/taches/'.$tache->id.'/synchroniser';
+        $action = ['type' => 'progression', 'avant' => 10, 'progression' => 40, 'operation' => 'progression1'];
+
+        $this->postJson($url, $action)->assertNoContent();
+        $tache->update(['progression' => 70]);
+        $this->postJson($url, $action)->assertNoContent();
+        $this->assertSame(70, $tache->fresh()->progression);
+
+        $nouvelle = array_replace($action, ['operation' => 'progression2']);
+        $this->postJson($url, $nouvelle)->assertConflict();
+        $this->assertDatabaseMissing('actions_mobiles_synchronisees', ['operation' => 'progression2']);
+    }
+
     public function test_profil_et_catalogue_mobile_respectent_le_role(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'technicien']), ['mobile']);

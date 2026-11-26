@@ -93,6 +93,25 @@ class OAuthSgtTest extends TestCase
         $this->withToken($resultat['access_token'])->getJson('/api/v1/me')->assertUnauthorized();
     }
 
+    public function test_changement_de_mot_de_passe_web_refuse_le_renouvellement_oauth(): void
+    {
+        $client = $this->client();
+        $this->actingAs(User::factory()->create());
+        $initial = $this->echanger($client, $this->code($client))->assertOk()->json();
+
+        $this->patch(route('profil.updatePassword'), [
+            'password_actuel' => 'password',
+            'password' => 'mot-de-passe-recette-2026',
+            'password_confirmation' => 'mot-de-passe-recette-2026',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull(PersonalAccessToken::findToken($initial['access_token']));
+        $this->postJson('/oauth/token', [
+            'grant_type' => 'refresh_token',
+            'client_id' => $client,
+            'refresh_token' => $initial['refresh_token'],
+        ])->assertStatus(400)->assertJsonPath('error', 'invalid_grant');
+    }
+
     public function test_revocation_machine_liee_au_client(): void
     {
         $client = $this->client();

@@ -13,6 +13,8 @@ Outil interne de planification, suivi et reporting des tâches quotidiennes (ter
 - **Auth** : Username + RBAC 5 rôles (manager / technicien / agent / developpeur / stagiaire)
 - **i18n** : Bilingue FR / EN
 
+[Procédure de déploiement et de retour arrière de SGT KayTech](DEPLOIEMENT_PARITE.md)
+
 ## Installation locale (Laragon)
 
 ```bash

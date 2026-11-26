@@ -26,19 +26,23 @@ class SynchronisationMobileController extends Controller
             'progression' => ['avant' => ['required', 'integer', 'between:0,100'], 'progression' => ['required', 'integer', 'between:0,100']],
             'sousTache' => ['avant' => ['required', 'boolean'], 'termine' => ['required', 'boolean'], 'id' => ['required', 'integer', 'min:1']],
         };
-        $request->validate($regles);
+        $request->validate($regles + ['operation' => ['sometimes', 'nullable', 'alpha_num:ascii', 'max:40']]);
 
         DB::transaction(function () use ($request, $tache, $type, $taches, $sousTaches) {
             $tache = Tache::query()->lockForUpdate()->findOrFail($tache->id);
             abort_unless($request->user()->canAccessTache($tache), 403);
+            if ($type === 'statut' && $request->input('statut') === 'termine') {
+                abort_unless($request->user()->isManager(), 403);
+            }
+            $operation = $request->input('operation');
+            if ($operation !== null && DB::table('actions_mobiles_synchronisees')->insertOrIgnore([
+                'tache_id' => $tache->id, 'user_id' => $request->user()->id, 'operation' => $operation,
+            ]) === 0) {
+                return;
+            }
             if (in_array($type, ['commentaire', 'rapport'], true)) {
-                $inseree = DB::table('actions_mobiles_synchronisees')->insertOrIgnore([
-                    'tache_id' => $tache->id, 'user_id' => $request->user()->id, 'operation' => $request->input('operation'),
-                ]);
-                if ($inseree === 1) {
-                    $relation = $type === 'commentaire' ? $tache->commentaires() : $tache->rapports();
-                    $relation->create(['user_id' => $request->user()->id, 'contenu' => $request->input('contenu')]);
-                }
+                $relation = $type === 'commentaire' ? $tache->commentaires() : $tache->rapports();
+                $relation->create(['user_id' => $request->user()->id, 'contenu' => $request->input('contenu')]);
 
                 return;
             }
@@ -56,9 +60,6 @@ class SynchronisationMobileController extends Controller
             $valeur = $type === 'statut' ? $request->string('statut')->toString() : $request->integer('progression');
             $avant = $type === 'statut' ? $request->string('avant')->toString() : $request->integer('avant');
             $actuel = $type === 'statut' ? $tache->statut : (int) $tache->progression;
-            if ($type === 'statut' && $valeur === 'termine') {
-                abort_unless($request->user()->isManager(), 403);
-            }
             if ($actuel === $valeur) {
                 return;
             }
