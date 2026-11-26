@@ -79,14 +79,45 @@ class MotDePasseMembreTest extends TestCase
         $compte->createToken('recette mobile', ['mobile']);
         $compte->createToken('recette MCP', ['mcp:read']);
         $conserve = $autre->createToken('autre compte', ['mobile']);
+        $this->startSession();
+        $sessionAvant = session()->getId();
+        $this->withCookie(session()->getName(), $sessionAvant);
         $this->actingAs($compte)->from('/profil')->patch(route('profil.updatePassword'), [
             'password_actuel' => 'ancien-factice', 'password' => 'nouveau-factice',
             'password_confirmation' => 'nouveau-factice',
         ])->assertRedirect('/profil')->assertSessionHas('success_password');
+        $this->assertNotSame($sessionAvant, session()->getId());
         $this->assertTrue(Hash::check('nouveau-factice', $compte->fresh()->password));
         $this->assertSame(0, $compte->tokens()->count());
         $this->assertDatabaseHas('personal_access_tokens', ['id' => $conserve->accessToken->id]);
         $this->get('/profil')->assertOk();
+    }
+
+    public function test_profil_web_refuse_un_mot_de_passe_de_quatre_caracteres_accentues(): void
+    {
+        $compte = User::factory()->create(['password' => 'ancien-factice']);
+
+        $this->actingAs($compte)->from('/profil')->patch(route('profil.updatePassword'), [
+            'password_actuel' => 'ancien-factice',
+            'password' => 'éééé',
+            'password_confirmation' => 'éééé',
+        ])->assertRedirect('/profil')->assertSessionHasErrors('password');
+
+        $this->assertSame($compte->password, $compte->fresh()->password);
+    }
+
+    public function test_profil_api_refuse_un_mot_de_passe_de_quatre_caracteres_accentues(): void
+    {
+        $compte = User::factory()->create(['password' => 'ancien-factice']);
+        Sanctum::actingAs($compte, ['mobile']);
+
+        $this->patchJson('/api/v1/profil/password', [
+            'password_actuel' => 'ancien-factice',
+            'password' => 'éééé',
+            'password_confirmation' => 'éééé',
+        ])->assertUnprocessable()->assertJsonValidationErrors('password');
+
+        $this->assertSame($compte->password, $compte->fresh()->password);
     }
 
     public function test_limite_web_et_regle_partagee_en_octets(): void
