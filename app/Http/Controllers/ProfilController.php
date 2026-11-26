@@ -45,7 +45,6 @@ class ProfilController extends Controller
         ], [
             'password_actuel.required' => 'Le mot de passe actuel est obligatoire.',
             'password.confirmed'       => 'Les nouveaux mots de passe ne correspondent pas.',
-            'password.min'             => 'Le nouveau mot de passe doit faire au moins 8 caractères.',
         ]);
 
         $modifie = DB::transaction(function () use ($request, $user): bool {
@@ -69,6 +68,7 @@ class ProfilController extends Controller
         // était compromis, l'attaquant est déconnecté immédiatement). Requiert le middleware
         // AuthenticateSession (cf. bootstrap/app.php).
         auth()->logoutOtherDevices($request->password);
+        $request->session()->regenerate();
 
         return back()->with('success_password', 'Mot de passe modifié avec succès.')->with('tab', 'password');
     }

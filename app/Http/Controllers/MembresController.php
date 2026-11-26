@@ -53,7 +53,6 @@ class MembresController extends Controller
             'password' => ['bail', 'required', 'string', 'confirmed', new MotDePasseSgt],
         ], [
             'username.unique'   => 'Cet identifiant est déjà utilisé.',
-            'password.min'      => 'Le mot de passe doit faire au moins 8 caractères.',
             'password.confirmed'=> 'Les mots de passe ne correspondent pas.',
         ]);
 

@@ -94,7 +94,7 @@ class MotDePasseMembreTest extends TestCase
         $manager = User::factory()->manager()->create();
         $membre = User::factory()->create();
         $this->actingAs($manager);
-        foreach ([str_repeat('é', 37), '1234567'] as $password) {
+        foreach ([str_repeat('é', 37), '1234567', 'éééé'] as $password) {
             $this->patchJson(route('membres.update', $membre), [
                 'nom' => $membre->nom, 'role' => $membre->role,
                 'password' => $password, 'password_confirmation' => $password,
@@ -117,4 +117,11 @@ class MotDePasseMembreTest extends TestCase
         $this->patchJson(route('profil.updatePassword'))->assertTooManyRequests();
     }
 
+
+    public function test_scope_mcp_ne_peut_pas_modifier_le_mot_de_passe_du_profil_api(): void
+    {
+        $compte = User::factory()->manager()->create();
+        Sanctum::actingAs($compte, ['mcp:write']);
+        $this->patchJson('/api/v1/profil/password')->assertForbidden();
+    }
 }
