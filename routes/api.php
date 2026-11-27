@@ -154,7 +154,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('v1')->group(functi
 
     Route::get('/sites', fn() => response()->json([
         'data' => Site::where('actif', true)->orderBy('nom')
-            ->get(['id', 'nom', 'localisation']),
+            ->get(['id', 'nom', 'ville'])
+            ->map(fn($s) => ['id' => $s->id, 'nom' => $s->nom, 'ville' => $s->ville, 'localisation' => $s->ville]),
     ]));
 
     // Rapports agents (lecture tous, écriture via scope)
