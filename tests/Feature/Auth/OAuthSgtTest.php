@@ -126,6 +126,8 @@ class OAuthSgtTest extends TestCase
 
     public function test_acces_limite_a_une_heure_et_renouvellement_a_trente_jours(): void
     {
+        $this->freezeTime();
+
         $client = $this->client();
         $this->actingAs(User::factory()->create());
         $initial = $this->echanger($client, $this->code($client))->assertOk()
