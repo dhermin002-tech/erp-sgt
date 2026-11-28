@@ -31,3 +31,12 @@ mémorisée (err-js-const-redeclare).
 **Recommandations qa-agent (backlog)** :
 1. Ajouter un workflow GitHub Actions de déploiement (git pull + view:clear + smoke test) déclenché sur push main.
 2. Ajouter au moins 1 test Dusk sur la page tâche (cocher sous-tâche, changer statut) pour couvrir le JS.
+
+## Revue du 28/11/2026 — DEPS-001 (bibliothèques serveur)
+**Demandé par** : session de contrôle (/controle-doyens)
+**Réviseurs** : Le-Doyen-KT (74, corrections demandées), Expert-Cybersécurité-KT (92, favorable avec réserves), Le-Doyen-Audit (86, sous réserve)
+**Contexte** : `b5b8613`, composer.lock seul. laravel/framework 13.14 → 13.44.1, composer audit 42 → 0, 207/207.
+**Verdict** : Corrections demandées ❌ sur le script de mise en production, puis Validé sous réserve ⚠️ après corrections.
+**Points validés** : audit à 0, l'avis critique TokenGuard ne concernait pas SGT (session web et Sanctum), suite complète relancée par l'audit, php8.3 du VPS compatible.
+**Risques identifiés** : retour arrière interrompu par `set -e` (bloquant), migration non protégée, notifications non contrôlées. Le message de commit omet trois montées majeures indirectes : brick/math 1.0, uri-template 2, hamcrest 3 (développement).
+**Corrections appliquées** : voir `controle/DEPS-001_VERDICT.md`, R1 à R8.
